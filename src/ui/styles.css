@@ -1,0 +1,381 @@
+/*
+ * PILGRIM global styles.
+ * System font stacks only (GDD 2.14) and no external files of any kind (GDD 2.3): every colour, shape and
+ * shadow is plain CSS. Look: chunky, rounded, warm, like a painted wooden toy (GDD 2.11).
+ */
+
+/* ---------------------------------------------------------------- tokens */
+
+:root {
+  /* Warm toy palette */
+  --panel: #fff4dc; /* cream panel */
+  --panel-deep: #f7e5bf; /* insets, tabs, list rows */
+  --panel-edge: #e6c891; /* panel rim */
+  --ink: #3b2a1f; /* text on cream */
+  --ink-soft: #6e5442;
+  --ink-inverse: #fff8ea; /* text over the 3D scene or dark scrims */
+  --accent: #f2b33d; /* gold: primary buttons, the Way */
+  --accent-light: #ffd27a;
+  --accent-deep: #c4861b; /* gold rim and pressed state */
+  --accent-ink: #3b2a1f;
+  --berry: #d8574a; /* warnings, detours */
+  --leaf: #5aa25a; /* success, "Back on the Way" */
+  --sky: #8fcbef;
+  --night: #2b2235; /* page background (matches theme-color) */
+  --scrim: rgba(28, 20, 34, 0.74);
+  --shadow: rgba(59, 36, 20, 0.35); /* soft drop shadow */
+  --shadow-solid: #c9a066; /* chunky offset shadow under panels */
+  --focus: #2b7bf3; /* >= 3:1 against both cream and night */
+
+  /* Shape and motion */
+  --radius-sm: 12px;
+  --radius: 20px;
+  --radius-lg: 30px;
+  --gap: 16px;
+  --dur: 160ms;
+  --dur-slow: 420ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Font stacks, exactly as GDD 2.14 */
+  --font-body: ui-rounded, "SF Pro Rounded", system-ui, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --font-title: Georgia, "Times New Roman", serif;
+  --font-tamil: "Noto Sans Tamil", "Tamil Sangam MN", "Nirmala UI", Latha, sans-serif;
+
+  /* Safe areas (notches, home indicator) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+/*
+ * Text size (Settings > Text: M / L / XL) is a class on <body> that sets --text-scale. The --fs-* tokens are
+ * computed on <body> so they pick the scale up; size UI text with them (or em), not rem.
+ */
+body {
+  --text-base: 18px;
+  --text-scale: 1;
+  --fs-small: calc(var(--text-base) * 0.85 * var(--text-scale));
+  --fs-body: calc(var(--text-base) * var(--text-scale));
+  --fs-large: calc(var(--text-base) * 1.3 * var(--text-scale));
+  --fs-title: calc(var(--text-base) * 2 * var(--text-scale));
+  --fs-huge: calc(var(--text-base) * 3.2 * var(--text-scale));
+}
+body.text-M { --text-scale: 1; }
+body.text-L { --text-scale: 1.2; }
+body.text-XL { --text-scale: 1.45; }
+/* Small screens and touch devices: body text never below 20px (GDD 2.14). */
+@media (max-width: 760px), (pointer: coarse) {
+  body { --text-base: 20px; }
+}
+
+/* Tamil: switch every text stack to the Tamil fonts (set by I18n). */
+body.lang-ta {
+  --font-body: "Noto Sans Tamil", "Tamil Sangam MN", "Nirmala UI", Latha, sans-serif;
+  --font-title: "Noto Sans Tamil", "Tamil Sangam MN", "Nirmala UI", Latha, sans-serif;
+  line-height: 1.55; /* Tamil glyphs are taller */
+}
+
+/* ---------------------------------------------------------------- base */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--night);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation; /* no double-tap zoom */
+}
+
+body {
+  position: fixed; /* stops iOS rubber-band scrolling */
+  inset: 0;
+  color: var(--ink-inverse);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+h1, h2, h3, .title {
+  font-family: var(--font-title);
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 0.5em;
+}
+h1, .title { font-size: var(--fs-title); }
+h2 { font-size: var(--fs-large); }
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+input, textarea, .selectable {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* `hidden` always wins, whatever display a component sets (see ui/dom.ts show/hide). */
+[hidden] { display: none !important; }
+
+:focus-visible {
+  outline: 4px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--accent-light);
+  color: var(--ink);
+}
+
+/* ---------------------------------------------------------------- layers */
+
+#game {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  outline: none;
+}
+
+/* Full-screen overlay above the canvas. The root lets pointer input through to the game... */
+#ui {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ...and interactive pieces opt back in (add `.ui-interactive` to any custom control or container). */
+#ui .ui-interactive, #ui .panel, #ui .ctx-overlay,
+#ui button, #ui a[href], #ui input, #ui select, #ui textarea, #ui label, #ui summary,
+#ui [role="button"], #ui [role="dialog"], #ui [role="slider"] {
+  pointer-events: auto;
+}
+#ui .ui-passive { pointer-events: none; }
+
+/* ---------------------------------------------------------------- panels */
+
+.panel {
+  position: relative;
+  max-width: min(720px, calc(100vw - 2 * var(--gap)));
+  max-height: calc(100vh - 2 * var(--gap));
+  max-height: calc(100dvh - 2 * var(--gap));
+  overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: clamp(16px, 4vw, 32px);
+  background: var(--panel);
+  color: var(--ink);
+  border: 4px solid var(--panel-edge);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 0 var(--shadow-solid), 0 18px 40px var(--shadow);
+  scrollbar-width: thin;
+  scrollbar-color: var(--panel-edge) transparent;
+}
+.panel p { max-width: 60ch; }
+.panel-inset {
+  background: var(--panel-deep);
+  border-radius: var(--radius);
+  padding: 0.75em 1em;
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+.btn {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  min-width: 56px;
+  min-height: 56px; /* comfortable touch target */
+  padding: 0.55em 1.4em;
+  border: 3px solid var(--accent-deep);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  text-align: center;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  box-shadow: 0 5px 0 var(--accent-deep), 0 8px 16px var(--shadow);
+  transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out), filter var(--dur) linear;
+}
+.btn:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--accent-deep), 0 3px 6px var(--shadow);
+}
+/* Clear ring on any background: cream halo inside, blue ring outside. */
+.btn:focus-visible {
+  outline: 4px solid var(--focus);
+  outline-offset: 4px;
+  box-shadow: 0 5px 0 var(--accent-deep), 0 0 0 4px var(--panel);
+}
+.btn:disabled, .btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+  filter: grayscale(0.4);
+  transform: none;
+}
+
+.btn-secondary {
+  background: var(--panel);
+  border-color: var(--panel-edge);
+  color: var(--ink);
+  box-shadow: 0 5px 0 var(--shadow-solid), 0 8px 16px var(--shadow);
+}
+.btn-secondary:active { box-shadow: 0 1px 0 var(--shadow-solid), 0 3px 6px var(--shadow); }
+
+.btn-wide { width: 100%; }
+
+/* Round icon buttons (touch controls are at least 72px, GDD 2.6). */
+.btn-round {
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: var(--fs-small);
+}
+.btn-round svg {
+  width: 55%;
+  height: 55%;
+}
+
+/* ---------------------------------------------------------------- overlays */
+
+/* "Restoring the world..." while the WebGL context is lost. Blocks input underneath. */
+.ctx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--gap) + var(--safe-top)) calc(var(--gap) + var(--safe-right))
+    calc(var(--gap) + var(--safe-bottom)) calc(var(--gap) + var(--safe-left));
+  background: var(--scrim);
+  color: var(--ink-inverse);
+  font-family: var(--font-title);
+  font-size: var(--fs-large);
+  text-align: center;
+  pointer-events: auto;
+  animation: pilgrim-fade-in var(--dur-slow) var(--ease-out) both;
+}
+.ctx-overlay > * { animation: pilgrim-breathe 2.4s ease-in-out infinite; }
+
+/* Readable text straight over the 3D scene (objectives, "Click to play"). */
+.on-scene {
+  color: var(--ink-inverse);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 0 14px rgba(0, 0, 0, 0.45);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------- safe areas */
+
+.safe-top { padding-top: var(--safe-top); }
+.safe-right { padding-right: var(--safe-right); }
+.safe-bottom { padding-bottom: var(--safe-bottom); }
+.safe-left { padding-left: var(--safe-left); }
+.safe-all { padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left); }
+/* Gap plus safe area, for full-screen layers. */
+.safe-pad {
+  padding: calc(var(--gap) + var(--safe-top)) calc(var(--gap) + var(--safe-right))
+    calc(var(--gap) + var(--safe-bottom)) calc(var(--gap) + var(--safe-left));
+}
+/* Corner anchors for HUD and touch controls. */
+.corner-tl, .corner-tr, .corner-bl, .corner-br { position: absolute; }
+.corner-tl {
+  top: calc(var(--gap) + var(--safe-top));
+  left: calc(var(--gap) + var(--safe-left));
+}
+.corner-tr {
+  top: calc(var(--gap) + var(--safe-top));
+  right: calc(var(--gap) + var(--safe-right));
+}
+.corner-bl {
+  bottom: calc(var(--gap) + var(--safe-bottom));
+  left: calc(var(--gap) + var(--safe-left));
+}
+.corner-br {
+  bottom: calc(var(--gap) + var(--safe-bottom));
+  right: calc(var(--gap) + var(--safe-right));
+}
+
+/* ---------------------------------------------------------------- motion */
+
+@keyframes pilgrim-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Slow and soft: far below the 3-flashes-per-second limit (GDD 2.15 Accessibility). */
+@keyframes pilgrim-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes pilgrim-pop {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+.pop-in { animation: pilgrim-pop var(--dur-slow) var(--ease-bounce) both; }
+
+/* OS reduce-motion, and the same treatment when the game adds `reduce-motion` to <body>. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Windows high contrast: keep button and panel edges visible. */
+@media (forced-colors: active) {
+  .btn, .panel { border-color: ButtonText; }
+}

@@ -19,7 +19,7 @@ export interface EventMap {
   'quality:changed': { level: 'low' | 'medium' | 'high' };
   'context:lost': void;
   'context:restored': void;
-  'resize': { width: number; height: number };
+  resize: { width: number; height: number };
   // Gameplay events named in GDD 2.15. Payloads are fixed here so every phase agrees.
   'burden:dropped': void;
   'hope:changed': { value: number; delta: number };

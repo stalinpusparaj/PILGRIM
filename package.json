@@ -3,14 +3,19 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": "^22.18.0 || >=23.6.0"
+  },
   "scripts": {
-    "dev": "vite",
+    "dev": "node tools/gen-icons.mjs && node tools/check-assets.mjs && vite",
+    "icons": "node tools/gen-icons.mjs",
     "check-assets": "node tools/check-assets.mjs",
+    "validate-levels": "node tools/validate-levels.mjs",
     "typecheck": "tsc --noEmit",
-    "build": "node tools/check-assets.mjs && tsc --noEmit && vite build",
-    "build:demo": "node tools/check-assets.mjs && tsc --noEmit && vite build --mode demo",
+    "build": "node tools/gen-icons.mjs && node tools/check-assets.mjs && node tools/validate-levels.mjs && tsc --noEmit && vite build",
+    "build:demo": "node tools/gen-icons.mjs && node tools/check-assets.mjs && node tools/validate-levels.mjs && tsc --noEmit && vite build --mode demo",
     "preview": "vite preview --port 4173 --strictPort",
-    "test": "node tools/check-assets.mjs && tsc --noEmit && playwright test",
+    "test": "node tools/gen-icons.mjs && node tools/check-assets.mjs && node tools/validate-levels.mjs && tsc --noEmit && playwright test",
     "format": "prettier --write \"src/**/*.ts\" \"tools/**/*.mjs\" \"tests/**/*.ts\""
   },
   "dependencies": {
