@@ -1,0 +1,8 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+.DS_Store
+*.log
+# The original build-prompt packs stay outside the repo history; Part 2 lives in docs/GDD.md.
+pilgrim-narrow-way-build-prompt*.md

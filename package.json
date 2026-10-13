@@ -1,0 +1,26 @@
+{
+  "name": "pilgrim-narrow-way",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "check-assets": "node tools/check-assets.mjs",
+    "typecheck": "tsc --noEmit",
+    "build": "node tools/check-assets.mjs && tsc --noEmit && vite build",
+    "build:demo": "node tools/check-assets.mjs && tsc --noEmit && vite build --mode demo",
+    "preview": "vite preview --port 4173 --strictPort",
+    "test": "node tools/check-assets.mjs && tsc --noEmit && playwright test",
+    "format": "prettier --write \"src/**/*.ts\" \"tools/**/*.mjs\" \"tests/**/*.ts\""
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/three": "0.186.0",
+    "prettier": "3.9.9",
+    "typescript": "7.0.2",
+    "vite": "8.3.1"
+  }
+}
