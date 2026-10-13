@@ -34,7 +34,7 @@ it lives and *how modules talk*. If you need to change a contract here, change i
 | `&waystone=ch08_w1&debug=1&god=1&skipIntro=1` | Debug params (GDD 2.15) |
 
 Phase 0 has only the "test scene" mode: an empty sky + ground scene with a slowly orbiting camera
-(`src/world/DevScene.ts`). `main.ts` already parses the mode; until later phases add the others, every mode
+(`src/world/dev/DevScene.ts`). `main.ts` already parses the mode; until later phases add the others, every mode
 shows the test scene.
 ```ts
 export type RuntimeMode =
@@ -352,15 +352,290 @@ Body text ≥ 20 px on mobile. `src/ui/dom.ts` has the typed `h()` element build
 `setText`, `setVisible`, `mount`, `uiRoot`). `src/ui/Emblem.ts` holds the logo emblem shapes and `emblemSvg()`
 (also read by `tools/gen-icons.mjs`).
 
-## Generation and world (Phase 0 parts)
+## Phase 0 dev scene
 
-- `src/gen/rng.ts`: `createRng(seed): Rng` (mulberry32: `next`, `range`, `int`, `pick`) and `hash3(x, y, z, seed)`.
-- `src/gen/geom.ts`: `flatten`, `jitter` (position-keyed, no cracks), `paintFaces` (one colour per triangle),
-  `mergeFlat` (one geometry, flat normals). Non-indexed geometry with `position` + `color`.
-- `src/gen/Sky.ts`: `new Sky(colors, sunDirection, radius?)` gradient dome shader with sun disc;
-  `follow(position)`, `dispose()`. Use the horizon colour for the scene fog.
-- `src/world/DevScene.ts` (+ `devWorld.ts`): the Phase 0 test scene, a `System` with `scene`, `camera`,
-  `setFov()`, `dispose()`. Built from a seed by placement rules (no level coordinates).
+`src/world/dev/` holds the Phase 0 test scene (`DevScene.ts`, `devWorld.ts`) and its own tiny helpers
+(`rng.ts`, `geom.ts`, `Sky.ts`). It is self-contained and is NOT the procedural toolkit: new code must use
+`src/gen/` below. It stays as the default mode until the title screen exists (Phase 3), then it can be deleted.
+
+## Procedural toolkit (Phase 1) — `src/gen/`
+
+Units: metres, Y up. One world unit = 1 m. Chapter worlds are `size × size` metres centred on the origin.
+
+### Foundations (WRITTEN — read the files; use them, do not rewrite them)
+
+`src/gen/rng.ts`
+```ts
+export function hashString(s: string): number;            // 32-bit FNV-1a
+export class Rng {                                        // mulberry32, in-house
+  constructor(seed: number);
+  next(): number;                                         // [0,1)
+  range(min: number, max: number): number;
+  int(min: number, max: number): number;                  // inclusive
+  chance(p: number): boolean;
+  pick<T>(items: readonly T[]): T;
+  sign(): 1 | -1;
+  gauss(mean?: number, sd?: number): number;
+  fork(salt: number | string): Rng;                       // independent child stream
+}
+```
+
+`src/gen/noise.ts`
+```ts
+export type Noise2D = (x: number, y: number) => number;            // ~[-1,1]
+export type Noise3D = (x: number, y: number, z: number) => number;
+export function createNoise2D(seed: number): Noise2D;              // in-house simplex
+export function createNoise3D(seed: number): Noise3D;
+export function fbm2(n: Noise2D, x: number, y: number, octaves?: number, lacunarity?: number, gain?: number): number;
+export function ridge2(n: Noise2D, x: number, y: number, octaves?: number): number;
+```
+
+`src/gen/palette.ts`
+```ts
+export type PaletteId = 'title' | 'test' | 'city' | 'slough' | 'wrongHill' | 'wicketGate' | 'interpreter' | 'cross'
+  | 'hill' | 'humiliation' | 'shadow' | 'vanity' | 'doubting' | 'delectable' | 'river' | 'epilogue';
+export interface Palette {
+  id: PaletteId;
+  sky: { top: string; horizon: string; bottom: string; sun: string };
+  fog: { color: string; near: number; far: number };
+  light: { sun: string; sunIntensity: number; sunDir: [number, number, number];
+           hemiSky: string; hemiGround: string; hemiIntensity: number };
+  ground: { low: string; mid: string; high: string; slope: string; path: string; pathEdge: string; detour: string };
+  water: { shallow: string; deep: string };
+  accents: Record<string, string>;                        // GDD 2.10 named hex values, e.g. accents.horizonLight
+}
+export const PALETTES: Record<PaletteId, Palette>;        // every chapter's GDD 2.10 hex values appear here
+export function color(hex: string): THREE.Color;          // cached, sRGB→linear handled by three's ColorManagement
+export function shade(hex: string, amount: number): string; // lighten (+) / darken (-), for derived tints
+export function mix(a: string, b: string, t: number): string;
+export function vary(hex: string, amount: number, r: number): string;   // per-instance jitter (r = rng.next())
+export function getPalette(id: string): Palette;                       // throws on unknown id
+export const SKIN_TONES: readonly ['#F1C7A3', '#E0A57A', '#C68A5E', '#9C6644', '#6E4A33'];  // GDD 2.11
+```
+
+`src/gen/geom.ts` — every builder returns a **non-indexed BufferGeometry with `position`, `normal`, `color`**
+(flat-shaded faces, vertex colours). Low segment counts.
+```ts
+export function lowSphere(radius: number, detail?: number): THREE.BufferGeometry;      // icosahedron based
+export function capsule(radius: number, length: number, radial?: number): THREE.BufferGeometry;
+export function bevelBox(w: number, h: number, d: number, bevel?: number): THREE.BufferGeometry;
+export function cone(radius: number, height: number, radial?: number): THREE.BufferGeometry;
+export function cylinder(rTop: number, rBottom: number, height: number, radial?: number): THREE.BufferGeometry;
+export function lathe(profile: Array<[number, number]>, radial?: number): THREE.BufferGeometry;
+export function extrude(shape: Array<[number, number]>, depth: number, bevel?: number): THREE.BufferGeometry;
+export function jitter(g: THREE.BufferGeometry, amount: number, rng: Rng): THREE.BufferGeometry; // welds shared verts so faces stay closed
+export function paint(g: THREE.BufferGeometry, hex: string | ((p: THREE.Vector3, n: THREE.Vector3) => string)): THREE.BufferGeometry;
+export function xform(g: THREE.BufferGeometry, o: { pos?: Vec3; rot?: Vec3; scale?: number | Vec3 }): THREE.BufferGeometry;
+export function merge(gs: THREE.BufferGeometry[]): THREE.BufferGeometry;               // disposes inputs
+export function finalize(g: THREE.BufferGeometry): THREE.BufferGeometry;               // toNonIndexed + flat normals + bounds
+export function part(g, hex | fn, o?: { pos?; rot?; scale? }): THREE.BufferGeometry;   // paint + xform in one call
+export function colorOf(hex: string): THREE.Color;                                     // cached linear colour, do not mutate
+export type Vec3 = [number, number, number];
+```
+
+`src/gen/materials.ts` — shared, app-lifetime materials (never disposed by chapters).
+```ts
+export function mat(kind: 'lambert' | 'toon' | 'glow' | 'skinned' | 'path' | 'unlit' | 'unlitTransparent'): THREE.Material;
+export function disposeSharedMaterials(): void;   // app shutdown / tests only
+// flatShading: true, vertexColors: true; 'glow' adds emissive from vertex colour; 'skinned' is the character material.
+```
+
+`src/gen/yielder.ts` — time-sliced work so generation never freezes the page.
+```ts
+export class Yielder { constructor(budgetMs?: number /* default 8 */); tick(): Promise<void>; finish(): number; workMs: number }
+// `await y.tick()` between chunks; it only really yields when the 8 ms slice is used up. finish() → total work ms.
+export function nextFrame(): Promise<void>;
+```
+
+`src/gen/types.ts`
+```ts
+export type Collider =
+  | { kind: 'box'; center: Vec3; half: Vec3; rotY: number }
+  | { kind: 'cylinder'; center: Vec3; radius: number; height: number }
+  | { kind: 'sphere'; center: Vec3; radius: number };
+export interface PropResult { geometry: THREE.BufferGeometry; colliders: Collider[]; glow?: THREE.BufferGeometry }
+export type PropBuilder = (rng: Rng, pal: Palette, params: Record<string, number | string | boolean>) => PropResult;
+```
+Prop geometry is built at the origin facing +Z; the placer transforms it. `colliders` are in the prop's local
+space. `glow` (optional) is geometry for emissive parts (candle flames, windows, the far light).
+
+### Level data — `src/world/LevelTypes.ts`
+Mirrors GDD 2.15 exactly, plus optional fields the GDD implies:
+```ts
+export interface LevelData {
+  id: string; seed: number; palette: PaletteId; size: number;
+  terrain: { base: number; noise: { scale: number; height: number; octaves?: number };
+             stamps: Array<{ type: 'hill' | 'valley' | 'plateau' | 'basin' | 'cliff' | 'ridge';
+                             x: number; z: number; r: number; height?: number; depth?: number; dir?: number }> };
+  way: Vec3[]; wayWidth?: number;                         // default 3 m
+  detours: Array<{ id: string; points: Vec3[]; width?: number }>;
+  zones: Array<{ id: string; type: string; shape: 'circle' | 'box' | 'way'; x?: number; z?: number; r?: number;
+                 size?: [number, number]; from?: number; to?: number; hopeDrain?: number; [k: string]: unknown }>;
+  scatter: Array<{ type: string; zone?: string; density: number; minDist?: number; slopeMax?: number;
+                   keepClear?: number; scale?: [number, number]; area?: { x: number; z: number; r: number } }>;
+  landmarks: Array<{ type: string; id: string; at?: Vec3; rotY?: number; path?: string; from?: number; to?: number;
+                     params?: Record<string, number | string | boolean> }>;
+  npcs: Array<{ id: string; recipe: string; role?: string; at?: Vec3; rotY?: number }>;
+  triggers: Array<{ id: string; shape: 'box' | 'circle'; at: Vec3; size?: Vec3; r?: number; script: string; once?: boolean }>;
+  waystones: Array<{ id: string; at: Vec3 }>;
+  promises: Array<{ id: string; at: Vec3 }>;
+  water?: Array<{ kind: 'water' | 'mud'; shape: 'circle' | 'box'; x: number; z: number; r?: number; size?: [number, number]; level: number }>;
+  ambience: string; music: string;
+}
+```
+
+### Terrain — `src/gen/Terrain.ts`, The Way — `src/gen/Way.ts`, Scatter — `src/gen/Scatter.ts`
+```ts
+export class Way {
+  constructor(points: Vec3[], width: number, kind: 'way' | 'detour', id: string);
+  readonly length: number;
+  sample(t: number, out?: THREE.Vector3): THREE.Vector3;               // t in [0,1], arc-length parameterised
+  tangent(t: number, out?: THREE.Vector3): THREE.Vector3;
+  closest(x: number, z: number): { t: number; dist: number; point: THREE.Vector3 };  // fast (precomputed polyline)
+  buildMesh(terrain: Terrain, pal: Palette, rng: Rng): THREE.Object3D;  // ribbon + instanced edge stones
+}
+export class Terrain {
+  static build(level: LevelData, ways: Way[], pal: Palette, y: Yielder, onProgress?: (p: number) => void): Promise<Terrain>;
+  heightAt(x: number, z: number): number;                              // bilinear on the grid
+  normalAt(x: number, z: number, out?: THREE.Vector3): THREE.Vector3;
+  slopeAt(x: number, z: number): number;                               // degrees
+  readonly mesh: THREE.Mesh;  readonly size: number;
+  dispose(): void;
+}
+export function scatter(level: LevelData, terrain: Terrain, ways: Way[], pal: Palette, rng: Rng, quality: QualityPreset,
+                        y: Yielder): Promise<{ object: THREE.Object3D; colliders: Collider[]; dispose(): void }>;
+```
+- Grid default 128×128 for 300 m (≈2.3 m cells); flat-shaded, vertex-coloured by height/slope/zone; the Way is
+  flattened (half-width + 2 m smooth falloff) and painted warm (`ground.path`); detours painted `ground.detour`.
+- Scatter types at least: trees (`tree_cone`, `tree_round`, `tree_dead`, `tree_fruit`), `bush`, `reeds`,
+  `grass` (instanced tufts), `rock`, `flower`. One `InstancedMesh` per type, per-instance colour jitter, distance
+  culling for small types (grass/flowers) by chunk, keep-clear distance from the Way.
+
+### Props — `src/gen/props/*.ts`, registry `src/gen/props/index.ts`
+```ts
+export const PROPS: Record<string, PropBuilder>;   // 'tree_cone','tree_round','tree_dead','tree_fruit','bush','reeds',
+// 'grass','rock','fence','wall','stile','house_a','house_b','house_c','gate','waystone','arbour','cross','tomb',
+// 'stall','cage','well','lamp','candle','flag','bridge_bank','lily','flower','sign'
+export function buildProp(type: string, rng: Rng, pal: Palette, params?: Record<string, number | string | boolean>): PropResult;
+```
+Static landmark props in an area are merged into one mesh per material (`placeProps()` in `src/world/LevelLoader.ts`).
+
+### Sky, water, particles
+```ts
+// src/gen/Sky.ts
+export class Sky { constructor(pal: Palette, q: QualityPreset); readonly object: THREE.Object3D;
+  update(dt: number, camera: THREE.Camera): void; dispose(): void; }       // gradient dome shader + sun disc + instanced puffy clouds; follows camera
+export function applyAtmosphere(scene: THREE.Scene, pal: Palette): { hemi: THREE.HemisphereLight; sun: THREE.DirectionalLight; dispose(): void };
+// src/gen/Water.ts
+export function createWater(o: { kind: 'water' | 'mud'; pal: Palette; shape: 'circle' | 'box'; r?: number; size?: [number, number] }):
+  { mesh: THREE.Mesh; update(t: number): void; dispose(): void };          // vertex waves, faceted normals, depth colour; mud bubbles instanced
+// src/gen/Particles.ts
+export type ParticlePreset = 'dust' | 'sparkle' | 'smoke' | 'ember' | 'rain' | 'zzz' | 'fire' | 'motes' | 'stars' | 'splash';
+export class Particles { constructor(max: number); readonly object: THREE.Object3D;
+  emit(preset: ParticlePreset, pos: THREE.Vector3, count?: number, opts?: { dir?: THREE.Vector3; color?: string; spread?: number }): void;
+  update(dt: number, camera: THREE.Camera): void; dispose(): void; }        // ONE InstancedMesh (camera-facing quads), 1 draw call
+```
+
+### Characters — `src/gen/CharacterFactory.ts`, `src/gen/rig.ts`, `src/gen/face.ts`, `content/characters/recipes.json`
+
+**One draw call per character**, including the face: eyes, brows and every mouth shape are part of the same
+SkinnedMesh, each bound rigidly to its own face bone. Blink = scale the eye bones on Y. Brows = rotate/offset the
+brow bones. Mouth shapes swap by scaling the active mouth bone to 1 and the others to 0. (Logged as a decision:
+the GDD's "separate tiny meshes" goal — swappable expressions — is met with zero extra draw calls.)
+
+Bone names (`rig.ts`), rest pose = arms hanging down (A-pose ~8°), character faces +Z, feet on y = 0:
+```ts
+export const BODY_BONES = ['root','hips','spine','chest','neck','head','upperArmL','lowerArmL','handL','upperArmR',
+  'lowerArmR','handR','thighL','shinL','footL','thighR','shinR','footR','propL','propR','back','sack','hat'] as const;
+export const FACE_BONES = ['eyeL','eyeR','browL','browR','mouth_neutral','mouth_smile','mouth_open','mouth_frown',
+  'mouth_o','mouth_flat','mouth_wavy','mouth_grin'] as const;
+export const BEAST_BONES = ['wingL','wingR','tail1','tail2','tail3','jaw'] as const;   // optional per recipe
+export type BoneName = typeof BODY_BONES[number] | typeof FACE_BONES[number] | typeof BEAST_BONES[number];
+```
+```ts
+export type Expression = 'neutral' | 'happy' | 'sad' | 'scared' | 'surprised' | 'angry' | 'sleepy' | 'determined';
+export interface CharacterRecipe {
+  id: string; name?: string;
+  body: 'adult' | 'adultF' | 'elder' | 'child' | 'youngAdult' | 'stocky' | 'thin' | 'big' | 'giant' | 'giantess' | 'tall' | 'beast';
+  scale?: number;                                        // giants 3, Shining Ones 1.3
+  build?: { height?: number; girth?: number; head?: number; legs?: number; arms?: number; belly?: number }; // multipliers ~0.7-1.4
+  skin: string;                                          // one of the GDD 2.11 skin tones
+  colors: { top: string; bottom: string; feet?: string; accent?: string; hair?: string; hat?: string; trim?: string; [k: string]: string | undefined };
+  parts: { top?: 'tunic' | 'robe' | 'dress' | 'coat' | 'vest' | 'shirt' | 'judge';
+           bottom?: 'trousers' | 'robe' | 'skirt';
+           hair?: 'none' | 'short' | 'curls' | 'bun' | 'long' | 'tuft' | 'bald';
+           beard?: 'none' | 'short' | 'full' | 'long';
+           hat?: 'none' | 'cap' | 'hood' | 'tall' | 'wig' | 'scarf' | 'helmet' | 'droopy' | 'mirrorMask';
+           extras?: string[] };                          // 'apron','ropeBelt','cape','buttons','plume','glowDot','trim','sleeves','chains'
+  props?: Array<{ type: 'staff' | 'candle' | 'lantern' | 'keys' | 'book' | 'gavel' | 'crook' | 'sword' | 'shield' | 'cane' | 'letter' | 'toy' | 'club' | 'pole';
+                  bone: 'propL' | 'propR' | 'back' }>;
+  burden?: boolean;                                      // adds the sack on the 'sack' bone
+  glow?: boolean;                                        // Shining Ones: emissive white + sparkle hook
+  expression?: Expression;                               // default face
+  voice: { pitch: number; speed: number; wave: 'sine' | 'triangle' | 'square' | 'sawtooth'; vowel: number }; // Phase 3 babble
+  style?: { bounce?: number; stiffness?: number; swagger?: number; lean?: number };                       // walk personality
+}
+export interface Character {
+  readonly recipe: CharacterRecipe;
+  readonly root: THREE.Object3D;                         // position/rotate this
+  readonly mesh: THREE.SkinnedMesh;
+  readonly bones: Record<string, THREE.Bone>;
+  readonly animator: Animator;
+  readonly height: number;
+  setExpression(e: Expression): void;
+  setTalking(on: boolean): void;                         // mouth flap + head bob layer
+  setBurdenSize(s: number): void;                        // 0 = none, 1 = normal, up to 1.6 (sack bone scale)
+  attach(obj: THREE.Object3D, bone: 'propL' | 'propR' | 'back' | 'head'): void;   // runtime props (extra draw call)
+  update(dt: number): void;                              // animator, blink, secondary motion (sack spring, hat bounce)
+  dispose(): void;                                       // geometry (materials are shared)
+}
+export class CharacterFactory {
+  static recipes(): Record<string, CharacterRecipe>;      // from content/characters/recipes.json
+  static build(recipe: CharacterRecipe | string, rng?: Rng): Character;
+}
+```
+
+### Procedural animation — `src/gen/anim/`
+```ts
+// src/gen/anim/types.ts
+export interface BonePose { x: number; y: number; z: number }               // Euler offset (rad) from rest, order 'YXZ'
+export interface Pose { bones: Map<BoneName, BonePose>; hips: { x: number; y: number; z: number } } // hips translation offset (m)
+export interface AnimParams { speed: number; burden: number; time: number; style: Required<NonNullable<CharacterRecipe['style']>>; height: number }
+export interface ProcClip {
+  name: AnimName; loop: boolean; duration: number;                          // loop cycle length or one-shot length (s)
+  layer: 'full' | 'upper';                                                  // 'upper' overlays arms/chest/head only
+  sample(t: number, p: AnimParams, out: Pose): void;                        // write offsets; t = seconds into the clip
+}
+export type AnimName = 'idle' | 'walk' | 'run' | 'burdenedWalk' | 'hop' | 'joyJump' | 'talk' | 'wave' | 'point' | 'sit'
+  | 'nap' | 'pray' | 'read' | 'trip' | 'coverEarsRun' | 'climb' | 'push' | 'kneel' | 'knock' | 'reach' | 'fall' | 'land';
+// src/gen/anim/Animator.ts
+export class Animator {
+  constructor(bones: Record<string, THREE.Bone>, params: AnimParams);
+  play(name: AnimName, opts?: { fade?: number; speed?: number; restart?: boolean }): void;   // full-body crossfade
+  overlay(name: AnimName | null, opts?: { fade?: number }): void;                          // upper-body layer
+  readonly current: AnimName; readonly params: AnimParams;
+  onEnd?: (name: AnimName) => void;                                                          // one-shots
+  update(dt: number): void;                                                                  // blend → write bone quaternions
+}
+export const CLIPS: Record<AnimName, ProcClip>;   // src/gen/anim/index.ts
+```
+Squash-and-stretch on jump/land is done on the `hips`/`root` scale. Secondary motion (sack spring, hat bounce) lives
+in the Character, driven by root acceleration.
+
+### Crowds — `src/gen/CrowdMesh.ts`
+`InstancedMesh` per body type built from a recipe (static, no skeleton), per-instance colour applied only to
+clothing (a `tint` vertex attribute masks skin/face), vertex-shader bob/sway driven by a `uTime` uniform and a
+per-instance phase. 1 draw call per body type; 100 citizens < 10 draw calls.
+```ts
+export class CrowdMesh { constructor(recipe: CharacterRecipe, max: number); readonly mesh: THREE.InstancedMesh;
+  set(i: number, pos: THREE.Vector3, rotY: number, tint: string, phase?: number): void; count: number;
+  update(t: number): void; dispose(): void; }
+```
+
+### Lab — `src/gen/Lab.ts` (`?lab=1`)
+Turntable scene; list of every recipe, every animation and every expression; sliders for colours and build
+multipliers; "Copy recipe JSON"; lineup view (all characters side by side at gameplay camera distance);
+a "crowd of 100" toggle; readouts for draw calls/triangles. Dev tool: plain English UI is fine.
 
 ## Tools and tests (Phase 0)
 
