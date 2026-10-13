@@ -3,9 +3,10 @@
  * (ARCHITECTURE.md "Runtime modes") and starts the loop.
  *
  * Order: flags → settings → i18n → save (all register themselves on import) → engine → quality (resolved
- * before the loop starts, so the benchmark has the GPU to itself) → input → scene → debug panel → start.
- * Phase 0 has only the test scene, so every mode shows it; the mode is parsed now and later phases plug in
- * the title screen, chapters, Lab and music page.
+ * before the loop starts, so the benchmark has the GPU to itself) → input → debug panel → mode → start.
+ * Modes (src/modes.ts): `?lab=1` → Character Lab, `?chapter=test` → the test world; everything else still shows
+ * the Phase 0 test scene until the title screen and chapters exist. The debug panel is created before the mode
+ * so a mode can add its own F1 controls while it starts.
  */
 import './ui/styles.css';
 import { events } from './core/Events';
@@ -19,7 +20,9 @@ import { Quality, type QualityPreset } from './core/Quality';
 import { Input } from './core/Input';
 import { createDebug, installCoreDebug, type Debug } from './core/Debug';
 import { h, uiRoot } from './ui/dom';
-import { DevScene } from './world/dev/DevScene';
+import { startMode, type ModeKind, type ModeRunner } from './modes';
+import type { LabProbe } from './gen/lab-probe';
+import type { TestWorld } from './world/TestWorld';
 
 // ------------------------------------------------------------------------------------------- runtime mode
 
@@ -46,6 +49,13 @@ export function selectMode(params: UrlParams): RuntimeMode {
   return { kind: 'title' };
 }
 
+/** Which runner shows a mode today: the Lab, the test world, or (until later phases) the Phase 0 scene. */
+export function modeKind(mode: RuntimeMode): ModeKind {
+  if (mode.kind === 'lab') return 'lab';
+  if (mode.kind === 'chapter' && mode.id === 'test') return 'testWorld';
+  return 'dev';
+}
+
 function describeMode(mode: RuntimeMode): string {
   switch (mode.kind) {
     case 'chapter':
@@ -66,6 +76,14 @@ export interface PilgrimHandle {
   readonly services: typeof services;
   readonly events: typeof events;
   readonly mode: RuntimeMode | null;
+  /** True once the current mode is on screen (Lab: first character; test world: built and shown). */
+  readonly modeReady: boolean;
+  /** `?lab=1`: drives and measures the Character Lab (src/gen/lab-probe.ts). */
+  readonly lab: LabProbe | null;
+  /** `?chapter=test`: the test world (build time, progress log, rebuild). */
+  readonly testWorld: TestWorld | null;
+  /** Disposes the current mode and starts it again (leak checks). Resolves when it is back on screen. */
+  restartMode(): Promise<void>;
 }
 
 declare global {
@@ -74,10 +92,18 @@ declare global {
   }
 }
 
-const state: { ready: boolean; engine: Engine | null; mode: RuntimeMode | null } = {
+const state: {
+  ready: boolean;
+  engine: Engine | null;
+  mode: RuntimeMode | null;
+  runner: ModeRunner | null;
+  restart: (() => Promise<void>) | null;
+} = {
   ready: false,
   engine: null,
   mode: null,
+  runner: null,
+  restart: null,
 };
 
 Object.defineProperty(window, '__pilgrim', {
@@ -91,6 +117,16 @@ Object.defineProperty(window, '__pilgrim', {
     get mode() {
       return state.mode;
     },
+    get modeReady() {
+      return state.runner?.ready ?? false;
+    },
+    get lab() {
+      return state.runner?.lab ?? null;
+    },
+    get testWorld() {
+      return state.runner?.testWorld ?? null;
+    },
+    restartMode: () => (state.restart ? state.restart() : Promise.reject(new Error('[main] not booted'))),
     services,
     events,
   } satisfies PilgrimHandle),
@@ -165,19 +201,21 @@ async function boot(): Promise<void> {
   loop.onBeforeStep = () => input.beginStep();
   loop.onAfterStep = () => input.endStep();
 
-  // Phase 0: every mode shows the test scene.
-  let scene = new DevScene({ fov: settings.data.fov });
-  let removeScene = loop.add(scene, 0);
-  engine.setView(scene.scene, scene.camera);
-  const rebuildScene = (): void => {
-    removeScene();
-    scene.dispose();
-    scene = new DevScene({ fov: settings.data.fov });
-    removeScene = loop.add(scene, 0);
-    engine.setView(scene.scene, scene.camera);
+  // The mode runner (src/modes.ts) owns its scene; restarting disposes it first (F1 "Rebuild scene").
+  const kind = modeKind(state.mode);
+  const launch = (): ModeRunner => {
+    const runner = startMode(kind, engine);
+    state.runner = runner;
+    runner.started.catch((err: unknown) => console.error(`[main] the ${kind} mode could not start`, err));
+    return runner;
   };
-  // The test scene is "gameplay": Click/Tap to play, pointer lock and the touch controls can be tried.
-  input.setGameplayActive(true);
+  state.restart = async (): Promise<void> => {
+    state.runner?.dispose();
+    await launch().started;
+  };
+  const rebuildScene = (): void => {
+    state.restart?.().catch(() => {}); // already logged by launch()
+  };
 
   events.on('settings:changed', ({ key }) => {
     const data = settings.data;
@@ -197,7 +235,7 @@ async function boot(): Promise<void> {
         loop.frameCap = data.frameCap;
         break;
       case 'fov':
-        scene.setFov(data.fov);
+        state.runner?.setFov(data.fov);
         break;
       case 'textSize':
       case 'reduceMotion':
@@ -213,6 +251,9 @@ async function boot(): Promise<void> {
     installCoreDebug(engine, quality, input, debug);
     installPhase0Debug(debug, engine, quality, rebuildScene);
   }
+
+  // Started before the loop so its first frame already shows the mode (the test world's loading scene).
+  launch();
 
   events.once('engine:ready', () => {
     state.ready = true;

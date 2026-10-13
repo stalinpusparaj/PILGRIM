@@ -4,7 +4,8 @@
  */
 import * as THREE from 'three';
 
-export type MaterialKind = 'lambert' | 'toon' | 'glow' | 'skinned' | 'path' | 'unlit' | 'unlitTransparent';
+export type MaterialKind =
+  'lambert' | 'toon' | 'glow' | 'skinned' | 'path' | 'unlit' | 'unlitTransparent' | 'decal';
 
 const cache = new Map<MaterialKind, THREE.Material>();
 let toonRamp: THREE.DataTexture | null = null;
@@ -45,6 +46,17 @@ function create(kind: MaterialKind): THREE.Material {
       return new THREE.MeshBasicMaterial({ vertexColors: true });
     case 'unlitTransparent':
       return new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false });
+    case 'decal':
+      // Flat marks laid on the ground (character blob shadows): RGBA vertex colours, drawn over the terrain and
+      // the Way ribbon (which has its own offset) without z-fighting, never writing depth.
+      return new THREE.MeshBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -4,
+        polygonOffsetUnits: -4,
+      });
   }
 }
 

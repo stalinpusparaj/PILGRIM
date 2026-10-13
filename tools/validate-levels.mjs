@@ -4,8 +4,12 @@
  *
  * Required: id (matches the file name), seed (uint32), palette, size (> 0), terrain (object), way (>= 2
  * points of [x, y, z]). Optional arrays (detours, zones, scatter, landmarks, npcs, triggers, waystones,
- * promises) must hold typed entries. Entity ids are unique within a file; waystone and promise ids are
- * unique across all files. Unknown top-level keys and points outside the level area are warnings.
+ * promises, water) must hold typed entries; `wayWidth` is a number > 0 (ARCHITECTURE LevelData). Shapes are
+ * the ones the runtime builds: zones circle / box / "way" (a band along the Way or a detour, whose `path` must
+ * exist), triggers and water circle / box. Scatter rules need `type` and `density` (>= 0); `scale` is a number
+ * > 0 or [min, max]. Entity ids
+ * are unique within a file; waystone and promise ids are unique across all files. Unknown top-level keys and
+ * points outside the level area are warnings.
  *
  * Usage: node tools/validate-levels.mjs [levels dir]   (exit 0 when valid or when there are no levels yet)
  */
@@ -19,26 +23,35 @@ const UINT32_MAX = 0xffffffff;
 // prettier-ignore
 const TOP_LEVEL_KEYS = new Set([
   'id', 'seed', 'palette', 'size', 'terrain', 'way', 'detours', 'zones', 'scatter', 'landmarks', 'npcs',
-  'triggers', 'waystones', 'promises', 'ambience', 'music',
+  'triggers', 'waystones', 'promises', 'ambience', 'music', 'water', 'wayWidth',
 ]);
 /** Required fields per optional section; `shaped` sections also need a valid shape with its geometry. */
 const SECTIONS = {
   detours: { required: ['id'] },
   zones: { required: ['id', 'type', 'shape'], shaped: true },
-  scatter: { required: ['type'] },
+  scatter: { required: ['type', 'density'] },
   landmarks: { required: ['type'] },
   npcs: { required: ['id', 'recipe'] },
   triggers: { required: ['id', 'shape'], shaped: true },
   waystones: { required: ['id', 'at'] },
   promises: { required: ['id', 'at'] },
+  water: { required: ['kind', 'shape', 'level'], shaped: true },
 };
-const ROUND_SHAPES = new Set(['circle', 'sphere', 'cylinder']);
-const SHAPES = new Set([...ROUND_SHAPES, 'box', 'polygon']);
+/**
+ * The shapes the runtime builds (LevelTypes.ts, src/gen/terrain/zones.ts): zones are circles, boxes or a band
+ * along the Way or a detour ('way': `path`, `from`, `to`); triggers and water are circles or boxes.
+ */
+const SHAPES_BY_SECTION = {
+  zones: new Set(['circle', 'box', 'way']),
+  triggers: new Set(['circle', 'box']),
+  water: new Set(['circle', 'box']),
+};
+const WATER_KINDS = new Set(['water', 'mud']);
 /** Field types that mean the same thing wherever they appear in an entry. */
 // prettier-ignore
 const NUMBER_RULES = {
   x: {}, y: {}, z: {}, depth: {}, height: {}, hopeDrain: {}, rotation: {}, yaw: {},
-  r: { gt: 0 }, radius: { gt: 0 }, scale: { gt: 0 },
+  r: { gt: 0 }, radius: { gt: 0 }, width: { gt: 0 }, level: {},
   density: { min: 0 }, from: { min: 0, max: 1 }, to: { min: 0, max: 1 },
 };
 const STRING_FIELDS = ['type', 'shape', 'script', 'recipe', 'role', 'zone', 'path', 'palette'];
@@ -81,6 +94,12 @@ function checkFields(r, entry, path) {
       r.error(`${path}.${key}`, 'must be a non-empty string');
   }
   if ('at' in entry && !isVec(entry.at, 3)) r.error(`${path}.at`, 'must be [x, y, z] numbers');
+  if ('scale' in entry) {
+    const s = entry.scale;
+    const range = isVec(s, 2) && s[0] > 0 && s[0] <= s[1];
+    if (!(range || (isNum(s) && s > 0)))
+      r.error(`${path}.scale`, 'must be a number > 0 or [min, max] with 0 < min <= max');
+  }
   if ('size' in entry) {
     const s = entry.size;
     const ok = Array.isArray(s) && (s.length === 2 || s.length === 3) && s.every((n) => isNum(n) && n > 0);
@@ -94,20 +113,19 @@ function checkFields(r, entry, path) {
   }
 }
 
-/** Shape-specific geometry for zones and triggers. */
-function checkShape(r, entry, path) {
-  if (!SHAPES.has(entry.shape)) {
-    r.error(`${path}.shape`, `must be one of ${[...SHAPES].join(', ')}`);
+/** Shape-specific geometry for zones, triggers and water. */
+function checkShape(r, entry, path, section) {
+  const allowed = SHAPES_BY_SECTION[section];
+  if (!allowed.has(entry.shape)) {
+    r.error(`${path}.shape`, `must be one of ${[...allowed].join(', ')}`);
     return;
   }
-  if (entry.shape === 'polygon') {
-    if (!Array.isArray(entry.points) || entry.points.length < 3)
-      r.error(`${path}.points`, 'polygon needs >= 3 points');
-    return;
-  }
+  if (section === 'water' && !WATER_KINDS.has(entry.kind))
+    r.error(`${path}.kind`, 'must be "water" or "mud"');
+  if (entry.shape === 'way') return; // a band along a path: no x/z needed (its `path` is checked in references)
   if (!('at' in entry) && !(isNum(entry.x) && isNum(entry.z)))
     r.error(path, `${entry.shape} needs "at" or "x" and "z"`);
-  if (ROUND_SHAPES.has(entry.shape) && !('r' in entry)) r.error(path, `${entry.shape} needs "r"`);
+  if (entry.shape === 'circle' && !('r' in entry)) r.error(path, 'circle needs "r"');
   if (entry.shape === 'box' && !('size' in entry)) r.error(path, 'box needs "size"');
 }
 
@@ -171,6 +189,8 @@ function validateLevel(file, level, crossIds) {
   if (!sizeOk) r.error('size', 'is required: a number > 0');
   checkTerrain(r, level.terrain);
   checkWay(r, level.way, sizeOk ? level.size / 2 : 0);
+  if ('wayWidth' in level && !(isNum(level.wayWidth) && level.wayWidth > 0))
+    r.error('wayWidth', 'must be a number > 0');
   for (const key of ['ambience', 'music']) {
     if (key in level && !isNonEmptyString(level[key])) r.error(key, 'must be a non-empty string');
   }
@@ -191,7 +211,7 @@ function validateLevel(file, level, crossIds) {
       if (!isObj(entry)) return r.error(path, 'must be an object');
       for (const field of rule.required) if (!(field in entry)) r.error(path, `is missing "${field}"`);
       checkFields(r, entry, path);
-      if (rule.shaped && typeof entry.shape === 'string') checkShape(r, entry, path);
+      if (rule.shaped && typeof entry.shape === 'string') checkShape(r, entry, path, section);
       if (typeof entry.id === 'string') {
         if (seen.has(entry.id))
           r.error(`${path}.id`, `"${entry.id}" is already used by ${seen.get(entry.id)}`);
@@ -218,6 +238,14 @@ function checkReferences(r, level, crossIds) {
     if (isObj(s) && typeof s.zone === 'string' && !zoneIds.has(s.zone)) {
       r.error(`scatter[${i}].zone`, `"${s.zone}" is not a zone in this level`);
     }
+  });
+  (Array.isArray(level.zones) ? level.zones : []).forEach((z, i) => {
+    // A 'way' band follows `path` ("way" or a detour id); a missing detour would silently drop the zone.
+    if (isObj(z) && typeof z.path === 'string' && z.path !== 'way' && !detourIds.has(z.path)) {
+      r.error(`zones[${i}].path`, `"${z.path}" must be "way" or a detour id`);
+    }
+    if (isObj(z) && isNum(z.from) && isNum(z.to) && z.from > z.to)
+      r.error(`zones[${i}]`, '"from" must be <= "to"');
   });
   (Array.isArray(level.landmarks) ? level.landmarks : []).forEach((l, i) => {
     if (!isObj(l)) return;

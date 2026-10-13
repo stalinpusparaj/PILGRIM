@@ -88,10 +88,18 @@ export function cylinder(rTop: number, rBottom: number, height: number, radial =
   return finalize(g);
 }
 
-/** Revolve a profile of [radius, y] points around Y. */
-export function lathe(profile: Array<[number, number]>, radial = 8): THREE.BufferGeometry {
+/**
+ * Revolve a profile of [radius, y] points around Y. A partial revolution starts at `phiStart` (0 = +Z, turning
+ * towards +X) and spans `phiLength`.
+ */
+export function lathe(
+  profile: Array<[number, number]>,
+  radial = 8,
+  phiStart = 0,
+  phiLength = Math.PI * 2,
+): THREE.BufferGeometry {
   const pts = profile.map(([r, y]) => new THREE.Vector2(Math.max(0, r), y));
-  return finalize(new THREE.LatheGeometry(pts, radial));
+  return finalize(new THREE.LatheGeometry(pts, radial, phiStart, phiLength));
 }
 
 /** Extrude a 2D outline (XY plane) along +Z by `depth`, centred on Z. */

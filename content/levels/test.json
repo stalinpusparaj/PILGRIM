@@ -1,0 +1,81 @@
+{
+  "id": "test",
+  "seed": 1678,
+  "palette": "test",
+  "size": 300,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.012, "height": 2.2, "octaves": 4 },
+    "stamps": [
+      { "type": "hill", "x": 18, "z": 62, "r": 36, "height": 9 },
+      { "type": "basin", "x": 62, "z": -36, "r": 28, "depth": 2.6 },
+      { "type": "plateau", "x": -95, "z": -70, "r": 32, "height": 4 },
+      { "type": "ridge", "x": 0, "z": -128, "r": 90, "height": 11, "dir": 0.12 },
+      { "type": "cliff", "x": 112, "z": 92, "r": 34, "height": 7, "dir": 1.2 },
+      { "type": "valley", "x": -120, "z": 105, "r": 40, "depth": 3, "dir": 0.8 }
+    ]
+  },
+  "way": [
+    [-132, 0, -10],
+    [-98, 0, 10],
+    [-62, 0, 18],
+    [-30, 0, 0],
+    [2, 0, -16],
+    [36, 0, -6],
+    [70, 0, 14],
+    [104, 0, 4],
+    [134, 0, -6]
+  ],
+  "detours": [
+    { "id": "hill_path", "points": [[-30, 0, 0], [-25, 0, 18], [-12, 0, 34], [4, 0, 46]], "width": 2.6 }
+  ],
+  "zones": [
+    { "id": "bog", "type": "slough", "shape": "circle", "x": 62, "z": -36, "r": 20, "hopeDrain": 1 },
+    { "id": "meadow", "type": "meadow", "shape": "box", "x": -78, "z": 58, "size": [70, 50] },
+    { "id": "woods", "type": "woods", "shape": "circle", "x": -30, "z": -62, "r": 34 },
+    { "id": "hilltop", "type": "detour", "shape": "circle", "x": 12, "z": 56, "r": 16 }
+  ],
+  "scatter": [
+    { "type": "tree_cone", "zone": "woods", "density": 1.1, "minDist": 4 },
+    { "type": "tree_round", "density": 0.09, "minDist": 7, "keepClear": 3 },
+    { "type": "tree_dead", "zone": "bog", "density": 0.35, "minDist": 5 },
+    { "type": "tree_fruit", "area": { "x": -108, "z": 40, "r": 16 }, "density": 1.2, "minDist": 5 },
+    { "type": "bush", "density": 0.22, "minDist": 3 },
+    { "type": "rock", "density": 0.07, "minDist": 4 },
+    { "type": "rock", "area": { "x": 0, "z": -122, "r": 30 }, "density": 0.5, "minDist": 3 },
+    { "type": "grass", "density": 2.2, "minDist": 0.8 },
+    { "type": "flower", "zone": "meadow", "density": 1.6, "minDist": 0.9 },
+    { "type": "flower", "density": 0.15, "minDist": 1.2 },
+    { "type": "reeds", "zone": "bog", "density": 4, "minDist": 0.8 }
+  ],
+  "landmarks": [
+    { "type": "house_a", "id": "test_house_a", "at": [-112, 0, 26], "rotY": 3.4 },
+    { "type": "house_b", "id": "test_house_b", "at": [-74, 0, -6], "rotY": 0.2 },
+    { "type": "fence", "id": "test_fence", "at": [-124, 0, 10], "rotY": -0.55 },
+    { "type": "gate", "id": "test_gate", "at": [-100, 0, 21], "rotY": 3.0 },
+    { "type": "waystone", "id": "test_marker", "at": [-48, 0, 20], "rotY": 3.6 },
+    { "type": "stall", "id": "test_stall", "at": [-10, 0, 8], "rotY": 3.6 },
+    { "type": "cage", "id": "test_cage", "at": [22, 0, -28], "rotY": 0.3 },
+    { "type": "arbour", "id": "test_arbour", "at": [88, 0, 24], "rotY": 3.3 },
+    { "type": "cross", "id": "test_cross", "at": [118, 0, 18], "rotY": 3.4 },
+    { "type": "tomb", "id": "test_tomb", "at": [126, 0, 27], "rotY": 3.9 }
+  ],
+  "npcs": [
+    { "id": "christian", "recipe": "christian_burdened", "role": "test", "at": [-132, 0, -10], "rotY": 1.0 },
+    { "id": "evangelist", "recipe": "evangelist", "role": "test", "at": [-104, 0, 2], "rotY": 0.6 },
+    { "id": "pliable", "recipe": "pliable", "role": "test", "at": [-58, 0, 24], "rotY": 3.0 },
+    { "id": "help", "recipe": "help", "role": "test", "at": [48, 0, -14], "rotY": 2.6 }
+  ],
+  "triggers": [],
+  "waystones": [
+    { "id": "test_w1", "at": [-118, 0, -6] },
+    { "id": "test_w2", "at": [96, 0, 12] }
+  ],
+  "promises": [
+    { "id": "test_p1", "at": [-4, 0, 50] },
+    { "id": "test_p2", "at": [40, 0, -30] }
+  ],
+  "water": [{ "kind": "mud", "shape": "circle", "x": 62, "z": -36, "r": 13, "level": -1.7 }],
+  "ambience": "meadow",
+  "music": "pilgrim"
+}

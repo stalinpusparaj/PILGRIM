@@ -33,21 +33,39 @@ it lives and *how modules talk*. If you need to change a contract here, change i
 | `?chapter=test` / `?chapter=1..13` / `?chapter=epilogue` | Load a chapter directly (debug) |
 | `&waystone=ch08_w1&debug=1&god=1&skipIntro=1` | Debug params (GDD 2.15) |
 
-Phase 0 has only the "test scene" mode: an empty sky + ground scene with a slowly orbiting camera
-(`src/world/dev/DevScene.ts`). `main.ts` already parses the mode; until later phases add the others, every mode
-shows the test scene.
+Phase 1 wires two modes: `?lab=1` → Character Lab (`src/gen/Lab.ts`) and `?chapter=test` → the test world
+(`src/world/TestWorld.ts`, built from `content/levels/test.json`). Every other mode still shows the Phase 0 test
+scene (`src/world/dev/DevScene.ts`) until the title screen (Phase 3) and the chapters exist.
 ```ts
 export type RuntimeMode =
   | { kind: 'title' } | { kind: 'lab' } | { kind: 'music'; id: string }
   | { kind: 'chapter'; id: string; waystone: string | null };
 export function selectMode(params: UrlParams): RuntimeMode;  // lab > music > chapter > title
+export function modeKind(mode: RuntimeMode): ModeKind;       // 'lab' | 'testWorld' | 'dev' (which runner shows it)
 ```
+Mode runners (`src/modes.ts`) own a mode's scene, camera, loop systems and DOM:
+```ts
+export type ModeKind = 'dev' | 'lab' | 'testWorld';
+export interface ModeRunner {
+  readonly kind: ModeKind;
+  readonly started: Promise<void>;   // the mode is on screen (Lab: first character; test world: built and shown)
+  readonly ready: boolean;
+  readonly lab: LabProbe | null;     // ?lab=1 only
+  readonly testWorld: TestWorld | null;
+  setFov(fov: number): void;
+  dispose(): void;                   // frees everything; the engine is left drawing an empty scene
+}
+export function startMode(kind: ModeKind, engine: Engine): ModeRunner;
+```
+- The Lab and the test world are dynamic imports (their own chunks), so the default mode does not ship them.
+- `main.ts` keeps one runner; F1 "Rebuild scene" and `window.__pilgrim.restartMode()` dispose it and start a
+  new one (leak checks). The debug panel is created before the mode starts, so a mode can add F1 controls.
 - `?chapter=` accepts `test`, `1`..`13`, `epilogue`; anything else falls back to the title. Demo builds
   (`VITE_DEMO=true`) also fall back to the title for chapters beyond IV and the epilogue.
 - All URL params are ignored outside dev builds unless `?debug=1` (see Flags.ts).
 - Boot order in `main.ts`: flags → settings → i18n → save (each registers itself on import) → `Engine` →
   `Quality` (resolved before `engine.start()`, so the benchmark has the GPU to itself) → `Input` (hooked into
-  `loop.onBeforeStep` / `onAfterStep`) → scene → debug panel → `engine.start()`.
+  `loop.onBeforeStep` / `onAfterStep`) → debug panel → mode runner → `engine.start()`.
 - `main.ts` owns the live wiring: one `quality:changed` listener applies `quality.preset` with the Shadows
   setting merged in (Shadows Off always wins; On means "if the preset allows") to `engine.applyQuality`;
   `settings:changed` applies quality, shadows, resolutionScale, frameCap, fov and the `text-M/L/XL` /
@@ -421,7 +439,7 @@ export function capsule(radius: number, length: number, radial?: number): THREE.
 export function bevelBox(w: number, h: number, d: number, bevel?: number): THREE.BufferGeometry;
 export function cone(radius: number, height: number, radial?: number): THREE.BufferGeometry;
 export function cylinder(rTop: number, rBottom: number, height: number, radial?: number): THREE.BufferGeometry;
-export function lathe(profile: Array<[number, number]>, radial?: number): THREE.BufferGeometry;
+export function lathe(profile: Array<[number, number]>, radial?: number, phiStart?: number, phiLength?: number): THREE.BufferGeometry;
 export function extrude(shape: Array<[number, number]>, depth: number, bevel?: number): THREE.BufferGeometry;
 export function jitter(g: THREE.BufferGeometry, amount: number, rng: Rng): THREE.BufferGeometry; // welds shared verts so faces stay closed
 export function paint(g: THREE.BufferGeometry, hex: string | ((p: THREE.Vector3, n: THREE.Vector3) => string)): THREE.BufferGeometry;
@@ -435,9 +453,10 @@ export type Vec3 = [number, number, number];
 
 `src/gen/materials.ts` — shared, app-lifetime materials (never disposed by chapters).
 ```ts
-export function mat(kind: 'lambert' | 'toon' | 'glow' | 'skinned' | 'path' | 'unlit' | 'unlitTransparent'): THREE.Material;
+export function mat(kind: 'lambert' | 'toon' | 'glow' | 'skinned' | 'path' | 'unlit' | 'unlitTransparent' | 'decal'): THREE.Material;
 export function disposeSharedMaterials(): void;   // app shutdown / tests only
-// flatShading: true, vertexColors: true; 'glow' adds emissive from vertex colour; 'skinned' is the character material.
+// flatShading: true, vertexColors: true; 'glow' adds emissive from vertex colour; 'skinned' is the character material;
+// 'decal' = unlit, transparent, no depth write, polygon offset: marks laid on the ground (blob shadows, RGBA colours).
 ```
 
 `src/gen/yielder.ts` — time-sliced work so generation never freezes the page.
@@ -467,7 +486,7 @@ export interface LevelData {
   terrain: { base: number; noise: { scale: number; height: number; octaves?: number };
              stamps: Array<{ type: 'hill' | 'valley' | 'plateau' | 'basin' | 'cliff' | 'ridge';
                              x: number; z: number; r: number; height?: number; depth?: number; dir?: number }> };
-  way: Vec3[]; wayWidth?: number;                         // default 3 m
+  way: Vec3[]; wayWidth?: number;                         // default 3 m (DEFAULT_WAY_WIDTH)
   detours: Array<{ id: string; points: Vec3[]; width?: number }>;
   zones: Array<{ id: string; type: string; shape: 'circle' | 'box' | 'way'; x?: number; z?: number; r?: number;
                  size?: [number, number]; from?: number; to?: number; hopeDrain?: number; [k: string]: unknown }>;
@@ -482,160 +501,358 @@ export interface LevelData {
   water?: Array<{ kind: 'water' | 'mud'; shape: 'circle' | 'box'; x: number; z: number; r?: number; size?: [number, number]; level: number }>;
   ambience: string; music: string;
 }
+export const DEFAULT_WAY_WIDTH = 3;
+export function parseLevel(raw: unknown): LevelData;   // readable errors; missing optional lists → [], ambience/music → ''
+// Section aliases: StampType, TerrainStamp, DetourDef, LevelZone, ScatterRule, LevelLandmark, LevelNpc, LevelTrigger,
+// LevelWaystone, LevelPromise, LevelWater.
 ```
+- `at` triples on landmarks, NPCs, waystones and promises are `[x, lift, z]`: y is a height above the terrain,
+  which the builder samples. Water `level` is an absolute world height. `dir` (stamps) is radians, 0 = +X.
+- Optional fields read through the zones' index signature: `tint` (hex or palette key) and `tintAmount`, `rotY` on
+  box zones, `path` on `'way'` band zones (default the main Way), `at` instead of x/z. Landmarks: `params.clear`
+  (scatter keep-out radius), and for runs along a path `offset`, `both`, `spacing`, `align`, `lift`.
 
 ### Terrain — `src/gen/Terrain.ts`, The Way — `src/gen/Way.ts`, Scatter — `src/gen/Scatter.ts`
 ```ts
+export type WayKind = 'way' | 'detour';
+export interface ClosestResult { t: number; dist: number; point: THREE.Vector3 }
 export class Way {
-  constructor(points: Vec3[], width: number, kind: 'way' | 'detour', id: string);
-  readonly length: number;
-  sample(t: number, out?: THREE.Vector3): THREE.Vector3;               // t in [0,1], arc-length parameterised
-  tangent(t: number, out?: THREE.Vector3): THREE.Vector3;
-  closest(x: number, z: number): { t: number; dist: number; point: THREE.Vector3 };  // fast (precomputed polyline)
-  buildMesh(terrain: Terrain, pal: Palette, rng: Rng): THREE.Object3D;  // ribbon + instanced edge stones
+  constructor(points: Vec3[], width: number, kind: WayKind, id: string);
+  readonly id: string; readonly kind: WayKind; readonly width: number; readonly halfWidth: number;
+  readonly points: readonly Vec3[]; readonly length: number;            // horizontal arc length (m)
+  readonly minX: number; readonly maxX: number; readonly minZ: number; readonly maxZ: number;
+  sample(t: number, out?: THREE.Vector3): THREE.Vector3;               // t in [0,1], arc-length, O(1)
+  tangent(t: number, out?: THREE.Vector3): THREE.Vector3;              // includes the ground slope once draped
+  closest(x: number, z: number, out?: ClosestResult): ClosestResult;  // 8 m bucket grid, ~1.5 µs
+  closestWithin(x: number, z: number, maxDist: number, out?: ClosestResult): boolean;
+  distanceWithin(x: number, z: number, maxDist: number): number;      // Infinity when further
+  drape(heightAt: (x: number, z: number) => number): void;            // Terrain.build calls it: sample().y = ground
+  buildMesh(terrain: Terrain, pal: Palette, rng: Rng): THREE.Object3D;  // ribbon (mat 'path') + instanced edge stones
+  dispose(): void;                                                     // frees what buildMesh made (the Way owns it)
 }
 export class Terrain {
   static build(level: LevelData, ways: Way[], pal: Palette, y: Yielder, onProgress?: (p: number) => void): Promise<Terrain>;
-  heightAt(x: number, z: number): number;                              // bilinear on the grid
+  heightAt(x: number, z: number): number;      // exact height of the DRAWN triangles (not bilinear), so feet sit on facets
   normalAt(x: number, z: number, out?: THREE.Vector3): THREE.Vector3;
-  slopeAt(x: number, z: number): number;                               // degrees
-  readonly mesh: THREE.Mesh;  readonly size: number;
-  dispose(): void;
+  slopeAt(x: number, z: number): number;       // degrees
+  contains(x: number, z: number, margin?: number): boolean;
+  readonly mesh: THREE.Mesh; readonly size: number; readonly segments: number; readonly cellSize: number;
+  readonly minHeight: number; readonly maxHeight: number; readonly ways: readonly Way[];  // main Way first
+  readonly heights: Float32Array;              // rows by z then x
+  readonly wayMask: Float32Array;              // per-vertex weight of the flattened band
+  dispose(): void;                             // geometry only (shared material; Ways are disposed by their builder)
 }
+export interface ScatterResult { object: THREE.Object3D; colliders: Collider[]; dispose(): void }  // scatter-meshes.ts
 export function scatter(level: LevelData, terrain: Terrain, ways: Way[], pal: Palette, rng: Rng, quality: QualityPreset,
-                        y: Yielder): Promise<{ object: THREE.Object3D; colliders: Collider[]; dispose(): void }>;
+                        y: Yielder): Promise<ScatterResult>;
 ```
-- Grid default 128×128 for 300 m (≈2.3 m cells); flat-shaded, vertex-coloured by height/slope/zone; the Way is
-  flattened (half-width + 2 m smooth falloff) and painted warm (`ground.path`); detours painted `ground.detour`.
-- Scatter types at least: trees (`tree_cone`, `tree_round`, `tree_dead`, `tree_fruit`), `bush`, `reeds`,
-  `grass` (instanced tufts), `rock`, `flower`. One `InstancedMesh` per type, per-instance colour jitter, distance
-  culling for small types (grass/flowers) by chunk, keep-clear distance from the Way.
+- Grid: round(128 × size / 300) cells per side, clamped 32-256 (≈2.3 m cells), alternating diagonals. Progress:
+  heights 0-0.45, flattening 0.45-0.65, mesh 0.65-1. Helpers live in `src/gen/terrain/` (spline, heightfield,
+  terrainMesh, wayMesh, zones, scatterRules).
+- Flattening: flat for half-width + 0.6 m, then a 2.2 m smooth falloff, target heights smoothed along the path; the
+  main Way first, detours never change its band; fades over 7 m past each end. Ribbons are lifted 3.5 cm (detours
+  2.5 cm) on the polygon-offset `path` material; detour ribbons are clipped under the main Way.
+- Scatter: per-type defaults (min distance, slope, keep-clear from the ribbon edge, scale, sink, tilt, collider kind,
+  water rule, instance cap), dart throwing with spacing hashes. Circle zones are sampled in their disc, 'way' zones
+  in their band, box zones in their own (turned) frame, so every attempt lands inside the zone. Meshes
+  (`scatter-meshes.ts`): every type is chunked into `THREE.LOD`s with chunk-sized bounds, so the camera and the
+  sun's shadow frustum cull them: grass and flowers in ~75 m cells, hidden beyond clamp(0.35 × drawDistance, 35,
+  90) m + the chunk radius and scaled by `quality.grassDensity` at build time; trees, bushes, rocks and reeds in
+  ~100 m cells (a type whose placements fit in one cell, e.g. a wood or a bog, stays one chunk), switching to the
+  prop's `lod: 1` build beyond clamp(0.3 × drawDistance, 30, 90) m + half the chunk radius (GDD 2.15 "simple LOD
+  for distant trees") and hidden only past the palette's fog far. Colliders are world space: trees use the
+  prop's cylinders, rocks a sphere.
 
 ### Props — `src/gen/props/*.ts`, registry `src/gen/props/index.ts`
 ```ts
-export const PROPS: Record<string, PropBuilder>;   // 'tree_cone','tree_round','tree_dead','tree_fruit','bush','reeds',
-// 'grass','rock','fence','wall','stile','house_a','house_b','house_c','gate','waystone','arbour','cross','tomb',
-// 'stall','cage','well','lamp','candle','flag','bridge_bank','lily','flower','sign'
-export function buildProp(type: string, rng: Rng, pal: Palette, params?: Record<string, number | string | boolean>): PropResult;
+export const PROPS: Record<string, PropBuilder>;   // { ...NATURE_PROPS, ...BUILT_PROPS }
+// NATURE_PROPS (props/nature.ts): tree_cone, tree_round, tree_dead, tree_fruit, fruit_tree_orchard, bush, reeds, grass,
+//   rock, flower, lily, mushroom, log, stump, vine_row
+// BUILT_PROPS (props/built.ts): fence, wall, stile, bridge_plank, gate, wicket_gate, house_a, house_b, house_c,
+//   waystone, arbour, cross, tomb, stall, cage, flag, sign, lamp, candle, well, bench, barrel, crate, cart,
+//   palace_tower, castle_tower, mountain_peak
+export function buildProp(type: string, rng: Rng, pal: Palette, params?: PropParams): PropResult;  // throws on unknown type
+export function transformCollider(c: Collider, at: Vec3, rotY: number, scale: number): Collider;
+// Simple merge helpers (one lit + one glow mesh): placeProps(items: PropItem[], rng, pal): MergedProps and
+// placePropsAsync(items, rng, pal, y: Yielder, onProgress?). Chapters use src/world/placeProps.ts (below).
 ```
-Static landmark props in an area are merged into one mesh per material (`placeProps()` in `src/world/LevelLoader.ts`).
+- Every builder returns one merged, non-indexed geometry (position, normal, color) at the origin, standing on y = 0,
+  facing +Z; walls, fences, logs and vine rows run along X. Trunks and bases sink 5-14 cm so nothing floats.
+- Common params: `variant` (0..3), `height`, `colour`/`color`, `lod` (0|1, nature props; same silhouette, ~half the
+  triangles). Kit helpers: `props/nature-kit.ts`, `props/built-kit.ts`, `props/built-house-kit.ts`.
+- **Collider convention:** `center` is the centre of the volume for every kind; a cylinder spans
+  `center.y ± height / 2`.
+- Budgets (lit triangles): grass < 40, flower < 60, rock < 80, bush < 150, trees < 300, walls < 200 per segment,
+  houses ~1000-1200 (+60-110 glow), other built props < 600 outside their wall segments.
 
 ### Sky, water, particles
 ```ts
 // src/gen/Sky.ts
 export class Sky { constructor(pal: Palette, q: QualityPreset); readonly object: THREE.Object3D;
-  update(dt: number, camera: THREE.Camera): void; dispose(): void; }       // gradient dome shader + sun disc + instanced puffy clouds; follows camera
-export function applyAtmosphere(scene: THREE.Scene, pal: Palette): { hemi: THREE.HemisphereLight; sun: THREE.DirectionalLight; dispose(): void };
+  update(dt: number, camera: THREE.Camera): void; dispose(): void; }       // dome 1 call + instanced clouds 1 call
+export interface Atmosphere { hemi: THREE.HemisphereLight; sun: THREE.DirectionalLight;
+  focus(p: THREE.Vector3): void; dispose(): void; }                        // focus: shadow area follows p (texel-snapped)
+export function applyAtmosphere(scene: THREE.Scene, pal: Palette): Atmosphere;
 // src/gen/Water.ts
-export function createWater(o: { kind: 'water' | 'mud'; pal: Palette; shape: 'circle' | 'box'; r?: number; size?: [number, number] }):
-  { mesh: THREE.Mesh; update(t: number): void; dispose(): void };          // vertex waves, faceted normals, depth colour; mud bubbles instanced
+export interface WaterOptions { kind: 'water' | 'mud'; pal: Palette; shape: 'circle' | 'box'; r?: number; size?: [number, number] }
+export interface WaterBody { mesh: THREE.Mesh; update(t: number): void; dispose(): void }   // t = absolute seconds
+export function createWater(o: WaterOptions): WaterBody;   // flat in local XZ at y = 0: caller sets mesh.position
 // src/gen/Particles.ts
 export type ParticlePreset = 'dust' | 'sparkle' | 'smoke' | 'ember' | 'rain' | 'zzz' | 'fire' | 'motes' | 'stars' | 'splash';
-export class Particles { constructor(max: number); readonly object: THREE.Object3D;
-  emit(preset: ParticlePreset, pos: THREE.Vector3, count?: number, opts?: { dir?: THREE.Vector3; color?: string; spread?: number }): void;
-  update(dt: number, camera: THREE.Camera): void; dispose(): void; }        // ONE InstancedMesh (camera-facing quads), 1 draw call
+export interface EmitOptions { dir?: THREE.Vector3; color?: string; spread?: number }
+export class Particles { constructor(max: number, seed?: number); readonly object: THREE.InstancedMesh; readonly max: number;
+  emit(preset: ParticlePreset, pos: THREE.Vector3, count?: number, opts?: EmitOptions): void;
+  update(dt: number, camera: THREE.Camera): void; setLight(pal: Palette): void; clear(): void; dispose(): void; }
+export class ParticleEmitter { constructor(p: Particles, preset: ParticlePreset, ratePerSec: number, opts?: EmitOptions);
+  update(dt: number, pos: THREE.Vector3): void; }                          // chimneys, fires, a rain field round the camera
 ```
+- The sky dome is redrawn around the rendering camera in its shader (no lag, never clipped), not tone mapped, and
+  its eye-level band is the fog colour so fogged ground meets the sky without a seam. Clouds: 7/12/18 by quality.
+- The sun is a child of `sun.target`; its shadow area is a 60 m square. `castShadow` is always on; the renderer's
+  shadow setting decides whether shadows draw. Water/mud read the palette's light once, at creation.
+- Particles: one InstancedMesh, alpha and additive mixed in one draw call (premultiplied alpha), world-space
+  positions (add `object` at the scene root), back-to-front sorted, no per-frame allocation. Slots come from a
+  free-slot stack; only a full pool recycles a live particle (the one furthest through its life).
+- Shader/preset helpers: `src/gen/fx/` (particlePresets, particleShaders, waterGrid).
 
 ### Characters — `src/gen/CharacterFactory.ts`, `src/gen/rig.ts`, `src/gen/face.ts`, `content/characters/recipes.json`
 
 **One draw call per character**, including the face: eyes, brows and every mouth shape are part of the same
 SkinnedMesh, each bound rigidly to its own face bone. Blink = scale the eye bones on Y. Brows = rotate/offset the
 brow bones. Mouth shapes swap by scaling the active mouth bone to 1 and the others to 0. (Logged as a decision:
-the GDD's "separate tiny meshes" goal — swappable expressions — is met with zero extra draw calls.)
+the GDD's "separate tiny meshes" goal — swappable expressions — is met with zero extra draw calls.) Characters with
+glowing bits (candle flame, lantern glass, forehead dot, beast belly) add ONE tiny `glowMesh` (mat 'glow') on the
+same skeleton.
 
-Bone names (`rig.ts`), rest pose = arms hanging down (A-pose ~8°), character faces +Z, feet on y = 0:
+Bone names (`rig.ts`), rest pose = arms hanging down (A-pose ~8°, in bone positions: every rest ROTATION is
+identity), character faces +Z, feet on y = 0:
 ```ts
 export const BODY_BONES = ['root','hips','spine','chest','neck','head','upperArmL','lowerArmL','handL','upperArmR',
   'lowerArmR','handR','thighL','shinL','footL','thighR','shinR','footR','propL','propR','back','sack','hat'] as const;
 export const FACE_BONES = ['eyeL','eyeR','browL','browR','mouth_neutral','mouth_smile','mouth_open','mouth_frown',
   'mouth_o','mouth_flat','mouth_wavy','mouth_grin'] as const;
-export const BEAST_BONES = ['wingL','wingR','tail1','tail2','tail3','jaw'] as const;   // optional per recipe
+export const BEAST_BONES = ['wingL','wingR','tail1','tail2','tail3','jaw'] as const;   // body 'beast' only
+export const ROPES_BONE = 'ropes';   // internal, child of chest, scaled with the sack (shoulder ropes); never animated
 export type BoneName = typeof BODY_BONES[number] | typeof FACE_BONES[number] | typeof BEAST_BONES[number];
+// Also: bodyFor(recipe) and Body (rig-bodies.ts), layoutRig, buildRig, faceAnchors, headSurfaceZ.
 ```
+Types live in `src/gen/char-types.ts` and are re-exported by `CharacterFactory.ts` (with `EXPRESSIONS`, `MOUTHS`,
+`normaliseRecipe`):
 ```ts
 export type Expression = 'neutral' | 'happy' | 'sad' | 'scared' | 'surprised' | 'angry' | 'sleepy' | 'determined';
+export type MouthShape = 'neutral' | 'smile' | 'open' | 'frown' | 'o' | 'flat' | 'wavy' | 'grin';
 export interface CharacterRecipe {
   id: string; name?: string;
   body: 'adult' | 'adultF' | 'elder' | 'child' | 'youngAdult' | 'stocky' | 'thin' | 'big' | 'giant' | 'giantess' | 'tall' | 'beast';
-  scale?: number;                                        // giants 3, Shining Ones 1.3
-  build?: { height?: number; girth?: number; head?: number; legs?: number; arms?: number; belly?: number }; // multipliers ~0.7-1.4
+  scale?: number;                                        // default: giants 3, beast 1.6, else 1 (Shining Ones set 1.3)
+  build?: { height?: number; girth?: number; head?: number; legs?: number; arms?: number; belly?: number }; // BUILD_LIMITS 0.6-1.6
   skin: string;                                          // one of the GDD 2.11 skin tones
-  colors: { top: string; bottom: string; feet?: string; accent?: string; hair?: string; hat?: string; trim?: string; [k: string]: string | undefined };
+  colors: { top: string; bottom: string; feet?: string; accent?: string; hair?: string; hat?: string; trim?: string;
+            [k: string]: string | undefined };           // also read: belt, sack, sackRope, glow, plume, shield, shieldRim,
+            // emblemSun, emblemPath, sword, swordHilt, apron, shirt, beard, brows, cape, bag, buttons, chains, wings,
+            // horns, lantern, candle and one per prop type (staff, toy, cane, keys, book, letter, gavel, club, crook, pole)
   parts: { top?: 'tunic' | 'robe' | 'dress' | 'coat' | 'vest' | 'shirt' | 'judge';
            bottom?: 'trousers' | 'robe' | 'skirt';
            hair?: 'none' | 'short' | 'curls' | 'bun' | 'long' | 'tuft' | 'bald';
            beard?: 'none' | 'short' | 'full' | 'long';
            hat?: 'none' | 'cap' | 'hood' | 'tall' | 'wig' | 'scarf' | 'helmet' | 'droopy' | 'mirrorMask';
-           extras?: string[] };                          // 'apron','ropeBelt','cape','buttons','plume','glowDot','trim','sleeves','chains'
+           extras?: string[] };   // 'apron','ropeBelt','belt','cape','buttons','plume','glowDot','trim','sleeves','chains','bag','blush'
   props?: Array<{ type: 'staff' | 'candle' | 'lantern' | 'keys' | 'book' | 'gavel' | 'crook' | 'sword' | 'shield' | 'cane' | 'letter' | 'toy' | 'club' | 'pole';
                   bone: 'propL' | 'propR' | 'back' }>;
-  burden?: boolean;                                      // adds the sack on the 'sack' bone
-  glow?: boolean;                                        // Shining Ones: emissive white + sparkle hook
-  expression?: Expression;                               // default face
+  burden?: boolean; glow?: boolean; expression?: Expression;
+  face?: { brows?: number };                             // brow size × (FACE_LIMITS 0.6-1.8; Obstinate's big frown brows)
+  pose?: 'armsCrossed' | 'handsOnHeart' | 'pointFar';    // GDD 2.11 design-sheet signature, held by the idle clip
   voice: { pitch: number; speed: number; wave: 'sine' | 'triangle' | 'square' | 'sawtooth'; vowel: number }; // Phase 3 babble
-  style?: { bounce?: number; stiffness?: number; swagger?: number; lean?: number };                       // walk personality
+  style?: { bounce?: number; stiffness?: number; swagger?: number; lean?: number };  // 0..2, 0..1, 0..1, -0.6..0.6
 }
 export interface Character {
   readonly recipe: CharacterRecipe;
   readonly root: THREE.Object3D;                         // position/rotate this
-  readonly mesh: THREE.SkinnedMesh;
+  readonly mesh: THREE.SkinnedMesh;                      // 1 draw call (fixed bounding sphere: no CPU skinning to cull)
+  readonly glowMesh: THREE.SkinnedMesh | null;           // +1 tiny call only for glowing bits; hide with mesh when culling
+  readonly skeleton: THREE.Skeleton;
   readonly bones: Record<string, THREE.Bone>;
   readonly animator: Animator;
-  readonly height: number;
+  readonly height: number;                               // top of head with hair, at rest
+  readonly expression: Expression; readonly burdenSize: number; readonly triangles: number;
   setExpression(e: Expression): void;
-  setTalking(on: boolean): void;                         // mouth flap + head bob layer
-  setBurdenSize(s: number): void;                        // 0 = none, 1 = normal, up to 1.6 (sack bone scale)
-  attach(obj: THREE.Object3D, bone: 'propL' | 'propR' | 'back' | 'head'): void;   // runtime props (extra draw call)
-  update(dt: number): void;                              // animator, blink, secondary motion (sack spring, hat bounce)
-  dispose(): void;                                       // geometry (materials are shared)
+  setMouth(shape: MouthShape | null): void;              // override; null = expression's mouth (joy jumps grin by themselves)
+  setEyesClosed(closed: boolean): void;                  // scripts; nap and pray close the eyes by themselves
+  setTalking(on: boolean): void;                         // mouth flap ~8/s + head nod (call animator.overlay('talk') for gestures)
+  setBurdenSize(s: number): void;                        // 0 hides sack and ropes, 1 normal, up to 1.6; sprung ("boing")
+  attach(obj: THREE.Object3D, bone: 'propL' | 'propR' | 'back' | 'head'): void;   // caller owns obj (extra draw call)
+  onSparkle: ((worldPos: THREE.Vector3) => void) | null; // glow recipes, every 0.1-0.3 s (reused vector: copy it)
+  update(dt: number): void;                              // animator, face (blend, blink, flap; follows nap/pray/joyJump), springs, talk nod
+  dispose(): void;                                       // geometry + bone texture (materials are shared)
 }
 export class CharacterFactory {
-  static recipes(): Record<string, CharacterRecipe>;      // from content/characters/recipes.json
-  static build(recipe: CharacterRecipe | string, rng?: Rng): Character;
+  static recipes(): Record<string, CharacterRecipe>;     // normalised copy of recipes.json
+  static build(recipe: CharacterRecipe | string, rng?: Rng): Character;  // unknown id: warns once, builds a villager
 }
 ```
+The recipe loader keeps build multipliers inside `BUILD_LIMITS` (char-types.ts), the same range `bodyFor` builds
+with and the Lab's sliders offer, so a stored value is always the one used. Brows lift at most `BROW_LIFT_MAX`
+(face.ts, 0.09 head radii) and hero hair keeps its fringe above `FRINGE.hero` (char-head.ts, 0.5): raised brows
+stay on skin. Hair shells, the helmet dome and its neck guard close their open edges with a skirt into the skull
+(`skirt`, char-parts.ts), so no gap with sky ever shows between a shell and the head.
 
-### Procedural animation — `src/gen/anim/`
+**Blob shadows** — `src/gen/BlobShadows.ts` (GDD 2.11: "cheap blob shadows under every character on all
+qualities"): one InstancedMesh (mat 'decal') of soft discs per scene = 1 draw call for the whole cast and every
+crowd citizen, with or without the shadow map.
 ```ts
-// src/gen/anim/types.ts
+export class BlobShadows { constructor(max: number, ground?: { heightAt(x, z): number; normalAt(x, z, out?): Vector3 } | null);
+  readonly mesh: THREE.InstancedMesh; readonly max: number;
+  follow(c: Character, radius?: number): void; unfollow(c: Character): void;   // radius default 0.27 × height
+  addCrowd(crowd: CrowdMesh, radius?: number): void; removeCrowd(crowd: CrowdMesh): void;   // static crowds
+  update(): void;   // per rendered frame after characters moved: under the hips, on the ground, tilted to it
+  dispose(): void; }
+```
+A character hidden (root or mesh, e.g. World distance culling) loses its blob; a crowd's blobs hide with it. With a
+ground sampler (a chapter's Terrain) blobs lie on the terrain; up to 1.5 m above it (a hop) the blob stays on the
+ground and shrinks; higher, the character stands on something and the blob goes to its feet.
+
+Builder files: `char-build.ts` (assembly), `char-parts.ts` (part kit, baking), `char-body.ts` + `char-limbs.ts`
+(torso, garments, arms, legs, extras), `char-head.ts` + `char-hats.ts`, `char-props.ts` + `char-prop-shapes.ts`
+(hand props, the Burden), `char-motion.ts` (springs), `char-recipes.ts` (loader), `rig-bodies.ts` (proportions).
+
+### Procedural animation — `src/gen/anim/` (import from `src/gen/anim/index.ts`)
+```ts
 export interface BonePose { x: number; y: number; z: number }               // Euler offset (rad) from rest, order 'YXZ'
-export interface Pose { bones: Map<BoneName, BonePose>; hips: { x: number; y: number; z: number } } // hips translation offset (m)
-export interface AnimParams { speed: number; burden: number; time: number; style: Required<NonNullable<CharacterRecipe['style']>>; height: number }
+export interface Pose { bones: Map<BoneName, BonePose>; hips: { x: number; y: number; z: number }; squash?: number }
+export interface AnimParams { speed: number; burden: number; time: number; style: AnimStyle; height: number;
+  rootMotion?: boolean;   // false: clips drop their jump arcs (the controller owns height)
+  pose?: 'armsCrossed' | 'handsOnHeart' | 'pointFar' | null;   // recipe signature held by idle (clips-pose.ts)
+  rig?: RigInfo }         // measured from the skeleton by the Animator
 export interface ProcClip {
-  name: AnimName; loop: boolean; duration: number;                          // loop cycle length or one-shot length (s)
-  layer: 'full' | 'upper';                                                  // 'upper' overlays arms/chest/head only
-  sample(t: number, p: AnimParams, out: Pose): void;                        // write offsets; t = seconds into the clip
+  name: AnimName; loop: boolean; duration: number; layer: 'full' | 'upper';
+  sample(t: number, p: AnimParams, out: Pose): void;
+  rate?(p: AnimParams): number;          // integrated playback rate (stride rate from speed; clips-gait.ts)
+  gait?: number; steps?: readonly number[]; cues?: readonly number[];   // in-step crossfades, foot plants, cues
 }
 export type AnimName = 'idle' | 'walk' | 'run' | 'burdenedWalk' | 'hop' | 'joyJump' | 'talk' | 'wave' | 'point' | 'sit'
   | 'nap' | 'pray' | 'read' | 'trip' | 'coverEarsRun' | 'climb' | 'push' | 'kneel' | 'knock' | 'reach' | 'fall' | 'land';
-// src/gen/anim/Animator.ts
+export interface PlayOptions { fade?: number; speed?: number; restart?: boolean }
 export class Animator {
-  constructor(bones: Record<string, THREE.Bone>, params: AnimParams);
-  play(name: AnimName, opts?: { fade?: number; speed?: number; restart?: boolean }): void;   // full-body crossfade
-  overlay(name: AnimName | null, opts?: { fade?: number }): void;                          // upper-body layer
-  readonly current: AnimName; readonly params: AnimParams;
-  onEnd?: (name: AnimName) => void;                                                          // one-shots
-  update(dt: number): void;                                                                  // blend → write bone quaternions
+  constructor(bones: Record<string, THREE.Bone>, params: AnimParams);       // starts on idle
+  play(name: AnimName, opts?: PlayOptions): void;   // full-body crossfade; an upper clip is routed to overlay()
+  overlay(name: AnimName | null, opts?: PlayOptions): void;                 // chest, neck, head, arms
+  update(dt: number): void; rest(): void;
+  readonly current: AnimName; readonly overlayName: AnimName | null; readonly params: AnimParams;
+  readonly phase: number; readonly gaitPhase: number; readonly squash: number;
+  steps: number; cues: number; lastCue: AnimName;  // poll counters: foot plants, clip cues (huff, knock, snore...)
+  onEnd?: (name: AnimName) => void;                 // one-shots on either layer; then falls back to the last loop
 }
-export const CLIPS: Record<AnimName, ProcClip>;   // src/gen/anim/index.ts
+export const CLIPS: Record<AnimName, ProcClip>;     // defined in clips-all.ts
+export const ANIM_NAMES: readonly AnimName[]; export const NOMINAL_SPEED: Partial<Record<AnimName, number>>;
+export function isUpperClip(name: AnimName): boolean;
+export const DEFAULT_STYLE: AnimStyle;              // bounce 0.4, stiffness 0.4, swagger 0.1, lean 0
+// Also: ANIM_BONES, UPPER_BONES, measureRig, standardRig, types RigInfo, ArmRest, AnimStyle.
 ```
-Squash-and-stretch on jump/land is done on the `hips`/`root` scale. Secondary motion (sack spring, hat bounce) lives
-in the Character, driven by root acceleration.
+Upper clips: talk, wave, point, read, knock, reach. Full-body one-shots: hop, joyJump, land, trip, fall.
+Planted feet (`clips-gait.ts`): walk, run, burdenedWalk, coverEarsRun and push solve stride cadence and thigh swing
+together from the speed (a preferred cadence per leg length per second, the swing that makes the planted foot
+travel as far as the body, the cadence solved back within limits scaled by leg length), with a linear stance
+sweep (walks) or flights with the legs split (runs), and `steadyLegs()` countering hip yaw, roll and sway, so feet
+do not skate at the GDD 2.7.1 speeds (walk ~3.2 Hz, run ~4.2 Hz, burdened ~2.6 Hz for Christian). The burdened
+walk loop is 4 strides (8 steps, one huff).
+Squash-and-stretch is on the `hips` scale, about the feet (the root is never touched). Secondary motion (sack spring,
+hat bounce, burden "boing") lives in the Character (`char-motion.ts`), driven by root and hips acceleration.
 
-### Crowds — `src/gen/CrowdMesh.ts`
-`InstancedMesh` per body type built from a recipe (static, no skeleton), per-instance colour applied only to
-clothing (a `tint` vertex attribute masks skin/face), vertex-shader bob/sway driven by a `uTime` uniform and a
-per-instance phase. 1 draw call per body type; 100 citizens < 10 draw calls.
+### Crowds — `src/gen/CrowdMesh.ts`, `src/gen/CrowdShadow.ts`
+`InstancedMesh` per body type built from a recipe (static, no skeleton, lower LOD), per-instance colour applied only
+to the top garment (a `tint` vertex attribute masks skin, face, hair and the rest), vertex-shader sway/nod/breath
+driven by `uTime` and a per-instance `crowdPhase`. CrowdMeshes do not cast shadows: one `CrowdShadow` draws every
+citizen's shadow (a scaled capsule-and-head proxy) into one light's shadow map only. 100 citizens of 8 body types
+= 8 calls + 1 shadow call. Their blob shadows join the scene's BlobShadows (`addCrowd`), whose single call the
+cast already pays for.
 ```ts
-export class CrowdMesh { constructor(recipe: CharacterRecipe, max: number); readonly mesh: THREE.InstancedMesh;
-  set(i: number, pos: THREE.Vector3, rotY: number, tint: string, phase?: number): void; count: number;
-  update(t: number): void; dispose(): void; }
+export class CrowdMesh { constructor(recipe: CharacterRecipe | string, max: number); readonly mesh: THREE.InstancedMesh;
+  readonly max: number; readonly height: number; readonly width: number;   // citizen size, for the shadow proxy
+  set(i: number, pos: THREE.Vector3, rotY: number, tint: string, phase?: number): void;  // raises count to i+1
+  count: number; update(t: number): void; dispose(): void; }
+export class CrowdShadow { constructor(max: number, light: THREE.DirectionalLight | THREE.SpotLight);
+  readonly mesh: THREE.InstancedMesh; count: number;
+  set(i: number, pos: THREE.Vector3, rotY: number, height: number, width: number): void; dispose(): void; }
 ```
 
 ### Lab — `src/gen/Lab.ts` (`?lab=1`)
 Turntable scene; list of every recipe, every animation and every expression; sliders for colours and build
 multipliers; "Copy recipe JSON"; lineup view (all characters side by side at gameplay camera distance);
 a "crowd of 100" toggle; readouts for draw calls/triangles. Dev tool: plain English UI is fine.
+```ts
+export class Lab implements System {
+  constructor(engine: Engine); start(): Promise<void>; dispose(): void;
+  inspect(): LabInternals | null;          // tests / console (lab-probe.ts)
+}
+// src/gen/lab-probe.ts — window.__pilgrim.lab in ?lab=1:
+export interface LabProbe {
+  ready(): boolean; recipeIds(): string[]; clipNames(): AnimName[]; expressions(): Expression[];
+  select(id: string): void; view(v: 'turntable' | 'lineup'): void; shot(s: 'close' | 'gameplay' | 'wide'): void;
+  crowd(on: boolean): void; play(name: AnimName): void; expression(e: Expression): void; talking(on: boolean): void;
+  burden(size: number): void; setRepeat(on: boolean): void; turn(angle: number): void; lineupBuilt(): number;
+  current(): { id: string; clip: AnimName; overlay: AnimName | null; height: number } | null; poseFinite(): boolean;
+  measureRecipe(id: string): RecipeStats;  // offscreen render: draw calls (main mesh / with glow), triangles, build ms
+  exercise(id: string): ExerciseResult;    // every clip, expression (mouth check), blinks in 12 s, talking, Burden,
+                                           // eyes shut in nap/pray, planted-foot slide per gait (lab-footslip.ts)
+  measureCrowd(): CrowdStats | null;       // colour calls and the measured cost with the shadow pass
+}
+```
+Files: `lab-stage` (scene, plinth, meadow), `lab-camera` (OrbitControls + eased shots; `GAMEPLAY_CAMERA` 4.5 m back,
+2.2 m up), `lab-cast` (characters + anim state), `lab-lineup` (lineup, crowd), `lab-panel` + `lab-style` (DOM),
+`lab-recipe` (editing helpers), `lab-readouts`, `lab-probe`, `lab-footslip`. The stage owns a BlobShadows that the
+turntable character, the lineup and the crowd join.
+
+## World assembly (Phase 1) — `src/world/`
+
+```ts
+// src/world/LevelLoader.ts
+export function loadLevel(id: string): Promise<LevelData>;     // 'test', 'epilogue', 'chNN' or '1'..'13'; lazy chunk per level
+export function buildWorld(level: LevelData, quality: QualityPreset, onProgress: (p: number) => void): Promise<World>;
+export function levelFileId(id: string): string; export function levelIds(): string[];
+export { placeProps } from './placeProps';   // + types Ground, PathLike, PlacedProps, PropPlacement
+// src/world/World.ts
+export interface World {
+  scene: THREE.Scene; level: LevelData; palette: Palette; terrain: Terrain; ways: { main: Way; detours: Way[] };
+  colliders: Collider[]; particles: Particles; npcs: Map<string, Character>;
+  update(dt: number, camera: THREE.Camera): void; dispose(): void; buildMs: number;   // wall clock
+  readonly buildWorkMs: number; readonly sky: Sky; readonly sun: THREE.DirectionalLight; readonly hemi: THREE.HemisphereLight;
+  readonly promises: PromiseMarkers; setShadowFocus(p: THREE.Vector3): void; wayById(id: string): Way | null;
+  readonly blobs: BlobShadows;   // every NPC followed; the player / walkers / crowds added later call follow / addCrowd
+}
+// Also WorldImpl, WorldParts, disposeSceneGraph, runDisposers, isSharedMaterial ('shared:' name prefix), clearScene.
+// src/world/placeProps.ts
+export function placeProps(items: PropPlacement[], pal: Palette, ground: { heightAt(x: number, z: number): number },
+  y: Yielder, opts?: { name?: string }): Promise<{ object: THREE.Group; colliders: Collider[]; placed: number; dispose(): void }>;
+// PropPlacement = { kind: 'point', type, rng, x, z, rotY, lift?, scale?, params? }
+//              | { kind: 'path', type, rng, path, from, to, offset?, both?, spacing?, align?: 'along' | 'face', rotY?, lift?, scale?, params? }
+// src/world/PromiseMarkers.ts — one InstancedMesh (mat 'glow') of floating scrolls
+export class PromiseMarkers { constructor(entries: { id: string; pos: THREE.Vector3 }[], pal: Palette);
+  readonly mesh: THREE.InstancedMesh; readonly ids: readonly string[]; readonly count: number;
+  setCollected(id: string, on: boolean): void; isCollected(id: string): boolean; positionOf(id: string, out: THREE.Vector3): THREE.Vector3 | null;
+  update(time: number, dt: number, camPos: THREE.Vector3 | null, particles: Particles | null): void; dispose(): void; }
+// src/ui/Loading.ts — GDD 2.14 loading screen (en.json keys)
+export class Loading { constructor(parent?: HTMLElement); readonly visible: boolean;
+  show(info: { title: string; kicker?: string; seed?: number }): void; setProgress(p: number): void;
+  showError(text: string): void; hide(): Promise<void>; dispose(): void; }
+export function chapterLoadingInfo(id: string): LoadingInfo;
+// src/world/TestWorld.ts (?chapter=test) + TestCamera.ts (follow / orbit / overview, keys 1-3)
+export class TestWorld { constructor(engine: Engine); start(): Promise<void>; dispose(): void;
+  readonly camera: THREE.PerspectiveCamera; readonly current: World | null; readonly ready: boolean;
+  readonly progressLog: number[];          // every loading-bar value of the last build (tests)
+  readonly cameraMode: TestCameraMode; setCameraMode(m: TestCameraMode): void; rebuild(): Promise<void>; }
+```
+- `buildWorld` order: atmosphere + sky, Ways, terrain, ribbons, scatter, landmarks + waystones (merged per 160 m
+  area: ≤ 4 lit meshes + 1 glow mesh on a 300 m map), water, particles (seeded from the level), NPCs (+ their blob
+  shadows, BlobShadows on the terrain, room for 32 more), promises.
+  One 8 ms Yielder; progress weights scene 3, ways 1, terrain 38, paths 6, scatter 24, landmarks 12, water 3,
+  particles 1, npcs 9, promises 3; progress only moves forward. A failed build frees what it made.
+- `World.dispose()` runs module disposers newest first, then sweeps the scene graph (geometry, non-shared materials
+  and textures, instance buffers, bone textures, shadow maps). Shared `shared:*` materials are never freed.
+- Shaders are precompiled behind the loading screen with `precompile()` (`src/core/compile.ts`, also used by the
+  quality benchmark): `compileAsync` where the GPU has KHR_parallel_shader_compile, `compile()` otherwise, so
+  software GL (SwiftShader, CI) logs no three.js warning.
+- NPCs beyond `quality.drawDistance` are hidden (mesh + glowMesh) and not animated. Landmarks/waystones without
+  `rotY` face the nearest Way; NPCs without `at` wait near the Way's start, alternating sides.
 
 ## Audio (Phase 3, built early) — `src/audio/`, `content/music/`
 
@@ -669,7 +886,7 @@ AudioBuffers. Music: in-house look-ahead step sequencer playing `SongDef`s; song
 (never transcribe any existing song, hymn or film score). `?music=<songId>` opens the music test page
 (`src/audio/MusicTestPage.ts`).
 
-## Tools and tests (Phase 0)
+## Tools and tests (Phase 0, Phase 1)
 
 - `tools/check-assets.mjs` — GDD 2.3. Fails (exit 1, readable message) if:
   - `public/` contains any file that is not text-based (`.svg`, `.json`, `.webmanifest`, `.txt`, `.js`, `.css`, `.html`) **and**
@@ -699,9 +916,29 @@ AudioBuffers. Music: in-house look-ahead step sequencer playing `SongDef`s; song
   Headless, with `--use-angle=metal` / swiftshader fallback flags.
 - `tools/gen-icons.mjs` writes the favicon, PWA icons and manifest into `public/` (git-ignored) before every
   dev/build/test run. It loads `src/ui/Emblem.ts` through Node's type stripping, so Node must be
-  `^22.18.0 || >=23.6.0` (package.json `engines`). `tools/validate-levels.mjs` checks `content/levels/*.json` (build and test run it).
+  `^22.18.0 || >=23.6.0` (package.json `engines`). `tools/validate-levels.mjs` checks `content/levels/*.json` (build and test run it)
+  against LevelData: only the shapes the runtime builds (zones circle | box | way, triggers and water circle | box),
+  `water` entries (kind water|mud, `level`), `wayWidth` > 0, scatter rules need `density` (>= 0) and `scale` is a
+  number or `[min, max]`, a 'way' zone's `path` must be "way" or a detour id; unknown top-level keys are warnings.
 - `tests/smoke.spec.ts`: boots `/`, waits for `window.__pilgrim?.ready`, asserts a frame rendered
   (`stats.drawCalls > 0`), zero console errors and zero page errors; runs check-assets via `child_process` and
   expects exit 0; puts a fake `.png` in `public/`, expects exit 1, then removes it (in `finally`).
-- `window.__pilgrim` (always present, read-only): `{ ready: boolean, engine, services, events, mode }` for
-  tests; `ready` turns true after the first rendered frame.
+- `window.__pilgrim` (always present, read-only): `{ ready, engine, services, events, mode, modeReady, lab,
+  testWorld, restartMode() }` for tests; `ready` turns true after the first rendered frame, `modeReady` once the
+  mode is on screen; `lab` is the LabProbe (`?lab=1`), `testWorld` the TestWorld (`?chapter=test`).
+- Phase 1 specs (`tests/support.ts` holds the shared console capture, frame waits and typings):
+  - `tests/lab.spec.ts`: `?lab=1` boots with zero console errors/warnings; every recipe builds and its main mesh is
+    exactly 1 draw call (2 only with a glow mesh), < 2500 triangles; every recipe runs all 22 clips and 8
+    expressions (correct mouth bone shown), blinks at least twice in 12 s and keeps every bone finite and above
+    ground, napping and praying close the eyes, and planted feet slide less than 25 % of the body speed at mid-stance
+    (walk, run; burdened walk < 15 %) at the GDD 2.7.1 speeds; every clip and expression also plays live on burdened
+    Christian; the lineup builds all recipes; a crowd
+    of 100 costs < 10 draw calls with the shadow pass; restarting the Lab 3 times does not grow GPU geometries or
+    textures.
+  - `tests/world.spec.ts`: `?chapter=test` builds in < 2 s with a clean console, the loading bar received >= 10
+    increasing updates before 100%; the gameplay view peaks under 150 draw calls and 300k triangles (GDD 2.15
+    desktop); on Low the shadow map is off and characters still stand on blob shadows; building and disposing the
+    world 5 times (Rebuild world and full mode restarts) keeps `renderer.info.memory` geometries and textures flat.
+  - Both save the Phase 1 report screenshots to `test-results/phase1/` (lab-lineup, lab-lineup-wide, lab-closeup,
+    lab-crowd, test-world, test-world-wide, test-world-low). Playwright clears `test-results/` at the start of each
+    run.

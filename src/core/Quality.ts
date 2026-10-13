@@ -7,6 +7,7 @@
 import * as THREE from 'three';
 import { events } from './Events';
 import { services } from './Services';
+import { precompile } from './compile';
 
 export type QualityLevel = 'low' | 'medium' | 'high';
 export type QualitySetting = QualityLevel | 'auto';
@@ -36,7 +37,7 @@ export const PRESETS: Record<QualityLevel, QualityPreset> = Object.freeze({
   low: Object.freeze({
     level: 'low',
     pixelRatioCap: 1,
-    shadows: false, // GDD 2.11: shadows off on Low; blob shadows still drawn by characters
+    shadows: false, // GDD 2.11: shadow map off on Low; BlobShadows (src/gen) still draw under every character
     shadowMapSize: 512, // unused: Low never renders shadows, whatever the Shadows setting (DECISIONS #77)
     drawDistance: 120,
     grassDensity: 0.35,
@@ -229,7 +230,7 @@ async function runBenchmark(renderer: THREE.WebGLRenderer): Promise<{ medianMs: 
     // Compile with the target bound (programs depend on it), then restore before awaiting so the
     // renderer is never left pointing at our target while other code might render.
     renderer.setRenderTarget(target);
-    const compiled = renderer.compileAsync(scene, camera);
+    const compiled = precompile(renderer, scene, camera);
     renderer.setRenderTarget(previousTarget);
     await Promise.race([compiled, delay(BENCH.compileWaitMs)]);
 
