@@ -2,10 +2,11 @@
  * Entry point: boots the core services in dependency order, picks the runtime mode from the URL
  * (ARCHITECTURE.md "Runtime modes") and starts the loop.
  *
- * Order: flags → settings → i18n → save (all register themselves on import) → engine → quality (resolved
- * before the loop starts, so the benchmark has the GPU to itself) → input → scene → debug panel → start.
- * Phase 0 has only the test scene, so every mode shows it; the mode is parsed now and later phases plug in
- * the title screen, chapters, Lab and music page.
+ * Order: flags → settings → i18n → save (all register themselves on import) → engine → audio (the 'audio'
+ * service; unlocked by the first gesture) → quality (resolved before the loop starts, so the benchmark has the
+ * GPU to itself) → input → scene → debug panel → start.
+ * `?music=<id>` opens the music test page instead (no Engine, no WebGL; the page builds its own AudioEngine).
+ * Every other mode shows the Phase 0 test scene; later phases plug in the title screen, chapters and Lab.
  */
 import './ui/styles.css';
 import { events } from './core/Events';
@@ -18,6 +19,7 @@ import { Engine } from './core/Engine';
 import { Quality, type QualityPreset } from './core/Quality';
 import { Input } from './core/Input';
 import { createDebug, installCoreDebug, type Debug } from './core/Debug';
+import { AudioEngine } from './audio/AudioEngine';
 import { h, uiRoot } from './ui/dom';
 import { DevScene } from './world/dev/DevScene';
 
@@ -33,6 +35,9 @@ export type RuntimeMode =
 const CHAPTER_ID = /^(test|epilogue|[1-9]|1[0-3])$/;
 /** The demo build ends after Chapter IV (GDD 2.1). */
 const DEMO_LAST_CHAPTER = 4;
+/** Loop order of the audio listener sync: right after the Engine's render system (1000), so it reads the
+ * camera matrix of the frame just drawn. */
+const AUDIO_LISTENER_ORDER = 1001;
 
 export function selectMode(params: UrlParams): RuntimeMode {
   if (params.lab) return { kind: 'lab' };
@@ -141,6 +146,14 @@ async function boot(): Promise<void> {
   applyBodyClasses(settings.data);
   document.title = t('ui.title.gameName');
   state.mode = selectMode(urlParams);
+  if (state.mode.kind === 'music') {
+    // Music test page (Phase 3): plain DOM over the empty canvas, no 3D scene and no WebGL needed.
+    const songId = state.mode.id;
+    const { MusicTestPage } = await import('./audio/MusicTestPage');
+    new MusicTestPage(songId).start();
+    state.ready = true;
+    return;
+  }
 
   const canvas = gameCanvas();
   let engine: Engine;
@@ -153,6 +166,10 @@ async function boot(): Promise<void> {
   }
   state.engine = engine;
   const loop = engine.loop;
+
+  // Audio (GDD 2.13): registers the 'audio' service; the AudioContext starts on the first tap / click / key.
+  const audio = new AudioEngine();
+  loop.add({ render: () => audio.setListener(engine.camera) }, AUDIO_LISTENER_ORDER);
 
   // Quality: one listener applies every preset change (settings, auto pick, debug buttons) to the Engine.
   const quality = new Quality();
