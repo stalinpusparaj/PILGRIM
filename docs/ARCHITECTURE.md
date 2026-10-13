@@ -34,8 +34,10 @@ it lives and *how modules talk*. If you need to change a contract here, change i
 | `&waystone=ch08_w1&debug=1&god=1&skipIntro=1` | Debug params (GDD 2.15) |
 
 Phase 1 wires two modes: `?lab=1` → Character Lab (`src/gen/Lab.ts`) and `?chapter=test` → the test world
-(`src/world/TestWorld.ts`, built from `content/levels/test.json`). Every other mode still shows the Phase 0 test
-scene (`src/world/dev/DevScene.ts`) until the title screen (Phase 3) and the chapters exist.
+(`src/world/TestWorld.ts`, built from `content/levels/test.json`). `?music=<id>` opens the music test page
+(`src/audio/MusicTestPage.ts`, plain DOM, loaded with a dynamic import before the Engine is created, so it needs
+no WebGL). Every other mode still shows the Phase 0 test scene (`src/world/dev/DevScene.ts`) until the title
+screen (Phase 3) and the chapters exist.
 ```ts
 export type RuntimeMode =
   | { kind: 'title' } | { kind: 'lab' } | { kind: 'music'; id: string }
@@ -64,8 +66,10 @@ export function startMode(kind: ModeKind, engine: Engine): ModeRunner;
   (`VITE_DEMO=true`) also fall back to the title for chapters beyond IV and the epilogue.
 - All URL params are ignored outside dev builds unless `?debug=1` (see Flags.ts).
 - Boot order in `main.ts`: flags → settings → i18n → save (each registers itself on import) → `Engine` →
-  `Quality` (resolved before `engine.start()`, so the benchmark has the GPU to itself) → `Input` (hooked into
-  `loop.onBeforeStep` / `onAfterStep`) → debug panel → mode runner → `engine.start()`.
+  `AudioEngine` (registers the 'audio' service; a loop System at order 1001, right after the Engine's render
+  system, calls `audio.setListener(engine.camera)` every rendered frame) → `Quality` (resolved before
+  `engine.start()`, so the benchmark has the GPU to itself) → `Input` (hooked into `loop.onBeforeStep` /
+  `onAfterStep`) → debug panel → mode runner → `engine.start()`.
 - `main.ts` owns the live wiring: one `quality:changed` listener applies `quality.preset` with the Shadows
   setting merged in (Shadows Off always wins; On means "if the preset allows") to `engine.applyQuality`;
   `settings:changed` applies quality, shadows, resolutionScale, frameCap, fov and the `text-M/L/XL` /
@@ -854,9 +858,9 @@ export class TestWorld { constructor(engine: Engine); start(): Promise<void>; di
 - NPCs beyond `quality.drawDistance` are hidden (mesh + glowMesh) and not animated. Landmarks/waystones without
   `rotY` face the nearest Way; NPCs without `at` wait near the Way's start, alternating sides.
 
-## Audio (Phase 3, built early) — `src/audio/`, `content/music/`
+## Audio (Phase 3) — `src/audio/`, `content/music/`
 
-Contract types: `src/audio/types.ts` (WRITTEN): `SfxId`, `AmbienceId`, `SongId`, `MusicState`, `InstrumentId`,
+Contract types: `src/audio/types.ts`: `SfxId`, `AmbienceId`, `SongId`, `MusicState`, `InstrumentId`,
 `VoiceParams`, `Mood`, `SongDef`/`TrackDef` (note-string format), `AudioEventMap`. Import `src/audio/events.ts`
 once (side-effect free, types only) to get the audio events on the global bus.
 
@@ -864,27 +868,70 @@ Gameplay code never touches Web Audio. It emits:
 `events.emit('sfx', { id: 'bonk', at: [x, y, z] })`, `'music:play' {id, fade?, state?}`, `'music:state' {state}`,
 `'music:stop'`, `'music:silence'`, `'ambience:set' {id|null}`, `'audio:duck' {on}`, or uses the service:
 ```ts
-// src/audio/AudioEngine.ts — registered as services 'audio'
+// src/audio/AudioEngine.ts — registers itself as services 'audio'; main.ts builds it right after the Engine
 export class AudioEngine {
-  readonly ready: boolean;                                   // false until unlocked by the first tap/click/key
-  unlock(): Promise<void>;                                   // also auto-bound to the first user gesture
+  constructor(opts?: { songs?: Partial<Record<SongId, SongDef>>; seed?: number; autoUnlock?: boolean /* true */;
+                       audioSession?: 'playback' | 'ambient' /* iOS; default: left to the browser */ });
+  readonly ready: boolean;                                   // false until the AudioContext runs
+  unlock(): Promise<void>;                                   // auto-bound to the first real tap/click/key; never rejects
   playSfx(id: SfxId, opts?: { at?: Vec3; volume?: number; pitch?: number }): void;
   readonly music: { play(id: SongId, fade?: number, state?: MusicState): void; setState(s: MusicState, fade?: number): void;
                     stop(fade?: number): void; silence(fade?: number): void; readonly current: SongId | null; readonly state: MusicState };
-  readonly ambience: { set(id: AmbienceId | null, fade?: number): void; addEmitter(id: AmbienceId, at: Vec3): () => void };
+  readonly ambience: { set(id: AmbienceId | null, fade?: number): void; addEmitter(id: AmbienceId, at: Vec3): () => void;
+                       readonly current: AmbienceId | null };
   readonly babble: { speak(voice: VoiceParams, text: string, opts?: { mood?: Mood; cps?: number; at?: Vec3 }): { stop(): void; readonly done: Promise<void> } };
-  setListener(camera: THREE.Camera): void;                   // call once per frame
-  duck(on: boolean): void;                                    // dialogue ducks music -6 dB
+  setListener(camera: THREE.Camera): void;                   // every rendered frame (main.ts); allocation-free
+  duck(on: boolean): void;                                    // music bus and its reverb send -6 dB
   dispose(): void;
+  readonly context: AudioContext | null;                     // dev / tests / test page, null before unlock
+  readonly buses: AudioBuses | null;                         // master, music, voice, effects, ambience, musicSend, ambienceSend, out
+  readonly musicPlayer: MusicPlayer | null;
 }
+// EventMap addition (declared in AudioEngine.ts): 'audio:ready': void — the context ran for the first time.
 ```
-Buses: Master, Music, Voice, Effects, Ambience, gains from settings `volMaster/volMusic/volVoices/volEffects/
-volAmbience` (live). Mute when the tab is hidden (listen to `visibilitychange` directly, not only `game:pause`).
-Synth instruments (`InstrumentId`) are built from oscillators, noise buffers, envelopes, filters and a
-generated reverb impulse; SFX are parameter recipes rendered once on load (OfflineAudioContext) into
-AudioBuffers. Music: in-house look-ahead step sequencer playing `SongDef`s; songs are ORIGINAL melodies only
-(never transcribe any existing song, hymn or film score). `?music=<songId>` opens the music test page
-(`src/audio/MusicTestPage.ts`).
+- **Unlock.** The AudioContext is created inside the first real user activation (`pointerdown`, `touchend`,
+  `keydown`, `click`; capture, passive; `navigator.userActivation` checked) with `resume()` plus a one-sample
+  silent buffer (iOS). Before that, `music.play/setState`, the ambience zone and emitters are remembered and
+  applied on unlock; `sfx` are dropped and babble is silent, but a babble handle's `done` still resolves after the
+  line's length (`Babble.silentLine`), so dialogue keeps its pace and never hangs. No Web Audio at all: the game
+  runs silently at the same pace.
+- **iOS audio session.** The game leaves `navigator.audioSession` alone, so on an iPhone Web Audio follows the
+  Ring/Silent switch (as native games do) and the player's own music keeps playing. `audioSession: 'playback'`
+  plays even in silent mode; the music test page uses it, and its tap overlay also says to turn silent mode off
+  (iOS before 16.4 has no `audioSession`).
+- **Mixer** (`amb-mixer.ts`; the `amb-` prefix is historical): music / voice / effects / ambience → master →
+  DynamicsCompressor limiter (−6 dB, 16:1, 3 ms) → soft clipper (linear to 0.8, ceiling ~0.95) → `out`
+  (hidden-tab mute) → destination. One shared ConvolverNode (`Synth.createReverbImpulse`, 2.4 s) fed by a music
+  send (the MusicPlayer's per-track sends, taken after its faders) and an ambience send; each send follows its bus. Settings `volMaster/volMusic/
+  volVoices/volEffects/volAmbience` apply live as gain v² with bus trims master 1.4, music 1, voice 1.25,
+  effects 1, ambience 0.8.
+- `'music:silence'` fades the songs, the ambience and the reverb return to 0 until the next `music:play` /
+  `ambience:set`; effects and voices stay (the Cross's 1.5 s of silence is true silence).
+- Hidden tab (`visibilitychange`): output ramps to 0 and the context is suspended after 0.4 s; it resumes on
+  return (if iOS refuses, on the next tap). The music and ambience clocks freeze with it, so nothing piles up.
+
+Modules (each file < 400 lines; everything seeded, every node disconnected when done):
+
+| File | API (beyond the engine) |
+|---|---|
+| `Synth.ts` | `midiToHz`, `parsePitch` ('C4' = 60, NaN if not a pitch), `adsr(param, t, peak, a, d, s, r, dur)` → silent time, `adsrValueAt`, `noiseBuffer(ctx, s, color)` (seeded, cached per context, seamless loop), `createReverbImpulse(ctx, s, decay)` (stereo, unit energy: `normalize = false`), `harmonicWave` |
+| `Instruments.ts` (+ `inst-*.ts`) | `new InstrumentBank(ctx, reverbSend)`; `play(id, {midi, time, dur, vel}, out, wet = true)` ('drums' maps GM notes), `playDrum('K'\|'S'\|'H'\|'O'\|'T'\|'R', time, vel, out, wet = true)`, `maxVoices` (24; the quietest voice is stolen with a ~50 ms fade, voices scheduled ahead are kept), `voiceCount`, `dispose()`. Level-matched at vel 0.8 (−24 LUFS per note). With `wet` each instrument's reverb send (`SEND`) is taken before `out`; the sequencer passes `wet = false` and sends each track itself, after its faders. |
+| `Sequencer.ts` (+ `seq-*.ts`) | `parseTrack`, `validateSong` (readable problems), `pitchToMidi`; `new MusicPlayer(ctx, bank, out, songs, reverb?)`: `play(id, fade?, state?)` (a new song defaults to 'calm'; from silence it starts at once, over another song it crossfades 1.5 s), `setState(s, fade = 2)` (leaving tracks keep playing while they fade; tracks that join start on the next bar line, and a leaving track in the same layer fades until half a fade past it), `stop(fade = 1)`, `silence(fade = 0.4)`, `position {bar, beat, loop}`, `info(id)`, `problems(id)`, `scheduleUntil(t)` (offline renders), `dispose()`. 25 ms tick, 120 ms look-ahead on the context clock; late notes are dropped, never bunched. Each track's reverb send (instrument `SEND` ÷ track gain, into `reverb` = `Mixer.musicSend`) sits after the track and song faders, so stops, song crossfades and state changes fade the reverb too. Grammar extras: BEATS may be a fraction (`1/3`), missing BEATS = 1, drum chords `K+H`. validateSong problems are logged once per song in dev builds. |
+| `sfx/index.ts` (+ `sfx/*.ts`) | `new SfxBank(ctx, out, {seed?, recipes?})`: `ready`, `progress`, `has(id)`, `buffer(id, variant?)`, `play(id, {at, volume, pitch})`, `stopAll(fade?)`, `dispose()`; `SFX_RECIPES`, `stepPitch(id, n)`, `pitchToSemitones`. Recipes are parameter objects rendered on load (OfflineAudioContext, time-sliced, UI and footsteps first), peak −6 dBFS, mixed by the recipe `level`. `pitch` is a playback-rate multiplier (1 = as designed, 0.25..4); recipes with a scale snap to it. One id never restarts within 25 ms; per-id polyphony, 24 voices in all; positional sounds beyond 60 m are skipped; nothing plays while the context is not running. |
+| `Ambience.ts` (+ `amb-*.ts`) | `new Ambience(ctx, out, {reverb?, seed?, hrtf?})`: `set(id \| null, fade = 2.5)`, `addEmitter(id, at)` → remove function, `listenerAt(x, y, z)`, `current`, `emitterCount`, `liveShots`, `dispose()`. A bed per AmbienceId (`amb-beds.ts` `BEDS`): looping noise / texture layers plus seeded one-shots. Emitters run only within their bed's reach (15 % hysteresis), at most 8 at once; HRTF panning only with a fine pointer. |
+| `Babble.ts` (+ `babblePlan.ts`, `babbleLevel.ts`, `voices.ts`) | `new Babble(ctx, out)`: `speak(voice, text, {mood, cps = 40, at})` → `{stop, done}`, at most 6 lines; `silentLine(voice, text, opts)` → a handle that only keeps the line's time. One blip per 2-3 letters of each word (never more; a one-letter word gets one), each starting when its first letter appears on the reveal clock `revealTimes(text, cps)` (`babblePlan.ts`): **the dialogue typewriter must use `revealTimes` to stay in sync.** Sad pitches down with longer, falling blips, excited pitches up with shorter ones; slow voices lean to 3 letters per blip and longer blips; every voice is level-matched. `VOICE_PRESETS` are reference values for `content/characters/recipes.json`. |
+| `renderOffline.ts` | Dev only (test page, scripts): `renderSong(id, [{state, loops}])`, `renderSfxTour()`, `levels(buf)`, `encodeWav(buf)`, `downloadWav(buf, name)`; renders through the real Mixer at the current volume settings. |
+| `MusicTestPage.ts` (+ `testpage/*`) | `?music=<songId>`: tap to start audio, every song / state / SFX / ambience, babble demo, volumes, "Download WAV". Builds its own AudioEngine (`audioSession: 'playback'`) when no 'audio' service exists. |
+| `amb-context.ts` | AudioEngine helpers: `audioContextClass()`, `setAudioSession(type)`, `kickContext(ctx, onResumed)` (resume plus the iOS silent buffer). |
+
+Songs: `content/music/themes.ts` exports `SONGS: Record<SongId, SongDef>` (note data in `songs-*.ts`, helpers in
+`notation.ts`, notes per theme in `docs/MUSIC.md`). ORIGINAL melodies only (never transcribe any existing song,
+hymn or film score). Every song's `calm` state is a complete arrangement; `pilgrim` in `joy` is the full theme
+(the burden-falls moment).
+
+Gameplay usage: the three joy jumps play `{ id: 'joy_note', pitch: stepPitch('joy_note', n) }` and the Cross's
+ropes `stepPitch('rope_snap', i)`; dialogue emits `'audio:duck' {on}` around lines; the Cross emits
+`'music:silence'`, waits 1.5 s, then `'music:play' { id: 'pilgrim', state: 'joy' }`.
 
 ## Tools and tests (Phase 0, Phase 1)
 
