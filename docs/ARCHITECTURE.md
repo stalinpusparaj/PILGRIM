@@ -637,6 +637,38 @@ Turntable scene; list of every recipe, every animation and every expression; sli
 multipliers; "Copy recipe JSON"; lineup view (all characters side by side at gameplay camera distance);
 a "crowd of 100" toggle; readouts for draw calls/triangles. Dev tool: plain English UI is fine.
 
+## Audio (Phase 3, built early) — `src/audio/`, `content/music/`
+
+Contract types: `src/audio/types.ts` (WRITTEN): `SfxId`, `AmbienceId`, `SongId`, `MusicState`, `InstrumentId`,
+`VoiceParams`, `Mood`, `SongDef`/`TrackDef` (note-string format), `AudioEventMap`. Import `src/audio/events.ts`
+once (side-effect free, types only) to get the audio events on the global bus.
+
+Gameplay code never touches Web Audio. It emits:
+`events.emit('sfx', { id: 'bonk', at: [x, y, z] })`, `'music:play' {id, fade?, state?}`, `'music:state' {state}`,
+`'music:stop'`, `'music:silence'`, `'ambience:set' {id|null}`, `'audio:duck' {on}`, or uses the service:
+```ts
+// src/audio/AudioEngine.ts — registered as services 'audio'
+export class AudioEngine {
+  readonly ready: boolean;                                   // false until unlocked by the first tap/click/key
+  unlock(): Promise<void>;                                   // also auto-bound to the first user gesture
+  playSfx(id: SfxId, opts?: { at?: Vec3; volume?: number; pitch?: number }): void;
+  readonly music: { play(id: SongId, fade?: number, state?: MusicState): void; setState(s: MusicState, fade?: number): void;
+                    stop(fade?: number): void; silence(fade?: number): void; readonly current: SongId | null; readonly state: MusicState };
+  readonly ambience: { set(id: AmbienceId | null, fade?: number): void; addEmitter(id: AmbienceId, at: Vec3): () => void };
+  readonly babble: { speak(voice: VoiceParams, text: string, opts?: { mood?: Mood; cps?: number; at?: Vec3 }): { stop(): void; readonly done: Promise<void> } };
+  setListener(camera: THREE.Camera): void;                   // call once per frame
+  duck(on: boolean): void;                                    // dialogue ducks music -6 dB
+  dispose(): void;
+}
+```
+Buses: Master, Music, Voice, Effects, Ambience, gains from settings `volMaster/volMusic/volVoices/volEffects/
+volAmbience` (live). Mute when the tab is hidden (listen to `visibilitychange` directly, not only `game:pause`).
+Synth instruments (`InstrumentId`) are built from oscillators, noise buffers, envelopes, filters and a
+generated reverb impulse; SFX are parameter recipes rendered once on load (OfflineAudioContext) into
+AudioBuffers. Music: in-house look-ahead step sequencer playing `SongDef`s; songs are ORIGINAL melodies only
+(never transcribe any existing song, hymn or film score). `?music=<songId>` opens the music test page
+(`src/audio/MusicTestPage.ts`).
+
 ## Tools and tests (Phase 0)
 
 - `tools/check-assets.mjs` — GDD 2.3. Fails (exit 1, readable message) if:
