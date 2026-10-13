@@ -858,6 +858,114 @@ export class TestWorld { constructor(engine: Engine); start(): Promise<void>; di
 - NPCs beyond `quality.drawDistance` are hidden (mesh + glowMesh) and not animated. Landmarks/waystones without
   `rotY` face the nearest Way; NPCs without `at` wait near the Way's start, alternating sides.
 
+## Session state (shared by Phase 2 and 3) — `src/core/GameState.ts` (WRITTEN), `src/core/CameraRig.ts` (WRITTEN)
+
+`GameState` wraps the GDD 2.15 `SaveData` and is the 'state' service (`createGameState(save?)`). Mutate only through
+its methods so events fire: `setHope/addHope` (→ `hope:changed`), `setBurden` (→ `burden:changed`), `giveRoll/
+loseRoll/findRoll` (→ `roll:changed`), `give/take` (→ `item:given/taken`), `giveGift(id, quiet?)` (→ `gift:given` +
+`hud:toast ui.toast.gift.<id>` unless quiet), `collectPromise` (→ `promise:collected`), `readPromise` (+15 once per
+chapter → `promise:read`), `enterDetour` (→ `detour:entered`), `setFlag` (→ `flag:changed`), `meet(recipeId)`
+(→ `friend:met`; FRIENDS MET), `setObjective(key|null)` (→ `objective:changed`; history for THE ROLL),
+`setChapter` (resets Promise reads → `chapter:changed`), `setWaystone`, `setPlayerName`, `unlock`
+(→ `achievement:unlocked`), `tickPlaytime(dt)`, `snapshot()` for `Save.write`, `reset(save?)`.
+Constants: `GIFT_IDS`, `PROMISE_TOTAL` 24, `HOPE_WAYSTONE_FLOOR` 60, `PROMISE_READ_HOPE` 15.
+HUD request events (declared there): `hud:toast {key, params?}`, `hud:chapterCard {chapter}`, `hud:visible {on}`.
+
+`CameraRig` ('cameraRig' service, implemented by the Phase 2 follow camera): `suspend()`, `resume(blend?)`,
+`suspended`, `focus(out)`. Cutscenes/dialogue cuts suspend it and drive `engine.camera` directly.
+
+## Gameplay (Phase 2) — `src/player/`, `src/world/`, `src/narrative/`, `src/ui/`
+
+```ts
+// src/world/Collision.ts — static + dynamic colliders over the terrain (no physics engine, GDD 2.15)
+export type SurfaceKind = 'dirt' | 'stone' | 'mud' | 'wood' | 'grass' | 'water';
+export class CollisionWorld {
+  constructor(world: World);                        // terrain + world.colliders, uniform grid broadphase
+  groundAt(x: number, z: number, fromY?: number): number;   // terrain or the highest walkable top at/below fromY+stepUp
+  addCollider(c: Collider, opts?: { walkable?: boolean; tag?: string }): number;  // handle; walkable tops can be stood on
+  removeCollider(handle: number): void; setEnabled(handle: number, on: boolean): void;
+  /** Capsule (feet at pos.y) vs colliders: pushes pos out horizontally, in place. Returns true if anything was hit. */
+  resolve(pos: THREE.Vector3, radius: number, height: number): boolean;
+  raycast(origin: THREE.Vector3, dir: THREE.Vector3, maxDist: number): number | null;  // terrain + colliders (camera arm)
+  surfaceAt(x: number, z: number): SurfaceKind;    // zones (mud/water) → Way band 'dirt' → 'grass'; wood/stone by collider tag
+  ledgeAhead(pos: THREE.Vector3, forward: THREE.Vector3, radius: number): { top: number; at: THREE.Vector3 } | null;  // 0.6-1.8 m
+  dispose(): void;
+}
+// src/player/Controller.ts — in-house kinematic controller
+export interface MoveParams { walkSpeed: number; runSpeed: number; jumpHeight: number; gravity: number;
+  accel: number; airControl: number; slopeLimit: number /* 40° */; stepUp: number /* 0.3 */ }
+export interface StepResult { jumped: boolean; landed: boolean; landSpeed: number; grounded: boolean; blocked: boolean }
+export class KinematicController {
+  constructor(col: CollisionWorld, radius?: number /* 0.35 */, height?: number /* 1.5 */);
+  readonly position: THREE.Vector3; readonly velocity: THREE.Vector3; readonly grounded: boolean;
+  step(dt: number, wish: { x: number; z: number } /* desired horizontal velocity, m/s */, jump: boolean, p: MoveParams): StepResult;
+  teleport(p: THREE.Vector3): void;                // coyote time 0.1 s and jump buffer 0.1 s inside
+}
+// src/player/Player.ts — owns the Character and the controller (registered as service 'player')
+export type PlayerMode = 'play' | 'locked' | 'cutscene';   // locked: no input, physics on; cutscene: scripts move it
+export class Player {
+  constructor(o: { world: World; col: CollisionWorld; state: GameState; recipe: string; spawn: THREE.Vector3; facing: number });
+  readonly character: Character; readonly controller: KinematicController;
+  readonly renderPosition: THREE.Vector3;           // interpolated (fixed 60 Hz update, render alpha)
+  readonly forward: THREE.Vector3; mode: PlayerMode;
+  speedScale: number;                               // multiplier from zones (slough) etc., 1 by default
+  setRecipe(id: string): void;                      // outfit swaps (christian_burdened → _free → _armour)
+  teleport(p: THREE.Vector3, facing?: number): void;
+  update(dt: number): void; render(alpha: number): void; dispose(): void;
+}
+// src/player/Camera.ts — GDD 2.5 follow camera; implements CameraRig ('cameraRig' service)
+export class FollowCamera implements CameraRig {
+  constructor(camera: THREE.PerspectiveCamera, player: Player, col: CollisionWorld);
+  update(dt: number): void; render(alpha: number, frameDt: number): void; snap(): void; dispose(): void;
+}
+// src/player/Burden.ts — sizes, speed rules (burdened 2.0 m/s, no run, 0.3 m hop; free 3.4/6/1.1), growth "boing",
+// huff cues, joy jumps. src/player/CrossDrop.ts — runCrossDrop(ctx): Promise<void>, the full GDD 2.7.1 sequence.
+// src/player/Hope.ts — zone drains, low-Hope look (src/gen/fx/WorldFX.ts saturation uniform), 0 → I SHALL ARISE.
+// src/player/Bonk.ts — safe-spot tracker on the Way + bonk(reason) (dust, stars, pop back, Hope -5, toast).
+// src/world/Zones.ts — membership per fixed step: zone:enter / zone:exit {id, type}; hazards (pit, ditch, bogHole).
+// src/world/Slough.ts — sinking + hidden stepping stones (landmark type 'steps' with a path range) revealed by
+//   standing still 2 s or reading a Promise; revealed stones are walkable colliders.
+// src/world/Interactables.ts — focus + [E]; src/narrative/Waystones.ts; src/narrative/Promises.ts (walk-through pickup)
+// src/ui/HUD.ts (+ hud-*.ts, hud.css) — objective, lantern, hearts, interaction bubble, toasts, chapter card,
+//   letterbox(on); src/ui/Arise.ts — I SHALL ARISE screen.
+// src/world/PlaySession.ts — builds World + CollisionWorld + Player + FollowCamera + systems for a level
+//   (?chapter=test now; ChapterManager in Phase 3 reuses it).
+```
+Interactables API (Phase 3 dialogue uses it for NPCs):
+```ts
+export interface Interactable { id: string; pos: THREE.Vector3; radius: number; verb: string /* i18n key, e.g. ui.verb.talk */;
+  enabled: boolean; height?: number /* bubble height above pos */; holdSeconds?: number /* hold E, e.g. iron gate 3 s */;
+  priority?: number; onUse(): void }
+export class Interactables { add(i: Interactable): () => void; readonly focused: Interactable | null; update(dt: number): void; dispose(): void }
+// service 'interactables'
+```
+New events (declared in their modules): `zone:enter`, `zone:exit`, `player:bonk {reason}`, `player:arise`,
+`player:landed`, `interact:focus {id|null}`, `interact:use {id}`, `waystone:read` (core), `burden:dropped` (core).
+
+## Story and UI (Phase 3) — `src/narrative/`, `src/ui/`, `content/dialogue/`, `content/promises.json`
+
+```ts
+// src/narrative/DialogueTypes.ts — GDD 2.8 graph format (content/dialogue/chXX.json: an array of graphs)
+export interface DialogueGraph { id: string; nodes: DialogueNode[] }
+export interface DialogueNode { id: string; speaker: string /* npc id from the level, or 'christian' */; text: string /* i18n key */;
+  anim?: string; expr?: Expression; mood?: Mood; bubble?: boolean /* world-space bubble instead of the panel */;
+  next?: string; choices?: DialogueChoice[] /* max 3 */; effects?: DialogueEffects; cond?: string /* flag key, '!' negates */ }
+export interface DialogueChoice { text: string; next?: string; effects?: DialogueEffects; cond?: string }
+export interface DialogueEffects { hope?: number; give?: string; take?: string; detour?: string; flag?: Record<string, FlagValue>;
+  anim?: string; cam?: string; sfx?: SfxId; music?: SongId; end?: boolean }
+// src/narrative/Dialogue.ts — UI-agnostic runner; the game supplies a host
+export interface DialogueHost { actor(speaker: string): Character | null; camera?(shot: string, speaker: string): void;
+  effect?(e: DialogueEffects): void }
+export class DialogueRunner { constructor(host: DialogueHost); readonly active: boolean;
+  play(graph: DialogueGraph | string): Promise<void>; skipLine(): void; choose(i: number): void; stop(): void; dispose(): void }
+// src/narrative/SpeechBubbles.ts — world-space bubbles (barks and simple lines), typewriter + babble in sync
+// src/ui/DialoguePanel.ts — bottom panel with a generated portrait, choices (1-3 / click / pad), skip (Space; hold 1 s = scene)
+// src/narrative/Cutscene.ts — spline camera rails, letterbox, actor tracks, timed events, hold-Space skip
+// src/ui/{Title,Opening,Pause,SettingsUI,ChapterSelect,Credits,DemoEnd,Menu}.ts — GDD 2.14 screens; Menu = focus nav
+// src/ui/SatchelUI.ts (+ satchel-*.ts) — MY SATCHEL: THE ROLL, PROMISES, FRIENDS MET, MAP, CARRIED
+// src/game/GameFlow.ts — title → opening → chapters → demo end / end → credits (chapters plug in via ChapterManager)
+```
+
 ## Audio (Phase 3) — `src/audio/`, `content/music/`
 
 Contract types: `src/audio/types.ts`: `SfxId`, `AmbienceId`, `SongId`, `MusicState`, `InstrumentId`,
