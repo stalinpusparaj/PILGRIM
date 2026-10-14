@@ -1,0 +1,63 @@
+/*
+ * Shipped art (public/art/, see src/ui/art.ts): where the generated images are painted. Each rule layers
+ * the image under the existing cream panels, so every screen keeps its chunky toy look and its contrast.
+ * `--art` is set per element by the TS (chapter tiles, the loading screen, the chapter card).
+ */
+
+/* ---------------------------------------------------------------- title */
+
+/* The painted backdrop is now the title's landscape: it stays (no fade to the 3D scene) with a slow drift. */
+.pg-screen .pg-title__backdrop {
+  background: #5e6fa8 url(/art/title.jpg) center / cover no-repeat;
+  transform-origin: 55% 60%;
+  animation: pg-art-drift 40s ease-in-out infinite alternate;
+}
+.pg-screen.pg-title.is-scene-ready .pg-title__backdrop { opacity: 1; }
+@media (orientation: portrait) {
+  .pg-screen .pg-title__backdrop { background-image: url(/art/title-portrait.jpg); background-position: 50% 40%; }
+}
+@keyframes pg-art-drift {
+  from { transform: scale(1.02) translate(0, 0); }
+  to { transform: scale(1.1) translate(-1.5%, -1%); }
+}
+/* The painted app icon replaces the SVG emblem on the title and loading screens. */
+.pg-title__emblem img, .pg-loading__emblem img {
+  display: block; width: 100%; height: 100%; border-radius: 22%; object-fit: cover;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.22), 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+.pg-title__emblem img {
+  width: clamp(56px, 11vh, 104px); height: clamp(56px, 11vh, 104px); margin: 0 auto 10px;
+  animation: pg-emblem-float 4.2s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------- menus */
+
+/* Pause, Chapters, Credits and the demo end sit on the dimmed hero key art. */
+.pg-screen.pg-pause, .pg-screen.pg-chapters, .pg-screen.pg-credits, .pg-screen.pg-demo-end {
+  background: linear-gradient(180deg, rgba(28, 20, 34, 0.72), rgba(28, 20, 34, 0.8)),
+    #2b2235 url(/art/key-art.jpg) center / cover no-repeat;
+}
+
+/* Chapter tiles: the chapter's card art as a tall swatch; chapters without art keep the palette swatch. */
+.pg-chapter .pg-chapter__swatch { background-image: var(--art, none); background-size: cover; background-position: center; }
+.pg-chapter .pg-chapter__swatch[style*="--art"] { height: 118px; }
+.pg-chapter .pg-chapter__swatch[style*="--art"]::after { display: none; }
+.pg-chapter[aria-disabled="true"] .pg-chapter__swatch[style*="--art"] { filter: grayscale(0.7) brightness(0.8); }
+
+/* ---------------------------------------------------------------- loading and chapter card */
+
+body .pg-loading {
+  background-image:
+    radial-gradient(120% 80% at 50% 115%, rgba(242, 179, 61, 0.28) 0%, rgba(242, 179, 61, 0) 55%),
+    linear-gradient(180deg, rgba(28, 20, 34, 0.55), rgba(28, 20, 34, 0.75)),
+    var(--art, none);
+  background-size: cover; background-position: center;
+}
+body .pg-loading__emblem { width: 84px; height: 84px; }
+
+/* The chapter card shows its art full-screen under the title, fading with the card. */
+.hud .hud-card {
+  background-image: radial-gradient(70% 46% at 50% 50%, rgba(28, 20, 34, 0.62), rgba(28, 20, 34, 0.3) 60%,
+    rgba(28, 20, 34, 0.15) 100%), var(--art, none);
+  background-size: cover; background-position: center;
+}

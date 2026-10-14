@@ -11,6 +11,7 @@
  * The debug panel is created before the mode so a mode can add its own F1 controls while it starts.
  */
 import './ui/styles.css';
+import './ui/art';
 import { events } from './core/Events';
 import { services } from './core/Services';
 import { buildFlags, urlParams, type UrlParams } from './core/Flags';

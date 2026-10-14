@@ -38,6 +38,12 @@ const EMPTY_DEP_FIELDS = [
   'bundledDependencies',
 ];
 const GENERATED_MANIFEST = '.generated-icons.json';
+/**
+ * public/art/: generated promo / UI art the owner chose to ship (DECISIONS, Phase 4: the GDD 2.3 "zero
+ * third-party assets" rule is waived for this one folder only). Images only, referenced as "/art/<name>".
+ */
+const ART_DIR = 'art';
+const ART_MAGIC = new Set(['PNG image', 'JPEG image', 'WebP image']);
 /** Text formats allowed in public/ (still sniffed for binary content). */
 const PUBLIC_TEXT_EXTS = new Set(['.svg', '.json', '.webmanifest', '.txt', '.js', '.css', '.html']);
 const CODE_EXTS = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs', '.jsx']);
@@ -193,6 +199,7 @@ function scanText(where, text, ext) {
   if (ext === '.css') {
     for (const m of text.matchAll(CSS_URL_RE)) {
       const target = m[2].trim().split(/[?#]/)[0].toLowerCase();
+      if (target.startsWith(`/${ART_DIR}/`)) continue; // shipped art (public/art/)
       if (ASSET_EXT_SET.has(extname(target))) failAt(where, text, m.index, `CSS loads an asset (${m[2]}).`);
     }
   }
@@ -276,7 +283,13 @@ function checkPublic() {
       }
       continue;
     }
-    const expected = listed.get(relative(publicDir, abs).split(sep).join('/'));
+    const relPath = relative(publicDir, abs).split(sep).join('/');
+    if (relPath.startsWith(`${ART_DIR}/`)) {
+      if (ART_MAGIC.has(magic)) stats.art = (stats.art ?? 0) + 1;
+      else fail(where, `public/${ART_DIR}/ may only hold PNG, JPEG or WebP images (found ${magic ?? (ext || 'unknown')}).`);
+      continue;
+    }
+    const expected = listed.get(relPath);
     if (!expected) {
       const what = magic ?? `"${ext || '(no extension)'}" file`;
       fail(
@@ -368,7 +381,10 @@ function main() {
   const ms = Math.round(performance.now() - started);
 
   console.log('check-assets: GDD 2.3 asset policy');
-  console.log(`  public/        ${pub.text} text files, ${pub.generated} generated icons (sha256 verified)`);
+  console.log(
+    `  public/        ${pub.text} text files, ${pub.generated} generated icons (sha256 verified), ` +
+      `${pub.art ?? 0} art images (public/${ART_DIR}/)`,
+  );
   console.log(`  package.json   ${deps}`);
   console.log(`  src/ content/  ${scanned} files scanned (binaries, imports, remote URLs, embedded data)`);
   if (ignored.length) console.log(`  ignored OS metadata: ${ignored.join(', ')}`);

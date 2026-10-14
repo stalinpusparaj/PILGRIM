@@ -11,6 +11,7 @@ import { buildFlags } from '../core/Flags';
 import { t } from '../core/I18n';
 import { PALETTES, type PaletteId } from '../gen/palette';
 import { h } from './dom';
+import { chapterArt, cssUrl } from './art';
 import { Menu } from './Menu';
 import { Texts, menuButton, playSfx, uid } from './menu-screen';
 
@@ -152,6 +153,7 @@ export class ChapterSelect {
         '--sky-low': pal.sky.horizon,
         '--ground': pal.ground.mid,
         '--path': pal.ground.path,
+        ...(chapterArt(n) ? { '--art': cssUrl(chapterArt(n)) } : {}),
       },
     });
     const status = h('span', { className: 'pg-chapter__status' });

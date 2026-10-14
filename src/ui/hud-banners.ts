@@ -6,6 +6,7 @@
 import { i18n, t } from '../core/I18n';
 import { EPILOGUE_CHAPTER } from '../core/Save';
 import { h, setText } from './dom';
+import { chapterArt, cssUrl } from './art';
 import { badgeSvg } from './hud-icons';
 
 /** On screen after a new objective (GDD 2.14). */
@@ -156,6 +157,7 @@ export class ChapterCard {
     this.id = id;
     this.time = 0;
     this.leaving = false;
+    this.el.style.setProperty('--art', cssUrl(chapterArt(id)));
     this.refreshText();
     // Alternate two identical entrance animations so a card shown over a card still replays.
     this.flip = !this.flip;

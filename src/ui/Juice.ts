@@ -206,11 +206,11 @@ export class Juice {
     const layer = h('div', { className: 'pg-motes', 'aria-hidden': 'true' });
     for (let i = 0; i < MOTES; i++) {
       const m = h('span', { className: 'pg-mote' });
-      m.style.setProperty('--mx', `${(this.rnd() * 100).toFixed(1)}%`);
+      m.style.setProperty('--mx', `${(8 + this.rnd() * 84).toFixed(1)}%`); // kept inside the screen
       m.style.setProperty('--ms', `${(3 + this.rnd() * 6).toFixed(1)}px`);
       m.style.setProperty('--mt', `${(11 + this.rnd() * 12).toFixed(1)}s`);
       m.style.setProperty('--md', `${(-this.rnd() * 20).toFixed(1)}s`);
-      m.style.setProperty('--mw', `${(this.rnd() * 80 - 40).toFixed(0)}px`);
+      m.style.setProperty('--mw', `${(this.rnd() * 32 - 16).toFixed(0)}px`);
       layer.appendChild(m);
     }
     // Between the shade and the menu column, so motes never sit on the text.

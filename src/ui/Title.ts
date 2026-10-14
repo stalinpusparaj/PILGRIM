@@ -15,7 +15,7 @@
  */
 import { i18n, type Lang } from '../core/I18n';
 import { version as GAME_VERSION } from '../../package.json';
-import { emblemSvg } from './Emblem';
+import { ART } from './art';
 import { h } from './dom';
 import { Menu } from './Menu';
 import { Texts, menuButton, playSfx, uid } from './menu-screen';
@@ -28,7 +28,6 @@ export interface TitleHandlers {
   credits(): void;
 }
 
-const EMBLEM_PX = 92;
 /** Our own down chevron (the 48 grid of src/ui/Svg.ts). */
 const MORE_ICON =
   '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" ' +
@@ -224,6 +223,7 @@ export class Title {
 
   private renderEmblem(): void {
     // Our own generated SVG; the only text in it (the accessible name) is escaped by emblemSvg().
-    this.emblem.innerHTML = emblemSvg(EMBLEM_PX, { id: 'pg-title-emblem', title: i18n.t('ui.title.emblem') });
+    // The painted app icon (public/art/); the SVG emblem stays the favicon source for gen-icons.
+    this.emblem.replaceChildren(h('img', { src: ART.icon, alt: i18n.t('ui.title.emblem'), draggable: false }));
   }
 }

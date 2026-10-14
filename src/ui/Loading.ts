@@ -11,7 +11,7 @@
  */
 import { i18n, t } from '../core/I18n';
 import { hashString } from '../gen/rng';
-import { emblemSvg } from './Emblem';
+import { ART, chapterArt, cssUrl } from './art';
 import { h, setText, uiRoot } from './dom';
 
 export interface LoadingInfo {
@@ -19,6 +19,8 @@ export interface LoadingInfo {
   title: string;
   /** Small line above the title, already translated (e.g. "CHAPTER I"). */
   kicker?: string;
+  /** Full-screen art behind the panel (public/art/), when the chapter has one. */
+  art?: string | null;
   /** Picks which friendly line comes first (default: from the title), so a chapter always opens the same way. */
   seed?: number;
 }
@@ -35,7 +37,7 @@ export function chapterLoadingInfo(id: string): LoadingInfo {
   const m = /^(?:ch)?0*(\d{1,2})$/.exec(id);
   const key = m ? m[1]! : id;
   if (!i18n.has(`ui.chapter.${key}.title`)) return { title: id.toUpperCase() };
-  return { kicker: t(`ui.chapter.${key}.number`), title: t(`ui.chapter.${key}.title`) };
+  return { kicker: t(`ui.chapter.${key}.number`), title: t(`ui.chapter.${key}.title`), art: chapterArt(key) };
 }
 
 /** Keys ui.loading.line.1..N that exist in en.json. */
@@ -86,7 +88,7 @@ export class Loading {
     );
     this.pct = h('p', { className: 'pg-loading__pct', 'aria-hidden': 'true' });
     const emblem = h('div', { className: 'pg-loading__emblem', 'aria-hidden': 'true' });
-    emblem.innerHTML = emblemSvg(72, { id: 'pg-loading-emblem' }); // our own generated SVG, no user text
+    emblem.appendChild(h('img', { src: ART.icon, alt: '', draggable: false }));
     this.root = h(
       'div',
       { className: 'pg-loading', 'aria-busy': 'true' },
@@ -111,6 +113,7 @@ export class Loading {
   show(info: LoadingInfo): void {
     if (this.disposed) return;
     this.cancelHide();
+    this.root.style.setProperty('--art', cssUrl(info.art ?? null));
     setText(this.kicker, info.kicker ?? '');
     this.kicker.hidden = !info.kicker;
     setText(this.title, info.title);
