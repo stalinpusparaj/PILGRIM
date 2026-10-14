@@ -1,0 +1,153 @@
+/*
+ * Letterbox bars (src/ui/Letterbox.ts) and the cutscene UI that rides in the bottom bar: the hold-to-skip ring
+ * (src/narrative/cutscene-skip.ts) and fallback captions (src/narrative/cutscene-caption.ts).
+ * Uses the tokens from styles.css. Only transform and opacity animate (compositor only, no layout per frame).
+ */
+
+.pg-letterbox {
+  --lb-h: clamp(44px, 11vh, 120px);
+  --lb-ink: #0b0810;
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.pg-letterbox__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: var(--lb-ink);
+  transition: transform 400ms cubic-bezier(0.45, 0, 0.25, 1);
+  will-change: transform;
+}
+.pg-letterbox__bar--top {
+  top: 0;
+  height: calc(var(--lb-h) + var(--safe-top));
+  transform: translateY(-101%);
+}
+.pg-letterbox__bar--bottom {
+  bottom: 0;
+  height: calc(var(--lb-h) + var(--safe-bottom));
+  transform: translateY(101%);
+}
+.pg-letterbox.is-on .pg-letterbox__bar { transform: none; }
+.pg-letterbox.is-instant .pg-letterbox__bar { transition: none; }
+
+/* ---------------------------------------------------------------- hold to skip */
+
+.pg-cs-skip {
+  --ring: 56px;
+  position: absolute;
+  right: calc(12px + var(--safe-right));
+  bottom: calc(var(--safe-bottom) + (var(--lb-h) - var(--ring)) / 2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 24px);
+  pointer-events: none;
+}
+@media (pointer: coarse) {
+  .pg-cs-skip { --ring: 64px; }
+}
+
+.pg-cs-skip__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - var(--ring) - 48px);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(11, 8, 16, 0.78);
+  color: var(--ink-inverse);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: right;
+  overflow-wrap: anywhere;
+  opacity: 0;
+  transition: opacity 240ms linear;
+}
+.pg-cs-skip.is-hint .pg-cs-skip__label { opacity: 1; }
+/* A caption on screen has the bar to itself: the ring stays, its hint waits. */
+.pg-cs-caption.is-on ~ .pg-cs-skip .pg-cs-skip__label { opacity: 0; }
+.pg-cs-skip__glyph { display: inline-flex; flex: none; }
+.pg-cs-skip__glyph:empty { display: none; }
+
+.pg-cs-skip__ring {
+  position: relative;
+  flex: none;
+  width: var(--ring);
+  height: var(--ring);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 248, 234, 0.12);
+  color: var(--ink-inverse);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  opacity: 0.75;
+  transition: opacity 160ms linear;
+}
+.pg-cs-skip.is-held .pg-cs-skip__ring,
+.pg-cs-skip.is-hint .pg-cs-skip__ring { opacity: 1; }
+.pg-cs-skip__ring:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+.pg-cs-skip__ring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pg-cs-skip__track { fill: none; stroke: rgba(255, 248, 234, 0.25); stroke-width: 4; }
+.pg-cs-skip__fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+.pg-cs-skip__icon { fill: currentColor; }
+
+/* ---------------------------------------------------------------- captions */
+
+.pg-cs-caption {
+  position: absolute;
+  left: calc(16px + var(--safe-left));
+  right: calc(16px + var(--ring-space, 84px) + var(--safe-right));
+  bottom: calc(var(--safe-bottom) + 8px);
+  min-height: calc(var(--lb-h) - 16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+@media (min-width: 640px) {
+  /* Room for the ring on both sides keeps the line centred on screen. */
+  .pg-cs-caption { left: calc(16px + var(--ring-space, 84px) + var(--safe-left)); }
+}
+.pg-cs-caption__text {
+  max-width: 34em;
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(11, 8, 16, 0.84);
+  color: var(--ink-inverse);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  overflow-wrap: anywhere;
+  opacity: 0;
+  transition: opacity 200ms linear;
+}
+.pg-cs-caption.is-on .pg-cs-caption__text { opacity: 1; }
+.pg-cs-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

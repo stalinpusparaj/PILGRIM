@@ -1,0 +1,65 @@
+{
+  "id": "dialogue_test",
+  "seed": 1679,
+  "palette": "city",
+  "size": 120,
+  "wayWidth": 3,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.02, "height": 1.4, "octaves": 3 },
+    "stamps": [
+      { "type": "hill", "x": -34, "z": 34, "r": 22, "height": 6 },
+      { "type": "hill", "x": 30, "z": 44, "r": 18, "height": 4 },
+      { "type": "ridge", "x": -54, "z": 6, "r": 46, "height": 5, "dir": 1.491 },
+      { "type": "plateau", "x": 0, "z": -46, "r": 22, "height": 0.8 }
+    ]
+  },
+  "way": [
+    [2, 0, -58],
+    [1, 0, -42],
+    [-1, 0, -24],
+    [0, 0, -6],
+    [3, 0, 12],
+    [1, 0, 30],
+    [-5, 0, 46],
+    [-8, 0, 57]
+  ],
+  "detours": [],
+  "zones": [
+    { "id": "town", "type": "town", "shape": "box", "x": 0, "z": -46, "size": [76, 28] },
+    { "id": "meadow", "type": "meadow", "shape": "box", "x": 22, "z": 22, "size": [26, 56] },
+    { "id": "grove", "type": "woods", "shape": "circle", "x": -26, "z": 38, "r": 16 }
+  ],
+  "scatter": [
+    { "type": "tree_cone", "zone": "grove", "density": 0.8, "minDist": 4 },
+    { "type": "tree_round", "density": 0.05, "minDist": 8, "keepClear": 4 },
+    { "type": "tree_fruit", "area": { "x": 30, "z": 18, "r": 9 }, "density": 0.9, "minDist": 5 },
+    { "type": "bush", "density": 0.16, "minDist": 3, "keepClear": 1.5 },
+    { "type": "rock", "density": 0.06, "minDist": 4 },
+    { "type": "grass", "density": 2.2, "minDist": 0.8 },
+    { "type": "flower", "zone": "meadow", "density": 1.4, "minDist": 0.9 },
+    { "type": "flower", "density": 0.18, "minDist": 1.2 }
+  ],
+  "landmarks": [
+    { "type": "gate", "id": "dt_city_gate", "at": [-0.5, 0, -30], "rotY": 0, "params": { "length": 76, "height": 3.4 } },
+    { "type": "house_a", "id": "dt_house_a", "at": [-11, 0, -41] },
+    { "type": "house_b", "id": "dt_house_b", "at": [12, 0, -46] },
+    { "type": "house_c", "id": "dt_house_c", "at": [-10, 0, -54] },
+    { "type": "house_a", "id": "dt_house_d", "at": [14, 0, -56], "params": { "variant": 2 } },
+    { "type": "lamp", "id": "dt_lamp", "at": [-3.6, 0, -27.4] },
+    { "type": "waystone", "id": "dt_waystone", "at": [-5.4, 0, -18.6], "params": { "clear": 6 } },
+    { "type": "sign", "id": "dt_sign", "at": [5.2, 0, 10] },
+    { "type": "bench", "id": "dt_bench", "at": [-4.2, 0, -8] },
+    { "type": "fence", "id": "dt_fence", "path": "way", "from": 0.62, "to": 0.9, "params": { "offset": 3.4, "length": 6, "spacing": 6 } }
+  ],
+  "npcs": [
+    { "id": "christian", "recipe": "christian_burdened", "role": "dialogue_test", "at": [-0.9, 0, -24.2], "rotY": 0 },
+    { "id": "evangelist", "recipe": "evangelist", "role": "dialogue_test", "at": [-0.8, 0, -21.2], "rotY": 3.1416 }
+  ],
+  "triggers": [],
+  "waystones": [],
+  "promises": [],
+  "water": [],
+  "ambience": "town",
+  "music": "pilgrim"
+}

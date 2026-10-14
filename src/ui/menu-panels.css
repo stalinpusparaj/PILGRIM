@@ -1,0 +1,319 @@
+/*
+ * GDD 2.14 menu screens, part 2: Pause (+ Controls card and the yes / no confirm), Chapters, Credits, Demo end and
+ * "THE END OF THE DREAM". Shared pieces (.pg-screen, .pg-menu-panel, .pg-mbtn, focus rings) are in menus.css.
+ */
+
+/* ------------------------------------------------------------------------------- pause, confirm, controls */
+
+.pg-pause__panel { width: min(440px, 100%); }
+.pg-confirm { width: min(500px, 100%); }
+.pg-confirm__text {
+  margin: 0 auto 6px;
+  font-size: var(--fs-large);
+  line-height: 1.35;
+}
+.pg-confirm__row { display: flex; flex-wrap: wrap; gap: 14px; }
+.pg-confirm__row .pg-mbtn { flex: 1 1 140px; width: auto; }
+
+.pg-controls { width: min(580px, 100%); text-align: left; }
+.pg-controls .pg-menu-title { text-align: center; }
+.pg-controls__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px;
+  border-radius: var(--radius);
+  background: var(--panel-deep);
+}
+.pg-tab {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 52px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--fs-small);
+  font-weight: 800;
+  line-height: 1.15;
+  overflow-wrap: break-word;
+  cursor: pointer;
+}
+.pg-tab.is-selected { background: var(--accent); box-shadow: 0 3px 0 var(--accent-deep); }
+.pg-controls__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  max-height: min(52vh, 470px);
+  max-height: min(52dvh, 470px);
+  margin: 0;
+  padding: 2px 4px;
+  overflow-y: auto;
+  list-style: none;
+}
+.pg-controls__row {
+  flex: none; /* rows keep their height; the list scrolls */
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--panel-deep);
+}
+.pg-controls__row:focus { outline: none; }
+.pg-controls__row.is-focused { outline: 3px solid var(--focus); outline-offset: 1px; }
+.pg-controls__glyphs {
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 8em;
+  color: var(--ink);
+}
+.pg-controls__label { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.pg-controls__label small { font-size: var(--fs-small); color: var(--ink-soft); }
+.pg-controls__chip {
+  display: inline-flex;
+  align-items: center;
+  height: 1.9em;
+  padding: 0 0.6em;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.8em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.pg-controls__round {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2em;
+  height: 2em;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 2px 0 var(--accent-deep);
+}
+.pg-controls__or { margin: 0 4px; opacity: 0.6; }
+@media (max-width: 480px) {
+  .pg-controls__row { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .pg-controls__glyphs { min-width: 0; }
+}
+
+/* ------------------------------------------------------------------------------------------ chapters */
+
+.pg-chapters__panel {
+  width: min(1000px, 100%);
+  max-width: min(1000px, 100%);
+  max-height: 100%;
+  text-align: left;
+}
+.pg-chapters__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.pg-chapters__head .pg-menu-title { flex: 1 1 auto; min-width: 0; margin: 0; text-align: center; }
+.pg-back { flex: none; width: auto; min-width: 120px; }
+.pg-chapters__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  grid-auto-rows: max-content; /* rows fit their cards even when the scrolling grid is short */
+  align-content: start;
+  gap: 14px;
+  min-height: 0;
+  margin: 0 -8px;
+  padding: 8px 8px 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.pg-chapter {
+  display: flex;
+  flex-direction: column;
+  min-height: 150px;
+  padding: 0;
+  overflow: hidden;
+  border: 3px solid var(--panel-edge);
+  border-radius: var(--radius);
+  background: var(--panel-deep);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--shadow-solid);
+  transition: transform var(--dur) var(--ease-out);
+  touch-action: manipulation;
+}
+.pg-chapter:not([aria-disabled="true"]):hover { transform: translateY(-2px); }
+.pg-chapter__swatch {
+  position: relative;
+  display: block;
+  flex: none;
+  height: 54px;
+  background: linear-gradient(180deg, var(--sky-top), var(--sky-low) 62%, var(--ground) 62%, var(--ground) 100%);
+}
+.pg-chapter__swatch::after {
+  content: '';
+  position: absolute;
+  left: 44%;
+  bottom: 0;
+  width: 12%;
+  height: 38%;
+  background: var(--path);
+  clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+}
+.pg-chapter__text { display: flex; flex-direction: column; gap: 4px; padding: 10px 14px 14px; min-width: 0; }
+.pg-chapter__number {
+  color: #8a5a0c; /* a darker gold for text: 4.8:1 on the card (--accent-deep is 2.5:1, below AA) */
+  font-size: var(--fs-small);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.pg-chapter__title {
+  font-family: var(--font-title);
+  font-size: var(--fs-body);
+  font-weight: 700;
+  line-height: 1.22;
+  overflow-wrap: anywhere;
+}
+.pg-chapter__status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: var(--fs-small);
+  font-weight: 700;
+}
+.pg-chapter__status:empty { display: none; }
+.pg-chapter__lock { display: inline-flex; }
+.pg-chapter[aria-disabled="true"] { cursor: default; background: #efe3cb; }
+.pg-chapter[aria-disabled="true"] .pg-chapter__swatch { filter: grayscale(0.85) brightness(0.92); }
+.pg-chapter[aria-disabled="true"] .pg-chapter__title,
+.pg-chapter[aria-disabled="true"] .pg-chapter__number { color: var(--ink-soft); }
+.pg-chapter.is-focused,
+.pg-chapter:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+
+/* ------------------------------------------------------------------------------------------- credits */
+
+.pg-credits {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+  background: rgba(15, 10, 22, 0.88);
+  color: var(--ink-inverse);
+}
+.pg-credits__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  outline: none;
+  -webkit-mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent);
+}
+.pg-credits__scroll::-webkit-scrollbar { display: none; }
+.pg-credits__roll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 42vh 24px 46vh;
+  text-align: center;
+}
+.pg-credits .pg-menu-title { color: var(--accent-light); }
+.pg-credits__emblem svg { display: block; }
+.pg-credits__name,
+.pg-credits__big {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: var(--fs-large);
+  line-height: 1.35;
+}
+.pg-credits__name { color: var(--accent-light); letter-spacing: 0.04em; }
+.pg-credits__line { margin: 0; font-size: var(--fs-body); opacity: 0.92; }
+.pg-credits__foot {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  padding: 12px calc(var(--gap) + var(--safe-right)) calc(var(--gap) + var(--safe-bottom))
+    calc(var(--gap) + var(--safe-left));
+}
+.pg-credits__back { width: min(320px, 100%); }
+
+/* ------------------------------------------------------------------------------------------ demo end */
+
+.pg-demo-end__panel { width: min(520px, 100%); }
+.pg-demo-end__emblem svg { display: block; margin: 0 auto; }
+.pg-demo-end__line1 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-title);
+  font-size: min(var(--fs-title), 9vw); /* like Settings: large text never splits a word on a phone */
+  overflow-wrap: break-word;
+}
+.pg-demo-end__line2 { margin: 0 auto 8px; color: var(--ink-soft); font-size: var(--fs-large); }
+
+/* -------------------------------------------------------------------------------------------- end card */
+
+.pg-end {
+  z-index: 860;
+  background: #07050b;
+  opacity: 0;
+  transition: opacity 1.6s ease;
+}
+.pg-end.is-shown { opacity: 1; }
+.pg-end__card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 760px;
+  padding: 28px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: #f3e9d2;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+.pg-end__card.is-focused,
+.pg-end__card:focus-visible { outline: 2px solid rgba(243, 233, 210, 0.3); outline-offset: 0; }
+.pg-end__title {
+  color: var(--accent-light);
+  font-family: var(--font-title);
+  font-size: clamp(32px, 7vw, 64px);
+  letter-spacing: 0.06em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.pg-end__line { font-family: var(--font-title); font-size: var(--fs-large); font-style: italic; opacity: 0.9; }
+
+/* ------------------------------------------------------------------------------------ touch pause icon */
+
+/* GameFlow's pause icon while the touch controls are hidden (talks, cutscenes): where Touch.ts puts its own. */
+.pg-flow-pause {
+  position: absolute;
+  top: calc(14px + var(--safe-top));
+  right: calc(14px + var(--safe-right));
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin: 0;
+  padding: 0;
+  border: 3px solid rgba(255, 248, 234, 0.75);
+  border-radius: 50%;
+  background: rgba(28, 20, 34, 0.45);
+  color: var(--ink-inverse);
+  box-shadow: 0 4px 12px rgba(28, 20, 34, 0.35);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 80ms, background-color 80ms;
+}
+.pg-flow-pause:active { transform: scale(0.92); background: rgba(242, 179, 61, 0.7); }
+.pg-flow-pause svg { display: block; }

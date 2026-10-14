@@ -1,0 +1,75 @@
+/**
+ * Stand-ins the flow uses until the real modules plug in:
+ * - the default chapter launcher opens the playable test world (src/world/TestWorld.ts, `content/levels/test.json`) for
+ *   every chapter, so title → opening → "chapter" → pause → title can be played and tested before the
+ *   ChapterManager exists; `?chapter=test` uses it on purpose;
+ * - the default Settings screen is SettingsUI (loaded on first use).
+ * GameFlow.setChapterLauncher() / setScreen() replace them. The Satchel lives in flow-satchel.ts.
+ */
+import type { Engine } from '../core/Engine';
+import type { TestWorld } from '../world/TestWorld';
+import type { ChapterHandle, ChapterLauncher, ScreenFactory } from './flow-types';
+
+/**
+ * The test world as a chapter. `onWorld` hears the world when it is on screen and null when it goes (the
+ * `?chapter=test` mode runner exposes it as `window.__pilgrim.testWorld`).
+ */
+export function testWorldLauncher(
+  engine: Engine,
+  onWorld?: (world: TestWorld | null) => void,
+): ChapterLauncher {
+  return async () => {
+    const { TestWorld } = await import('../world/TestWorld');
+    const world = new TestWorld(engine);
+    try {
+      await world.start();
+    } catch (err) {
+      world.dispose();
+      throw err;
+    }
+    onWorld?.(world);
+    const handle: ChapterHandle = {
+      gameplay: true, // Phase 2: the test world is played (PlaySession), with fly cameras on F1 / keys 2-3
+      satchelMap: () => {
+        const built = world.current;
+        if (!built) return null;
+        const p = world.play?.player;
+        const player = p
+          ? { x: p.renderPosition.x, z: p.renderPosition.z, heading: { x: p.forward.x, z: p.forward.z } }
+          : null;
+        return { level: built.level, player };
+      },
+      dispose: () => {
+        onWorld?.(null);
+        world.dispose();
+      },
+    };
+    return handle;
+  };
+}
+
+/** Settings > SettingsUI.open() resolves when the player leaves the screen. */
+export const settingsScreen: ScreenFactory = (ctx) => {
+  let disposed = false;
+  let dispose: (() => void) | null = null;
+  import('../ui/SettingsUI')
+    .then(({ SettingsUI }) => {
+      if (disposed) return;
+      const ui = new SettingsUI(ctx.parent);
+      dispose = () => ui.dispose();
+      ui.open().then(
+        () => ctx.close(),
+        () => ctx.close(),
+      );
+    })
+    .catch((err: unknown) => {
+      console.error('[flow] the settings screen could not open', err);
+      ctx.close();
+    });
+  return {
+    dispose: () => {
+      disposed = true;
+      dispose?.();
+    },
+  };
+};

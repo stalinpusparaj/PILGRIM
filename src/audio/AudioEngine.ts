@@ -111,6 +111,7 @@ export class AudioEngine {
   private readonly seed: number;
   private readonly session: AudioSessionType | undefined;
   private readonly flags: MixFlags = { ducked: false, silenced: false, hidden: false };
+  private readonly duckers = new Set<string>();
   private isReady = false;
   private failed = false;
   private disposed = false;
@@ -194,11 +195,14 @@ export class AudioEngine {
     }
   }
 
-  /** Dialogue ducks the music by 6 dB while on. */
-  duck(on: boolean): void {
-    if (this.flags.ducked === on) return;
-    this.flags.ducked = on;
-    this.mixer?.apply(this.flags, on ? TC_DUCK_DOWN : TC_DUCK_UP);
+  /** Ducks the music by 6 dB while any owner (`by`) holds it: a pause closing mid-dialogue keeps the duck. */
+  duck(on: boolean, by = 'default'): void {
+    if (on) this.duckers.add(by);
+    else this.duckers.delete(by);
+    const ducked = this.duckers.size > 0;
+    if (this.flags.ducked === ducked) return;
+    this.flags.ducked = ducked;
+    this.mixer?.apply(this.flags, ducked ? TC_DUCK_DOWN : TC_DUCK_UP);
   }
 
   /** Puts the shared listener on the camera (call once per frame, after the camera moved). Allocation-free. */
@@ -288,7 +292,7 @@ export class AudioEngine {
       events.on('music:stop', (p) => this.music.stop(p?.fade)),
       events.on('music:silence', (p) => this.music.silence(p?.fade)),
       events.on('ambience:set', (p) => this.ambience.set(p.id, p.fade)),
-      events.on('audio:duck', (p) => this.duck(p.on)),
+      events.on('audio:duck', (p) => this.duck(p.on, p.by)),
       events.on('settings:changed', (p) => {
         if (p.key.startsWith('vol')) this.mixer?.apply(this.flags, TC_VOLUME);
       }),

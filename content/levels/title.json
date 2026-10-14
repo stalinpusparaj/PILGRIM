@@ -1,0 +1,86 @@
+{
+  "id": "title",
+  "seed": 1678,
+  "palette": "title",
+  "size": 300,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.011, "height": 2.4, "octaves": 4 },
+    "stamps": [
+      { "type": "valley", "x": 0, "z": 10, "r": 70, "depth": 3, "dir": 1.55 },
+      { "type": "hill", "x": -92, "z": 56, "r": 52, "height": 15 },
+      { "type": "hill", "x": -70, "z": -40, "r": 46, "height": 12 },
+      { "type": "hill", "x": 88, "z": 36, "r": 56, "height": 17 },
+      { "type": "hill", "x": 78, "z": -62, "r": 44, "height": 13 },
+      { "type": "hill", "x": -40, "z": 118, "r": 30, "height": 7 },
+      { "type": "ridge", "x": -70, "z": -138, "r": 70, "height": 15, "dir": 0.1 },
+      { "type": "ridge", "x": 78, "z": -136, "r": 70, "height": 16, "dir": -0.1 },
+      { "type": "plateau", "x": 8, "z": -128, "r": 22, "height": 12 }
+    ]
+  },
+  "way": [
+    [-4, 0, 140],
+    [10, 0, 112],
+    [-8, 0, 84],
+    [-14, 0, 58],
+    [4, 0, 32],
+    [14, 0, 6],
+    [0, 0, -20],
+    [-12, 0, -46],
+    [-2, 0, -72],
+    [10, 0, -96],
+    [8, 0, -114]
+  ],
+  "detours": [],
+  "zones": [
+    { "id": "far_light", "type": "farLight", "shape": "circle", "x": 8, "z": -128, "r": 3, "height": 54 },
+    {
+      "id": "title_camera",
+      "type": "cameraRail",
+      "shape": "way",
+      "path": "way",
+      "from": 0.02,
+      "to": 0.3,
+      "r": 2,
+      "height": 7,
+      "offset": -5,
+      "seconds": 75
+    },
+    { "id": "meadow_west", "type": "meadow", "shape": "box", "x": -40, "z": 84, "size": [50, 60] },
+    { "id": "meadow_east", "type": "meadow", "shape": "box", "x": 46, "z": 4, "size": [44, 70] },
+    { "id": "woods_west", "type": "woods", "shape": "circle", "x": -88, "z": 10, "r": 40 },
+    { "id": "woods_east", "type": "woods", "shape": "circle", "x": 92, "z": 90, "r": 34 },
+    { "id": "orchard", "type": "orchard", "shape": "circle", "x": 40, "z": 74, "r": 16 }
+  ],
+  "scatter": [
+    { "type": "tree_cone", "zone": "woods_west", "density": 0.9, "minDist": 4.5 },
+    { "type": "tree_cone", "zone": "woods_east", "density": 0.8, "minDist": 4.5 },
+    { "type": "tree_round", "density": 0.05, "minDist": 8, "keepClear": 4 },
+    { "type": "tree_fruit", "zone": "orchard", "density": 1.2, "minDist": 5 },
+    { "type": "bush", "density": 0.14, "minDist": 3, "keepClear": 1.5 },
+    { "type": "rock", "density": 0.05, "minDist": 4, "keepClear": 1 },
+    { "type": "grass", "density": 1.8, "minDist": 0.9 },
+    { "type": "flower", "zone": "meadow_west", "density": 1.5, "minDist": 0.9 },
+    { "type": "flower", "zone": "meadow_east", "density": 1.4, "minDist": 0.9 },
+    { "type": "flower", "density": 0.12, "minDist": 1.2 }
+  ],
+  "landmarks": [
+    { "type": "waystone", "id": "title_waystone", "at": [6, 0, 96] },
+    {
+      "type": "fence",
+      "id": "title_fence",
+      "path": "way",
+      "from": 0.08,
+      "to": 0.2,
+      "params": { "offset": 4.2, "spacing": 4 }
+    },
+    { "type": "bench", "id": "title_bench", "at": [-22, 0, 64], "rotY": 1.4 },
+    { "type": "wicket_gate", "id": "title_gate", "at": [9, 0, -100], "params": { "length": 26 } }
+  ],
+  "npcs": [],
+  "triggers": [],
+  "waystones": [],
+  "promises": [],
+  "ambience": "meadow",
+  "music": "title"
+}

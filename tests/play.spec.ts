@@ -322,28 +322,29 @@ test('burdened ~2.0 m/s; after the debug Cross drop free walk ~3.4, run ~6 and t
   expect(problems, problems.join('\n')).toEqual([]);
 });
 
-test('keyboard only: Tab keeps focus on "Click to play" and Enter starts play', async ({ page }) => {
+test('keyboard only: losing the pointer lock pauses; Tab stays in the menu and Enter goes back to play', async ({ page }) => {
   const problems = watchConsole(page);
   await page.goto('/?chapter=test');
   await waitForMode(page);
-  // Headless Chrome grants the pointer lock at once; letting it go brings the overlay up (as Esc or alt-tab do).
+  // Headless Chrome grants the pointer lock at once; letting it go is what Esc or alt-tab do. Under the game flow
+  // that opens the pause menu, and KEEP GOING (Enter) takes the lock back, so no mouse is ever needed.
   await page.evaluate(() => document.exitPointerLock());
-  const overlay = page.locator('.pg-click-to-play');
-  await expect(overlay).toBeVisible();
-  await expect(overlay).toBeFocused();
-  await page.keyboard.press('Tab'); // the Satchel key (GDD 2.6): must not send focus out of the page
-  await expect(overlay).toBeFocused();
-  await page.keyboard.press('Shift+Tab');
-  await expect(overlay).toBeFocused();
+  const resume = page.locator('[data-key="ui.pause.resume"]');
+  await expect(resume).toBeVisible();
+  await resume.focus();
+  await page.keyboard.press('Tab'); // the Satchel key (GDD 2.6): focus must stay inside the menu
+  expect(await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))).toBe(true);
+  await resume.focus();
   await page.keyboard.press('Enter');
-  await expect(overlay).toBeHidden();
-  expect(
-    await page.evaluate(
-      () =>
-        (
-          window as unknown as { __pilgrim: { services: { get(k: 'input'): { pointerLocked: boolean } } } }
-        ).__pilgrim.services.get('input').pointerLocked,
-    ),
-  ).toBe(true);
+  await expect(resume).toBeHidden();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __pilgrim: { services: { get(k: 'input'): { pointerLocked: boolean } } } })
+            .__pilgrim.services.get('input').pointerLocked,
+      ),
+    )
+    .toBe(true);
   expect(problems, problems.join('\n')).toEqual([]);
 });

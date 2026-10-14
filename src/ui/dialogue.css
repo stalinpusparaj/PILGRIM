@@ -1,0 +1,260 @@
+/*
+ * Dialogue presentation: world-space speech bubbles (src/narrative/SpeechBubbles.ts) and the bottom
+ * conversation panel (src/ui/DialoguePanel.ts). Uses the tokens from styles.css (panel colours, radii, font
+ * stacks, --fs-* text scale, safe areas). Motion is gentle and switched off by Reduce motion (styles.css).
+ */
+
+/* ---------------------------------------------------------------- typewriter */
+
+.tw-rest { visibility: hidden; }
+
+/* ---------------------------------------------------------------- speech bubbles */
+
+.dlg-bubbles { position: absolute; inset: 0; z-index: 25; overflow: hidden; pointer-events: none; }
+
+.dlg-bubble {
+  position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; pointer-events: none;
+}
+.dlg-bubble.is-off { visibility: hidden; }
+
+.dlg-bubble__box {
+  --tail-x: 0px; position: relative; width: max-content; max-width: min(16em, calc(100vw - 32px));
+  padding: 0.45em 0.8em 0.5em; background: #fffaf0; color: var(--ink); border: 3px solid var(--panel-edge);
+  border-radius: 18px; box-shadow: 0 4px 0 var(--shadow-solid), 0 8px 18px var(--shadow);
+  font-family: var(--font-body); font-size: var(--fs-body); font-weight: 600; line-height: 1.3;
+  overflow-wrap: break-word; animation: dlg-bubble-in var(--dur-slow) var(--ease-bounce) both;
+  transform-origin: calc(50% + var(--tail-x)) 100%;
+}
+body.lang-ta .dlg-bubble__box { line-height: 1.5; }
+
+/* Tail: a rounded triangle under the box, pointing at the head (shifted when the box is pushed to an edge). */
+.dlg-bubble__tail {
+  position: absolute; left: calc(50% + var(--tail-x)); bottom: -14px; width: 22px; height: 14px;
+  margin-left: -11px; overflow: hidden;
+}
+.dlg-bubble__tail::before {
+  content: ''; position: absolute; left: 3px; top: -10px; width: 16px; height: 16px; background: #fffaf0;
+  border: 3px solid var(--panel-edge); border-radius: 0 0 5px 0; transform: rotate(45deg);
+}
+
+.dlg-bubble.is-leaving .dlg-bubble__box { animation: dlg-bubble-out 200ms ease-in both; }
+
+@keyframes dlg-bubble-in {
+  from { opacity: 0; transform: scale(0.82); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes dlg-bubble-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.9); }
+}
+
+/* ---------------------------------------------------------------- conversation panel */
+
+/* Full-screen layer while a conversation runs: a tap or click anywhere moves the talk on. */
+.dlg-layer {
+  position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-end;
+  padding: var(--gap) calc(var(--gap) + var(--safe-right)) calc(var(--gap) + var(--safe-bottom))
+    calc(var(--gap) + var(--safe-left));
+  pointer-events: auto; cursor: pointer; touch-action: manipulation; opacity: 0;
+  transition: opacity var(--dur) var(--ease-out);
+}
+.dlg-layer.is-open { opacity: 1; }
+.dlg-layer:focus { outline: none; }
+
+.dlg-panel {
+  position: relative; width: min(880px, 100%); display: grid; grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: 'face body' 'choices choices'; column-gap: clamp(12px, 2.5vw, 22px);
+  padding: clamp(14px, 2.6vw, 22px) clamp(14px, 3vw, 26px) clamp(16px, 2.6vw, 22px); background: var(--panel);
+  color: var(--ink); border: 4px solid var(--panel-edge); border-radius: var(--radius-lg);
+  box-shadow: 0 8px 0 var(--shadow-solid), 0 18px 40px var(--shadow); cursor: pointer;
+  /* Long lines (Tamil, text size XL) scroll inside the panel instead of leaving the screen. */
+  max-height: calc(100% - 64px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
+  scrollbar-width: thin; scrollbar-color: var(--panel-edge) transparent; transform: translateY(0);
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+.dlg-layer:not(.is-open) .dlg-panel { transform: translateY(24px); }
+.dlg-panel.is-player {
+  grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'body face' 'choices choices';
+}
+/* Choices after a bubble line: just the "Choose one" kicker and the buttons (beats the phone layout too). */
+.dlg-layer .dlg-panel.is-choices-only { grid-template-areas: 'kicker kicker' 'choices choices'; row-gap: 0; }
+.dlg-panel.is-choices-only .dlg-face, .dlg-panel.is-choices-only .dlg-body { display: none; }
+
+.dlg-face {
+  grid-area: face; align-self: start; width: clamp(64px, 11vw, 96px); height: clamp(64px, 11vw, 96px);
+  border-radius: 50%; background: var(--panel-deep) center / cover no-repeat;
+  box-shadow: 0 3px 0 var(--shadow-solid); display: flex; align-items: center; justify-content: center;
+  color: var(--ink); font-family: var(--font-title); font-size: var(--fs-title); font-weight: 700;
+  user-select: none;
+}
+.dlg-face.has-image { color: transparent; }
+/* Portraits face the viewer's right (towards the text); the player's, on the right, turns to face left. */
+.dlg-panel.is-player .dlg-face.has-image { transform: scaleX(-1); }
+
+.dlg-body { grid-area: body; min-width: 0; display: flex; flex-direction: column; gap: 0.3em; }
+
+.dlg-name {
+  align-self: flex-start; max-width: 100%; padding: 0.12em 0.7em 0.16em; border-radius: 999px;
+  background: var(--accent); border: 2px solid var(--accent-deep); color: var(--accent-ink);
+  font-family: var(--font-title); font-size: var(--fs-small); font-weight: 700; letter-spacing: 0.03em;
+  overflow-wrap: break-word;
+}
+.dlg-panel.is-player .dlg-name { align-self: flex-end; }
+
+.dlg-text {
+  min-height: calc(2 * 1.4em);
+  padding-right: 2.6em; /* room for the next indicator */
+  font-size: var(--fs-large); font-weight: 600; line-height: 1.4; overflow-wrap: break-word;
+}
+body.lang-ta .dlg-text { line-height: 1.6; min-height: calc(2 * 1.6em); }
+
+.dlg-kicker {
+  grid-area: kicker; margin: 0 0 0.4em; font-size: var(--fs-small); font-weight: 800; color: var(--ink-soft);
+}
+
+/* Next: a gold chevron (with the key or button glyph on keyboard / pad) that bobs gently. */
+.dlg-next {
+  position: absolute; right: clamp(12px, 2.4vw, 22px); bottom: clamp(10px, 2vw, 18px); display: inline-flex;
+  align-items: center; gap: 0.35em; color: var(--accent-deep); font-size: var(--fs-small); font-weight: 800;
+  pointer-events: none; animation: dlg-bob 1.6s ease-in-out infinite;
+}
+.dlg-panel.is-player .dlg-next {
+  /* clear of the portrait column on the right */
+  right: calc(clamp(14px, 3vw, 26px) + clamp(64px, 11vw, 96px) + clamp(12px, 2.5vw, 22px));
+}
+.dlg-next svg { width: 1.5em; height: 1.5em; }
+.dlg-next .dlg-glyph { display: inline-flex; align-items: center; color: var(--ink-soft); }
+.dlg-next .dlg-glyph:empty { display: none; }
+
+@keyframes dlg-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
+}
+
+/* Choices: up to three big buttons, numbered for keyboard players. */
+.dlg-choices { grid-area: choices; display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.dlg-choices:empty { display: none; }
+.dlg-panel.is-choices-only .dlg-choices { margin-top: 0; }
+
+.dlg-choice.btn {
+  justify-content: flex-start; width: 100%; min-height: 64px; padding: 0.5em 1em; text-align: start;
+  white-space: normal; overflow-wrap: break-word; font-size: var(--fs-body); line-height: 1.3;
+  background: #fffaf0; border-color: var(--panel-edge); color: var(--ink);
+  box-shadow: 0 5px 0 var(--shadow-solid), 0 8px 16px var(--shadow);
+  animation: dlg-choice-in var(--dur-slow) var(--ease-out) both;
+}
+.dlg-choice.btn:nth-child(2) { animation-delay: 60ms; }
+.dlg-choice.btn:nth-child(3) { animation-delay: 120ms; }
+/* Cream buttons; the highlighted one turns gold and gets the focus ring (shape and colour both show it). */
+.dlg-choice.btn:hover, .dlg-choice.btn.is-focused, .dlg-choice.btn:focus-visible {
+  background: var(--accent); border-color: var(--accent-deep);
+  box-shadow: 0 5px 0 var(--accent-deep), 0 8px 16px var(--shadow);
+}
+.dlg-choice.btn.is-focused, .dlg-choice.btn:focus-visible {
+  outline: 4px solid var(--focus); outline-offset: 4px;
+  box-shadow: 0 5px 0 var(--accent-deep), 0 0 0 4px var(--panel);
+}
+.dlg-choice.btn:active { box-shadow: 0 1px 0 var(--accent-deep), 0 3px 6px var(--shadow); }
+.dlg-choice__num {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 1.8em;
+  height: 1.8em; border-radius: 10px; background: var(--panel); border: 2px solid var(--accent-deep);
+  color: var(--ink); font-size: var(--fs-small); font-weight: 800;
+}
+.dlg-layer:not(.is-kbm) .dlg-choice__num { display: none; }
+
+@keyframes dlg-choice-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hold to skip: a round button whose ring fills while Space / A (or the button itself) is held. */
+.dlg-skip {
+  position: absolute; top: calc(var(--gap) + var(--safe-top)); right: calc(var(--gap) + var(--safe-right));
+  width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%; background: rgba(28, 20, 34, 0.5);
+  color: var(--ink-inverse); cursor: pointer; touch-action: none; display: flex; align-items: center;
+  justify-content: center; opacity: 0.75; transition: opacity var(--dur) linear;
+}
+.dlg-skip:hover, .dlg-skip.is-holding { opacity: 1; }
+/*
+ * Touch: the top-right corner belongs to the pause icon (GameFlow's, 72 px at 14 px): the ring sits under it and
+ * the panel stays below both (choices hide the ring, so they only keep clear of the icon).
+ */
+.dlg-layer.is-touch .dlg-skip { top: calc(96px + var(--safe-top)); right: calc(22px + var(--safe-right)); }
+.dlg-layer.is-touch .dlg-panel { max-height: calc(100% - 148px); }
+.dlg-layer.is-touch .dlg-panel.has-choices { max-height: calc(100% - 84px); }
+.dlg-skip[aria-disabled='true'] { visibility: hidden; }
+.dlg-skip svg { width: 100%; height: 100%; }
+.dlg-skip .dlg-ring-track { stroke: rgba(255, 248, 234, 0.35); }
+.dlg-skip .dlg-ring { stroke: var(--accent-light); transition: stroke-dashoffset 60ms linear; }
+
+/* Bubble lines: the panel box steps aside; the layer keeps the input and shows only the hint. */
+.dlg-layer.is-bubble-line .dlg-panel { display: none; }
+.dlg-hint {
+  display: none; align-items: center; gap: 0.4em; padding: 0.35em 0.9em; border-radius: 999px;
+  background: rgba(28, 20, 34, 0.55); color: var(--ink-inverse); font-size: var(--fs-small); font-weight: 800;
+  animation: dlg-bob 1.6s ease-in-out infinite;
+}
+.dlg-hint svg { width: 1.4em; height: 1.4em; }
+.dlg-layer.is-bubble-line .dlg-hint.is-ready { display: inline-flex; }
+
+/* Touch screens: primary actions >= 72 px tall. */
+@media (pointer: coarse) {
+  .dlg-choice.btn { min-height: 72px; }
+}
+
+/* Phones: full-width panel; a small portrait sits beside the name and the text gets the whole width. */
+@media (max-width: 600px) {
+  .dlg-layer { padding-left: calc(10px + var(--safe-left)); padding-right: calc(10px + var(--safe-right)); }
+  .dlg-panel, .dlg-panel.is-player {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: 'face name' 'text text' 'choices choices'; row-gap: 8px;
+  }
+  .dlg-panel.is-player {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'name face' 'text text' 'choices choices';
+  }
+  .dlg-body { display: contents; }
+  .dlg-name { grid-area: name; align-self: center; justify-self: start; }
+  .dlg-panel.is-player .dlg-name { justify-self: end; }
+  .dlg-face { width: 56px; height: 56px; font-size: var(--fs-large); }
+  .dlg-text { grid-area: text; font-size: var(--fs-body); padding-right: 1.8em; }
+  .dlg-panel.is-player .dlg-next { right: clamp(14px, 3vw, 26px); }
+  .dlg-choice.btn { min-height: 72px; }
+}
+
+/*
+ * Phones on their side (and other short screens): the question and its answers side by side, so both are in
+ * view at once; a smaller portrait, tighter padding, 56 px choices.
+ */
+@media (max-height: 520px) and (min-width: 601px) {
+  .dlg-layer { padding-top: calc(8px + var(--safe-top)); padding-bottom: calc(8px + var(--safe-bottom)); }
+  .dlg-panel { width: min(980px, 100%); padding: 10px 16px 12px; column-gap: 14px; }
+  .dlg-panel.has-choices { max-height: 100%; } /* the skip ring is hidden while choices are up */
+  .dlg-face { width: 48px; height: 48px; font-size: var(--fs-large); }
+  .dlg-panel.is-player .dlg-next { right: 78px; } /* padding + the 48 px portrait + the gap */
+  .dlg-text { min-height: 0; }
+  /* With choices: portrait and name over the whole question on the left, the answers on the right. */
+  .dlg-panel.has-choices {
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto 1fr;
+    grid-template-areas: 'face name choices' 'text text choices'; row-gap: 6px;
+  }
+  .dlg-panel.is-player.has-choices {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-areas: 'name face choices' 'text text choices';
+  }
+  .dlg-panel.has-choices .dlg-body { display: contents; }
+  .dlg-panel.has-choices .dlg-name { grid-area: name; align-self: center; justify-self: start; }
+  .dlg-panel.is-player.has-choices .dlg-name { justify-self: end; }
+  .dlg-panel.has-choices .dlg-text { grid-area: text; padding-right: 0; }
+  .dlg-layer .dlg-panel.is-choices-only.has-choices {
+    grid-template-columns: minmax(0, 1fr); grid-template-areas: 'kicker' 'choices';
+  }
+  /* Centred by auto margins: when the answers are taller than the panel they start at its top (no lost top). */
+  .dlg-panel.has-choices .dlg-choices { margin: auto 0; gap: 8px; align-self: start; }
+  .dlg-choice.btn { min-height: 56px; padding: 0.35em 0.8em; }
+}
+
+@media (forced-colors: active) {
+  .dlg-bubble__box, .dlg-panel { border-color: CanvasText; }
+}

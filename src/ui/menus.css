@@ -1,0 +1,325 @@
+/*
+ * GDD 2.14 menu screens, part 1: shared pieces and the Title (part 2, menu-panels.css: Pause with its Controls
+ * card and confirm, Chapters, Credits, Demo end, the end cards; the Opening has opening.css). Built on the tokens,
+ * .panel and .btn of styles.css. Layers inside #ui: title 50, menus 400, the
+ * opening and the end card 860 (above the loading screen, 800, so Chapter I can load behind the narration).
+ * Big targets everywhere (>= 48 px; primary buttons 72 px on phones), visible focus for keyboard and pad,
+ * nothing overflows at 375 px wide or in Tamil, reduce-motion handled by styles.css.
+ */
+
+/* ------------------------------------------------------------------------------------------- shared */
+
+.pg-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--gap) + var(--safe-top)) calc(var(--gap) + var(--safe-right))
+    calc(var(--gap) + var(--safe-bottom)) calc(var(--gap) + var(--safe-left));
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+.pg-scrim {
+  background: var(--scrim);
+  animation: pilgrim-fade-in var(--dur-slow) var(--ease-out) both;
+}
+
+.pg-menu-panel {
+  width: min(460px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+
+.pg-menu-title {
+  margin: 0 0 4px;
+  color: var(--ink);
+  font-family: var(--font-title);
+  font-size: var(--fs-title);
+  letter-spacing: 0.04em;
+  overflow-wrap: break-word;
+}
+
+.pg-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pg-mbtn {
+  width: 100%;
+  min-height: 60px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+.pg-mbtn--primary {
+  min-height: 66px;
+  font-size: var(--fs-large);
+}
+@media (max-width: 760px), (pointer: coarse) {
+  .pg-mbtn--primary { min-height: 72px; }
+}
+@media (max-width: 480px) {
+  .pg-mbtn--primary { font-size: calc(var(--fs-body) * 1.1); }
+  .pg-menu-title { font-size: calc(var(--fs-title) * 0.8); }
+}
+
+/* Focus ring for keyboard, gamepad and mouse hover (Menu adds .is-focused); touch shows none. */
+[data-menu-item].is-focused,
+[data-menu-item]:focus-visible {
+  outline: 4px solid var(--focus);
+  outline-offset: 4px;
+}
+.btn.is-focused {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 5px 0 var(--accent-deep), 0 0 0 4px var(--panel);
+}
+.btn-secondary.is-focused {
+  box-shadow: 0 5px 0 var(--shadow-solid), 0 0 0 4px var(--panel-deep);
+}
+
+/* -------------------------------------------------------------------------------------------- title */
+
+.pg-title {
+  --title-sky-top: #5e6fa8;
+  --title-sky-low: #f2c9a0;
+  --title-ground: #8dbf6a;
+  --title-light: #ffe8a3;
+  z-index: 50;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  color: var(--ink-inverse);
+}
+
+.pg-title__backdrop,
+.pg-title__shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+/* Painted stand-in for the 3D landscape while it builds; fades away once the scene is on screen. */
+.pg-title__backdrop {
+  background:
+    radial-gradient(circle at 62% 58%, var(--title-light) 0, rgba(255, 232, 163, 0.55) 1.2%, rgba(255, 232, 163, 0) 9%),
+    linear-gradient(180deg, var(--title-sky-top) 0%, #a98fae 38%, var(--title-sky-low) 58%, var(--title-ground) 58.4%,
+      #6e9a50 100%);
+  transition: opacity 1.4s var(--ease-out);
+}
+.pg-title.is-scene-ready .pg-title__backdrop { opacity: 0; }
+/* Keeps the logo and menu readable over any part of the landscape. */
+.pg-title__shade {
+  background:
+    linear-gradient(90deg, rgba(28, 20, 34, 0.58) 0%, rgba(28, 20, 34, 0.3) 38%, rgba(28, 20, 34, 0) 62%),
+    linear-gradient(0deg, rgba(28, 20, 34, 0.5) 0%, rgba(28, 20, 34, 0) 26%);
+}
+
+.pg-title__main {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* centred by the auto margins below, so a tall menu scrolls instead of clipping */
+  gap: clamp(12px, 3vh, 30px);
+  /* 24 px side padding keeps the logo's shadow and the focus ring inside the scrolling box. */
+  width: min(468px, calc(100% + 48px));
+  margin-left: max(-24px, calc(6vw - 24px));
+  padding: 16px 24px 8px; /* the language toggle sits top right, clear of this column (phones add room) */
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.pg-title__head { margin-top: auto; text-align: center; }
+/* The head shrinks with the window's height, so the five buttons fit on a laptop screen. */
+.pg-title__emblem svg {
+  display: block;
+  width: clamp(48px, 10vh, 92px);
+  height: clamp(48px, 10vh, 92px);
+  margin: 0 auto 10px;
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.22));
+}
+/* The logo stays Latin in both languages, so it keeps Georgia even when Tamil switches --font-title. */
+.pg-title__logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1;
+}
+.pg-title__word {
+  font-size: min(clamp(46px, 10vw, 80px), 10.5vh);
+  letter-spacing: 0.05em;
+  color: var(--panel);
+  text-shadow: 0 4px 0 var(--accent-deep), 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+.pg-title__sub {
+  margin-top: 10px;
+  font-size: min(clamp(17px, 3.4vw, 27px), 3.8vh);
+  letter-spacing: 0.3em;
+  color: var(--accent-light);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+}
+/* A soft dark pill keeps the credit readable (AA) wherever the far light's beam rises behind it. */
+.pg-title__credit {
+  width: fit-content;
+  max-width: 44ch;
+  margin: 14px auto 0;
+  padding: 3px 14px 4px;
+  border-radius: 16px;
+  background: rgba(28, 20, 34, 0.58);
+  font-size: var(--fs-small);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+.pg-title__menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pg-title__notice {
+  margin: 0 0 auto;
+  text-align: center;
+  font-size: var(--fs-small);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+/* "More below": shown only while the menu runs past the bottom (large text, a short window); a click scrolls. */
+.pg-title__more {
+  position: sticky;
+  bottom: 0;
+  flex: none;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 40px;
+  margin-top: -8px;
+  border-radius: 999px;
+  background: rgba(28, 20, 34, 0.62);
+  color: var(--ink-inverse);
+  cursor: pointer;
+  animation: pg-title-more 1.6s ease-in-out infinite;
+}
+.pg-title__more svg { width: 28px; height: 28px; }
+@keyframes pg-title-more {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+.pg-title__footer {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding-top: 8px;
+  font-size: var(--fs-small);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6), 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.pg-title__lang {
+  position: absolute;
+  top: calc(var(--gap) + var(--safe-top));
+  right: calc(var(--gap) + var(--safe-right));
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(28, 20, 34, 0.55);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+.pg-title__langbtn {
+  min-width: 52px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-inverse);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.pg-title__langbtn:lang(en) { font-family: ui-rounded, "SF Pro Rounded", system-ui, "Segoe UI", Roboto, sans-serif; }
+.pg-title__langbtn:lang(ta) { font-family: var(--font-tamil); }
+.pg-title__langbtn[aria-pressed="true"] {
+  background: var(--panel);
+  color: var(--ink);
+}
+.pg-title__langbtn:hover { background: rgba(255, 244, 220, 0.18); }
+.pg-title__langbtn[aria-pressed="true"]:hover { background: var(--panel); }
+.pg-title__langbar { opacity: 0.55; }
+
+.pg-title.is-covered .pg-title__main,
+.pg-title.is-covered .pg-title__footer,
+.pg-title.is-covered .pg-title__lang,
+.pg-title.is-covered .pg-title__shade { visibility: hidden; }
+
+/* Short desktop and laptop windows (a 1366 x 768 screen minus the browser's bars): tighter, so the menu fits. */
+@media (min-width: 641px) and (max-height: 820px) {
+  .pg-title__main { gap: clamp(10px, 2vh, 20px); }
+  .pg-title__emblem svg { margin-bottom: 6px; }
+  .pg-title__sub { margin-top: 6px; }
+  .pg-title__credit { margin-top: 10px; }
+  .pg-title__menu { gap: 10px; }
+}
+@media (min-width: 641px) and (max-height: 820px) and (pointer: fine) {
+  .pg-title__menu .pg-mbtn { min-height: 52px; padding-top: 0.4em; padding-bottom: 0.4em; }
+  .pg-title__menu .pg-mbtn--primary { min-height: 60px; }
+}
+/* Large text on a wide screen: a wider column keeps START THE JOURNEY on one line. */
+@media (min-width: 900px) and (min-height: 521px) {
+  body.text-L .pg-title__main, body.text-XL .pg-title__main { width: min(560px, calc(100% + 48px)); }
+}
+
+/* Phones in portrait: everything centred. */
+@media (max-width: 640px) {
+  .pg-title__main { align-self: center; margin: 0; }
+  .pg-title__shade {
+    background: linear-gradient(0deg, rgba(28, 20, 34, 0.62) 0%, rgba(28, 20, 34, 0.3) 55%, rgba(28, 20, 34, 0.4) 100%);
+  }
+  .pg-title__main { padding-top: 60px; }
+  .pg-title__emblem svg { width: 60px; height: 60px; margin-bottom: 6px; }
+  .pg-title__credit { margin-top: 10px; }
+  .pg-title__menu { gap: 10px; }
+  .pg-title__menu .pg-mbtn:not(.pg-mbtn--primary) { min-height: 56px; }
+}
+@media (max-width: 640px) and (max-height: 760px) {
+  .pg-title__main { gap: 10px; }
+  .pg-title__emblem svg { width: 48px; height: 48px; }
+  .pg-title__sub { margin-top: 6px; }
+  .pg-title__menu { gap: 8px; }
+  .pg-title__menu .pg-mbtn:not(.pg-mbtn--primary) { min-height: 52px; }
+}
+/* Phones on their side: menu left (full height), logo right under the language toggle. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .pg-title__main {
+    display: grid;
+    grid-template-columns: minmax(240px, 330px) 1fr;
+    align-content: safe center;
+    gap: 8px 24px;
+    width: calc(100% + 48px);
+    margin: 0 -24px;
+    padding-top: 4px;
+  }
+  .pg-title__head { grid-column: 2; grid-row: 1 / span 2; margin: 0; padding-top: 60px; }
+  .pg-title__menu { grid-column: 1; grid-row: 1; gap: 8px; }
+  .pg-title__notice { grid-column: 1; grid-row: 2; margin: 0; }
+  .pg-title__more { grid-column: 1; justify-self: center; }
+  .pg-title__emblem svg { width: 48px; height: 48px; margin-bottom: 4px; }
+  .pg-title__word { font-size: clamp(40px, 7vw, 60px); }
+  .pg-title__sub { margin-top: 6px; }
+  .pg-title__credit { margin-top: 8px; }
+  .pg-title__menu .pg-mbtn:not(.pg-mbtn--primary) { min-height: 48px; }
+  .pg-title__menu .pg-mbtn--primary { font-size: calc(var(--fs-body) * 1.1); }
+  .pg-title__footer { padding-top: 4px; }
+}

@@ -1,0 +1,76 @@
+[
+  {
+    "id": "test_evangelist",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "evangelist",
+        "text": "test.evangelist.1",
+        "anim": "wave",
+        "next": "n2",
+        "effects": { "cam": "over_shoulder_evangelist" }
+      },
+      {
+        "id": "n2",
+        "speaker": "christian",
+        "text": "test.christian.1",
+        "mood": "sad",
+        "next": "n3",
+        "effects": { "cam": "close_christian" }
+      },
+      {
+        "id": "n3",
+        "speaker": "evangelist",
+        "text": "test.evangelist.2",
+        "anim": "point",
+        "mood": "excited",
+        "next": "n4",
+        "effects": { "cam": "over_shoulder_evangelist" }
+      },
+      {
+        "id": "n4",
+        "speaker": "evangelist",
+        "text": "test.evangelist.3",
+        "next": "n5",
+        "choices": [
+          {
+            "text": "test.choice.brave",
+            "effects": { "hope": 5, "flag": { "test.brave": true }, "anim": "hop" }
+          },
+          {
+            "text": "test.choice.polite",
+            "effects": { "hope": 5, "flag": { "test.polite": true } }
+          },
+          {
+            "text": "test.choice.funny",
+            "next": "n5_funny",
+            "effects": { "hope": 10, "flag": { "test.funny": true } }
+          }
+        ]
+      },
+      {
+        "id": "n5",
+        "speaker": "evangelist",
+        "text": "test.evangelist.4",
+        "expr": "happy",
+        "next": "n6"
+      },
+      {
+        "id": "n5_funny",
+        "speaker": "evangelist",
+        "text": "test.evangelist.5",
+        "mood": "excited",
+        "next": "n6",
+        "effects": { "cam": "close_evangelist" }
+      },
+      {
+        "id": "n6",
+        "speaker": "christian",
+        "text": "test.christian.2",
+        "mood": "excited",
+        "bubble": true,
+        "effects": { "cam": "release" }
+      }
+    ]
+  }
+]

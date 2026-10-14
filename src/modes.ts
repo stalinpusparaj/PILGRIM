@@ -3,37 +3,47 @@
  * of one mode and frees them in `dispose()`; `main.ts` starts one and can restart it (F1 "Rebuild scene", the
  * Playwright leak checks).
  *
- * - `dev`: the Phase 0 test scene (DevScene), the default until the title screen exists (Phase 3).
+ * - `flow`: the game itself (src/game/GameFlow.ts): the title screen by default, or straight into a chapter
+ *   (`?chapter=test` → the test world, `?chapter=N` → chapter N; the test world stands in for every chapter until
+ *   the ChapterManager plugs in). Pause and the Satchel work through the flow.
  * - `lab`: the Character Lab (`?lab=1`, dev builds or `?debug=1` only, like every URL param).
- * - `testWorld`: `?chapter=test`, the test world, played (Phase 2): a PlaySession on content/levels/test.json
- *   with the Phase 1 fly cameras kept on top (TestWorld; keys 1-3 / F1).
+ * - `dialogueTest`: `?dialogue=test`, the Phase 3 dialogue demo (src/narrative/DialogueTestScene.ts).
  *
- * The Lab and the test world are loaded as their own chunks (dynamic import), so the default mode does not ship
- * the Lab code.
+ * Every runner's code is a dynamic import (its own chunk), so the default mode does not ship the Lab or the demo.
  */
 import * as THREE from 'three';
 import type { Engine } from './core/Engine';
-import { services } from './core/Services';
-import { settings } from './core/Settings';
-import { DevScene } from './world/dev/DevScene';
+import type { GameFlow } from './game/GameFlow';
 import type { LabProbe } from './gen/lab-probe';
+import type { DialogueTestScene } from './narrative/DialogueTestScene';
+import { dialogueTestRunner } from './narrative/dtest-mode';
 import type { TestWorld } from './world/TestWorld';
 import type { PlaySession } from './world/PlaySession';
 
-export type ModeKind = 'dev' | 'lab' | 'testWorld';
+export type ModeKind = 'flow' | 'lab' | 'dialogueTest';
+
+/** Where the flow starts: null = the title screen; else a chapter (1..13, 14 = Epilogue) at a waystone. */
+export interface FlowStart {
+  chapter: number;
+  waystone: string | null;
+  /** `?chapter=test`: the test world (content/levels/test.json) as the chapter. */
+  test: boolean;
+}
 
 export interface ModeRunner {
   readonly kind: ModeKind;
-  /** Resolves when the mode is on screen (the Lab's first character, the test world built); rejects on failure. */
+  /** Resolves when the mode is on screen (the Lab's first character, the title, a chapter); rejects on failure. */
   readonly started: Promise<void>;
-  /** True once `started` has resolved (and the runner is not disposed). */
+  /** True once the mode is on screen (and the runner is not disposed). */
   readonly ready: boolean;
   /** `?lab=1` only: the Lab probe (tests, console). */
   readonly lab: LabProbe | null;
-  /** `?chapter=test` only. */
+  /** `?chapter=test` only: the test world while it is the running chapter. */
   readonly testWorld: TestWorld | null;
   /** The running play session (Christian, camera, systems), null while loading or in a non-play mode. */
   readonly play: PlaySession | null;
+  /** `?dialogue=test` only: the dialogue demo scene. */
+  readonly dialogueTest?: DialogueTestScene | null;
   setFov(fov: number): void;
   dispose(): void;
 }
@@ -41,19 +51,19 @@ export interface ModeRunner {
 const BLANK_FOV = 55;
 
 /** Starts a mode. The returned runner can be disposed at any time, even before `started` settles. */
-export function startMode(kind: ModeKind, engine: Engine): ModeRunner {
+export function startMode(kind: ModeKind, engine: Engine, start: FlowStart | null = null): ModeRunner {
   switch (kind) {
     case 'lab':
       return labRunner(engine);
-    case 'testWorld':
-      return testWorldRunner(engine);
+    case 'dialogueTest':
+      return dialogueTestRunner(engine, blankView);
     default:
-      return devRunner(engine);
+      return flowRunner(engine, start);
   }
 }
 
 /** After a mode is gone the engine draws an empty scene, never one whose geometry was just freed. */
-function blankView(engine: Engine): void {
+export function blankView(engine: Engine): void {
   engine.setView(new THREE.Scene(), new THREE.PerspectiveCamera(BLANK_FOV, 1, 0.1, 100));
 }
 
@@ -62,29 +72,47 @@ class RunnerState {
   disposed = false;
 }
 
-function devRunner(engine: Engine): ModeRunner {
-  const scene = new DevScene({ fov: settings.data.fov });
-  const remove = engine.loop.add(scene, 0);
-  engine.setView(scene.scene, scene.camera);
-  // The test scene is "gameplay": Click/Tap to play, pointer lock and the touch controls can be tried.
-  services.tryGet('input')?.setGameplayActive(true);
+/** The game flow: the title screen, or a chapter started directly (debug URL). */
+function flowRunner(engine: Engine, start: FlowStart | null): ModeRunner {
   const st = new RunnerState();
-  st.ready = true;
+  let flow: GameFlow | null = null;
+  let world: TestWorld | null = null;
+  const started = import('./game/GameFlow').then(async ({ GameFlow }) => {
+    if (st.disposed) return;
+    flow = new GameFlow(engine);
+    if (!start) {
+      flow.start();
+    } else {
+      if (start.test) {
+        const { testWorldLauncher } = await import('./game/flow-launcher');
+        flow.setChapterLauncher(testWorldLauncher(engine, (w) => (world = w)));
+      }
+      await flow.startChapter(start.chapter, start.waystone);
+    }
+    st.ready = !st.disposed;
+  });
   return {
-    kind: 'dev',
-    started: Promise.resolve(),
+    kind: 'flow',
+    started,
     get ready() {
-      return st.ready && !st.disposed;
+      if (!st.ready || st.disposed || !flow) return false;
+      if (!start) return flow.state !== 'title' || flow.ready; // the title: once its landscape is on screen
+      return flow.ready && (world?.ready ?? !start.test);
     },
     lab: null,
-    testWorld: null,
-    play: null,
-    setFov: (fov) => scene.setFov(fov),
+    get testWorld() {
+      return st.disposed ? null : world;
+    },
+    get play() {
+      return st.disposed ? null : (world?.play ?? null);
+    },
+    setFov: () => {}, // the title scene and the chapters follow settings:changed themselves
     dispose: () => {
       if (st.disposed) return;
       st.disposed = true;
-      remove();
-      scene.dispose();
+      flow?.dispose();
+      flow = null;
+      world = null;
       blankView(engine);
     },
   };
@@ -120,38 +148,6 @@ function labRunner(engine: Engine): ModeRunner {
       if (st.disposed) return;
       st.disposed = true;
       dispose?.();
-      blankView(engine);
-    },
-  };
-}
-
-function testWorldRunner(engine: Engine): ModeRunner {
-  const st = new RunnerState();
-  let world: TestWorld | null = null;
-  const started = import('./world/TestWorld').then(async ({ TestWorld }) => {
-    if (st.disposed) return;
-    world = new TestWorld(engine);
-    await world.start();
-    st.ready = !st.disposed;
-  });
-  return {
-    kind: 'testWorld',
-    started,
-    get ready() {
-      return st.ready && !st.disposed && (world?.ready ?? false);
-    },
-    lab: null,
-    get testWorld() {
-      return st.disposed ? null : world;
-    },
-    get play() {
-      return st.disposed ? null : (world?.play ?? null);
-    },
-    setFov: () => {}, // the play session follows settings:changed itself
-    dispose: () => {
-      if (st.disposed) return;
-      st.disposed = true;
-      world?.dispose();
       blankView(engine);
     },
   };
