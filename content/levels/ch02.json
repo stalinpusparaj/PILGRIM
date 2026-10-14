@@ -1,0 +1,114 @@
+{
+  "id": "ch02",
+  "seed": 2207,
+  "palette": "slough",
+  "size": 300,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.015, "height": 0.35, "octaves": 3 },
+    "stamps": [
+      { "type": "basin", "x": 12, "z": -3, "r": 80, "depth": 1.8 },
+      { "type": "basin", "x": 12, "z": -3, "r": 44, "depth": 1.4 },
+      { "type": "hill", "x": -120, "z": 40, "r": 40, "height": 5 },
+      { "type": "hill", "x": -60, "z": -70, "r": 36, "height": 4 },
+      { "type": "hill", "x": 40, "z": 70, "r": 44, "height": 4.5 },
+      { "type": "hill", "x": 120, "z": 50, "r": 38, "height": 6 },
+      { "type": "ridge", "x": 20, "z": -118, "r": 90, "height": 7, "dir": 0.1 },
+      { "type": "plateau", "x": 130, "z": -60, "r": 34, "height": 3 }
+    ]
+  },
+  "way": [
+    [-138, 0, -24],
+    [-112, 0, -14],
+    [-86, 0, -2],
+    [-60, 0, 6],
+    [-34, 0, 6],
+    [-10, 0, 0],
+    [14, 0, -6],
+    [38, 0, -4],
+    [60, 0, 6],
+    [84, 0, 10],
+    [110, 0, 2],
+    [136, 0, -12]
+  ],
+  "detours": [],
+  "zones": [
+    {
+      "id": "bog",
+      "type": "slough",
+      "shape": "circle",
+      "x": 12,
+      "z": -3,
+      "r": 30,
+      "hopeDrain": 1.2,
+      "tint": "mud",
+      "tintAmount": 0.45
+    },
+    { "id": "shore", "type": "shore", "shape": "circle", "x": 12, "z": -3, "r": 48 },
+    { "id": "home_meadow", "type": "meadow", "shape": "circle", "x": -110, "z": -10, "r": 40 },
+    { "id": "far_meadow", "type": "meadow", "shape": "circle", "x": 112, "z": 0, "r": 36 }
+  ],
+  "scatter": [
+    { "type": "reeds", "zone": "shore", "density": 2.4, "minDist": 0.9, "keepClear": 1.2 },
+    { "type": "reeds", "zone": "bog", "density": 0.7, "minDist": 1.4, "keepClear": 2.2 },
+    { "type": "tree_dead", "zone": "shore", "density": 0.22, "minDist": 7, "keepClear": 4 },
+    { "type": "tree_dead", "density": 0.04, "minDist": 9, "keepClear": 4 },
+    { "type": "tree_round", "zone": "home_meadow", "density": 0.22, "minDist": 6.5, "keepClear": 3 },
+    { "type": "tree_round", "zone": "far_meadow", "density": 0.22, "minDist": 6.5, "keepClear": 3 },
+    { "type": "tree_cone", "density": 0.05, "minDist": 8, "keepClear": 4 },
+    { "type": "bush", "density": 0.26, "minDist": 3.2, "keepClear": 2 },
+    { "type": "rock", "density": 0.07, "minDist": 4 },
+    { "type": "mushroom", "zone": "shore", "density": 0.18, "minDist": 2.5 },
+    { "type": "grass", "density": 1.9, "minDist": 0.8 },
+    { "type": "flower", "zone": "home_meadow", "density": 0.5, "minDist": 1.1 },
+    { "type": "flower", "zone": "far_meadow", "density": 0.6, "minDist": 1.1 }
+  ],
+  "landmarks": [
+    { "type": "steps", "id": "bog_steps", "path": "way", "from": 0.44, "to": 0.65 },
+    { "type": "reeds", "id": "home_bank", "at": [-24, 0, 6], "params": { "clear": 2 } },
+    { "type": "grass", "id": "help_bank", "at": [46.5, 0, -2.5], "params": { "clear": 2 } },
+    { "type": "sign", "id": "ch02_sign_home", "at": [-30, 0, -2], "rotY": 2.2 },
+    { "type": "sign", "id": "ch02_sign_far", "at": [50, 0, 4.5], "rotY": -0.9 },
+    { "type": "log", "id": "ch02_log_a", "at": [-52, 0, -8], "rotY": 0.5 },
+    { "type": "log", "id": "ch02_log_b", "at": [70, 0, 14], "rotY": 1.9 },
+    { "type": "stump", "id": "ch02_stump_a", "at": [-70, 0, 14] },
+    { "type": "stump", "id": "ch02_stump_b", "at": [92, 0, 2] },
+    {
+      "type": "fence",
+      "id": "ch02_fence_start",
+      "path": "way",
+      "from": 0.01,
+      "to": 0.09,
+      "params": { "offset": 3.2 }
+    },
+    {
+      "type": "fence",
+      "id": "ch02_fence_end",
+      "path": "way",
+      "from": 0.9,
+      "to": 0.985,
+      "params": { "offset": -3.2 }
+    },
+    { "type": "tree_round", "id": "ch02_tree_end_a", "at": [124, 0, 6] },
+    { "type": "tree_round", "id": "ch02_tree_end_b", "at": [134, 0, -22] },
+    { "type": "rock", "id": "ch02_rock_end", "at": [118, 0, -14] },
+    { "type": "lamp", "id": "ch02_lamp_end", "at": [128, 0, -4], "rotY": 0.4 }
+  ],
+  "npcs": [
+    { "id": "pliable", "recipe": "pliable", "role": "companion", "at": [-134, 0, -19], "rotY": 1.2 },
+    { "id": "help", "recipe": "help", "role": "story", "at": [44, 0, 1.5], "rotY": -1.4 }
+  ],
+  "triggers": [
+    { "id": "bog_enter", "shape": "box", "at": [-13, 0, 1], "size": [6, 4, 16], "script": "bogEnter" },
+    { "id": "help_near", "shape": "circle", "at": [44, 0, 1.5], "r": 14, "script": "helpNear", "once": true },
+    { "id": "bog_end", "shape": "circle", "at": [128, 0, -8], "r": 8, "script": "bogEnd" }
+  ],
+  "waystones": [
+    { "id": "ch02_w1", "at": [-118, 0, -21] },
+    { "id": "ch02_w2", "at": [58, 0, 1.5] }
+  ],
+  "promises": [{ "id": "p03", "at": [20, 0.7, 7] }],
+  "water": [{ "kind": "mud", "shape": "circle", "x": 12, "z": -3, "r": 30, "level": -2.5 }],
+  "ambience": "bog",
+  "music": "burden"
+}

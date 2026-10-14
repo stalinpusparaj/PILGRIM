@@ -10,7 +10,7 @@ import { installDialogueSpy, readSpy, spaceUntil, waitForFlow, type DialogueSpy 
  *     text is Tamil). Pliable follows as a companion. Clean console.
  * (2) Building and disposing the chapter 5 times through the ChapterManager keeps renderer.info.memory
  *     geometries / textures and events.count() at their baseline.
- * (3) title → START → opening → Chapter I: with no Chapter I script yet the test chapter plays in its place
+ * (3) title → START → opening → Chapter I: the real Chapter I script starts as chapter 1
  *     (ChapterManager fallback), with a clean console.
  */
 
@@ -205,7 +205,7 @@ test('building and disposing the test chapter 5 times keeps GPU memory and liste
   expect(problems, problems.join('\n')).toEqual([]);
 });
 
-test('title → START → opening → Chapter I plays the test chapter in its place (no script yet)', async ({
+test('title → START → opening → Chapter I (src/chapters/ch01.ts) starts as chapter 1', async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -228,7 +228,7 @@ test('title → START → opening → Chapter I plays the test chapter in its pl
   }
   await waitForFlow(page, (p) => p.state === 'playing' && p.chapter === 1 && !p.loopPaused);
   const p = await probe(page);
-  expect(p).toMatchObject({ key: 'test', chapter: 1, ready: true });
+  expect(p).toMatchObject({ key: '1', chapter: 1, ready: true });
   expect(await page.evaluate(() => (window as unknown as ChapterWindow).__pilgrim.play!.state.chapter)).toBe(
     1,
   );

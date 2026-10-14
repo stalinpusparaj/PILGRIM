@@ -1,0 +1,209 @@
+[
+  {
+    "id": "ch02_start",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "pliable",
+        "text": "ch02.pliable.start.1",
+        "anim": "hop",
+        "mood": "excited",
+        "next": "n2",
+        "effects": { "cam": "over_shoulder_pliable" }
+      },
+      {
+        "id": "n2",
+        "speaker": "christian",
+        "text": "ch02.christian.start.1",
+        "next": "n3",
+        "effects": { "cam": "over_shoulder_christian" }
+      },
+      {
+        "id": "n3",
+        "speaker": "pliable",
+        "text": "ch02.pliable.start.2",
+        "anim": "point",
+        "mood": "excited",
+        "next": "n4",
+        "effects": { "cam": "close_pliable" }
+      },
+      {
+        "id": "n4",
+        "speaker": "christian",
+        "text": "ch02.christian.start.2",
+        "bubble": true,
+        "effects": { "cam": "release" }
+      }
+    ]
+  },
+  {
+    "id": "ch02_sink",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "pliable",
+        "text": "ch02.pliable.sink.1",
+        "anim": "hop",
+        "mood": "scared",
+        "expr": "surprised",
+        "next": "n2",
+        "effects": { "cam": "close_pliable" }
+      },
+      {
+        "id": "n2",
+        "speaker": "christian",
+        "text": "ch02.christian.sink.1",
+        "next": "n3",
+        "effects": { "cam": "over_shoulder_christian" }
+      },
+      {
+        "id": "n3",
+        "speaker": "pliable",
+        "text": "ch02.pliable.sink.2",
+        "anim": "wave",
+        "mood": "scared",
+        "next": "n4",
+        "effects": { "cam": "two" }
+      },
+      {
+        "id": "n4",
+        "speaker": "pliable",
+        "text": "ch02.pliable.sink.3",
+        "anim": "trip",
+        "mood": "scared",
+        "expr": "surprised",
+        "effects": { "sfx": "mud_slurp", "flag": { "ch02.boot": true }, "cam": "release" }
+      }
+    ]
+  },
+  {
+    "id": "ch02_quits",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "pliable",
+        "text": "ch02.pliable.quits.1",
+        "mood": "angry",
+        "expr": "angry",
+        "next": "n2",
+        "effects": { "cam": "close_pliable" }
+      },
+      {
+        "id": "n2",
+        "speaker": "pliable",
+        "text": "ch02.pliable.quits.2",
+        "mood": "angry",
+        "next": "n3"
+      },
+      {
+        "id": "n3",
+        "speaker": "christian",
+        "text": "ch02.christian.quits.1",
+        "mood": "sad",
+        "next": "n4b",
+        "effects": { "cam": "over_shoulder_christian" },
+        "choices": [
+          { "text": "ch02.choice.stay", "next": "n4a", "effects": { "flag": { "ch02.askedStay": true } } },
+          { "text": "ch02.choice.go", "next": "n4b", "effects": { "flag": { "ch02.letGo": true } } }
+        ]
+      },
+      {
+        "id": "n4a",
+        "speaker": "pliable",
+        "text": "ch02.pliable.quits.stay",
+        "mood": "angry",
+        "next": "n5",
+        "effects": { "cam": "close_pliable" }
+      },
+      {
+        "id": "n4b",
+        "speaker": "pliable",
+        "text": "ch02.pliable.quits.go",
+        "mood": "angry",
+        "next": "n5",
+        "effects": { "cam": "close_pliable" }
+      },
+      {
+        "id": "n5",
+        "speaker": "christian",
+        "text": "ch02.christian.quits.2",
+        "mood": "sad",
+        "expr": "sad",
+        "bubble": true,
+        "effects": { "cam": "release" }
+      }
+    ]
+  },
+  {
+    "id": "ch02_help",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "help",
+        "text": "ch02.help.1",
+        "mood": "excited",
+        "expr": "happy",
+        "next": "n2",
+        "effects": { "cam": "over_shoulder_help" }
+      },
+      {
+        "id": "n2",
+        "speaker": "help",
+        "text": "ch02.help.2",
+        "anim": "point",
+        "next": "n3",
+        "effects": { "cam": "close_help" }
+      },
+      {
+        "id": "n3",
+        "speaker": "christian",
+        "text": "ch02.christian.help.1",
+        "mood": "sad",
+        "next": "n4",
+        "effects": { "cam": "over_shoulder_christian" }
+      },
+      {
+        "id": "n4",
+        "speaker": "help",
+        "text": "ch02.help.3",
+        "anim": "point",
+        "next": "n5",
+        "effects": { "cam": "two" }
+      },
+      {
+        "id": "n5",
+        "speaker": "christian",
+        "text": "ch02.christian.help.2",
+        "mood": "excited",
+        "expr": "happy",
+        "bubble": true,
+        "effects": { "hope": 20, "flag": { "ch02.helped": true }, "cam": "release" }
+      }
+    ]
+  },
+  {
+    "id": "ch02_help_again",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "help",
+        "text": "ch02.help.again.1",
+        "anim": "point",
+        "expr": "happy",
+        "bubble": true
+      }
+    ]
+  },
+  {
+    "id": "ch02_end",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "christian",
+        "text": "ch02.christian.end.1",
+        "mood": "excited",
+        "bubble": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,104 @@
+[
+  {
+    "id": "ch04_goodwill",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "goodwill",
+        "text": "ch04.goodwill.1",
+        "anim": "wave",
+        "mood": "excited",
+        "expr": "happy",
+        "next": "n2",
+        "effects": { "cam": "over_shoulder_goodwill" }
+      },
+      {
+        "id": "n2",
+        "speaker": "goodwill",
+        "text": "ch04.goodwill.2",
+        "anim": "talk",
+        "next": "n3"
+      },
+      {
+        "id": "n3",
+        "speaker": "christian",
+        "text": "ch04.christian.1",
+        "mood": "scared",
+        "next": "n4",
+        "effects": { "cam": "close_christian" }
+      },
+      {
+        "id": "n4",
+        "speaker": "goodwill",
+        "text": "ch04.goodwill.3",
+        "anim": "talk",
+        "next": "n6",
+        "effects": { "cam": "over_shoulder_goodwill" },
+        "choices": [
+          {
+            "text": "ch04.choice.evangelist",
+            "next": "n5a",
+            "effects": { "hope": 5, "flag": { "ch04.toldEvangelist": true } }
+          },
+          {
+            "text": "ch04.choice.city",
+            "next": "n5b",
+            "effects": { "hope": 5, "flag": { "ch04.toldCity": true } }
+          },
+          {
+            "text": "ch04.choice.sack",
+            "next": "n5c",
+            "effects": { "hope": 10, "flag": { "ch04.sackJoke": true } }
+          }
+        ]
+      },
+      {
+        "id": "n5a",
+        "speaker": "goodwill",
+        "text": "ch04.goodwill.4a",
+        "expr": "happy",
+        "next": "n6"
+      },
+      {
+        "id": "n5b",
+        "speaker": "goodwill",
+        "text": "ch04.goodwill.4b",
+        "expr": "happy",
+        "next": "n6"
+      },
+      {
+        "id": "n5c",
+        "speaker": "goodwill",
+        "text": "ch04.goodwill.4c",
+        "mood": "excited",
+        "expr": "happy",
+        "next": "n6",
+        "effects": { "cam": "close_goodwill" }
+      },
+      {
+        "id": "n6",
+        "speaker": "goodwill",
+        "text": "ch04.goodwill.5",
+        "anim": "point",
+        "next": "n7",
+        "effects": { "cam": "two" }
+      },
+      {
+        "id": "n7",
+        "speaker": "goodwill",
+        "text": "ch04.goodwill.6",
+        "anim": "talk",
+        "next": "n8"
+      },
+      {
+        "id": "n8",
+        "speaker": "christian",
+        "text": "ch04.christian.2",
+        "mood": "excited",
+        "expr": "happy",
+        "bubble": true,
+        "effects": { "cam": "release" }
+      }
+    ]
+  }
+]

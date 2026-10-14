@@ -1,0 +1,173 @@
+[
+  {
+    "id": "ch03_wiseman",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "wiseman",
+        "text": "ch03.wiseman.1",
+        "anim": "wave",
+        "mood": "excited",
+        "next": "n2",
+        "effects": { "cam": "over_shoulder_wiseman" }
+      },
+      {
+        "id": "n2",
+        "speaker": "christian",
+        "text": "ch03.christian.1",
+        "next": "n3",
+        "effects": { "cam": "close_christian" }
+      },
+      {
+        "id": "n3",
+        "speaker": "wiseman",
+        "text": "ch03.wiseman.2",
+        "anim": "point",
+        "next": "n4",
+        "effects": { "cam": "two" }
+      },
+      {
+        "id": "n4",
+        "speaker": "christian",
+        "text": "ch03.christian.hat",
+        "mood": "excited",
+        "bubble": true,
+        "next": "n5"
+      },
+      {
+        "id": "n5",
+        "speaker": "wiseman",
+        "text": "ch03.wiseman.3",
+        "expr": "determined",
+        "next": "n9",
+        "effects": { "cam": "over_shoulder_wiseman" },
+        "choices": [
+          {
+            "text": "ch03.choice.polite",
+            "next": "n6",
+            "effects": { "flag": { "ch03.answer": "polite" } }
+          },
+          {
+            "text": "ch03.choice.doubt",
+            "next": "n7",
+            "effects": { "flag": { "ch03.answer": "doubt" }, "hope": 5 }
+          },
+          {
+            "text": "ch03.choice.funny",
+            "next": "n8",
+            "effects": { "flag": { "ch03.answer": "funny" }, "hope": 5 }
+          }
+        ]
+      },
+      {
+        "id": "n6",
+        "speaker": "wiseman",
+        "text": "ch03.wiseman.polite",
+        "expr": "happy",
+        "next": "n9",
+        "effects": { "cam": "close_wiseman" }
+      },
+      {
+        "id": "n7",
+        "speaker": "wiseman",
+        "text": "ch03.wiseman.doubt",
+        "next": "n9",
+        "effects": { "cam": "close_wiseman" }
+      },
+      {
+        "id": "n8",
+        "speaker": "wiseman",
+        "text": "ch03.wiseman.funny",
+        "mood": "excited",
+        "next": "n9",
+        "effects": { "cam": "close_wiseman" }
+      },
+      {
+        "id": "n9",
+        "speaker": "wiseman",
+        "text": "ch03.wiseman.4",
+        "anim": "point",
+        "next": "n10",
+        "effects": { "cam": "two", "flag": { "ch03.wisemanTold": true } }
+      },
+      {
+        "id": "n10",
+        "speaker": "christian",
+        "text": "ch03.christian.2",
+        "bubble": true,
+        "effects": { "cam": "release" }
+      }
+    ]
+  },
+  {
+    "id": "ch03_evangelist",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "evangelist",
+        "text": "ch03.evangelist.1",
+        "anim": "wave",
+        "next": "n2",
+        "effects": { "cam": "over_shoulder_evangelist" }
+      },
+      {
+        "id": "n2",
+        "speaker": "christian",
+        "text": "ch03.christian.3",
+        "mood": "sad",
+        "next": "n3",
+        "effects": { "cam": "close_christian" }
+      },
+      {
+        "id": "n3",
+        "speaker": "evangelist",
+        "text": "ch03.evangelist.2",
+        "anim": "point",
+        "next": "n4",
+        "effects": { "cam": "two" }
+      },
+      {
+        "id": "n4",
+        "speaker": "evangelist",
+        "text": "ch03.evangelist.3",
+        "next": "n7",
+        "effects": { "cam": "over_shoulder_evangelist" },
+        "choices": [
+          {
+            "text": "ch03.choice.sorry",
+            "next": "n5",
+            "effects": { "hope": 5, "flag": { "ch03.sorry": true } }
+          },
+          {
+            "text": "ch03.choice.confused",
+            "next": "n6",
+            "effects": { "flag": { "ch03.sorry": false } }
+          }
+        ]
+      },
+      {
+        "id": "n5",
+        "speaker": "evangelist",
+        "text": "ch03.evangelist.sorry",
+        "expr": "happy",
+        "next": "n7",
+        "effects": { "cam": "close_evangelist" }
+      },
+      {
+        "id": "n6",
+        "speaker": "evangelist",
+        "text": "ch03.evangelist.confused",
+        "expr": "happy",
+        "next": "n7",
+        "effects": { "cam": "close_evangelist" }
+      },
+      {
+        "id": "n7",
+        "speaker": "evangelist",
+        "text": "ch03.evangelist.4",
+        "mood": "excited",
+        "effects": { "cam": "release", "flag": { "ch03.evangelistFound": true } }
+      }
+    ]
+  }
+]

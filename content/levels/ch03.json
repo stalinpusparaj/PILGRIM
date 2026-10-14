@@ -1,0 +1,107 @@
+{
+  "id": "ch03",
+  "seed": 3303,
+  "palette": "wrongHill",
+  "size": 300,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.016, "height": 3.4, "octaves": 4 },
+    "stamps": [
+      { "type": "hill", "x": -110, "z": 10, "r": 40, "height": 9 },
+      { "type": "hill", "x": -60, "z": -110, "r": 36, "height": 8 },
+      { "type": "hill", "x": -24, "z": 44, "r": 30, "height": 6 },
+      { "type": "hill", "x": 70, "z": -122, "r": 40, "height": 10 },
+      { "type": "hill", "x": 124, "z": 10, "r": 38, "height": 8 },
+      { "type": "hill", "x": 96, "z": -18, "r": 26, "height": 5 },
+      { "type": "ridge", "x": -40, "z": -142, "r": 100, "height": 12, "dir": 0.1 },
+      { "type": "plateau", "x": 42, "z": 104, "r": 46, "height": 5 },
+      { "type": "cliff", "x": 42, "z": 94, "r": 44, "height": 9, "dir": 1.5708 }
+    ]
+  },
+  "wayWidth": 2.4,
+  "way": [
+    [-130, 0, -60],
+    [-104, 0, -50],
+    [-76, 0, -60],
+    [-46, 0, -48],
+    [-14, 0, -40],
+    [16, 0, -54],
+    [48, 0, -70],
+    [80, 0, -78],
+    [106, 0, -66],
+    [132, 0, -72]
+  ],
+  "detours": [
+    {
+      "id": "wrong_hill",
+      "points": [
+        [-14, 0, -40],
+        [6, 0, -24],
+        [22, 0, -4],
+        [32, 0, 20],
+        [38, 0, 46],
+        [40, 0, 72]
+      ],
+      "width": 3.8
+    }
+  ],
+  "zones": [
+    { "id": "sunny_road", "type": "meadow", "shape": "way", "path": "wrong_hill", "from": 0.04, "to": 0.6 },
+    {
+      "id": "wrong_hill_shadow",
+      "type": "detour",
+      "shape": "way",
+      "path": "wrong_hill",
+      "from": 0.1,
+      "to": 1.0,
+      "hopeDrain": 0.9
+    }
+  ],
+  "scatter": [
+    { "type": "grass", "density": 1.6, "minDist": 0.9 },
+    { "type": "flower", "zone": "sunny_road", "density": 1.6, "minDist": 0.9 },
+    { "type": "flower", "density": 0.12, "minDist": 1.4 },
+    { "type": "tree_fruit", "area": { "x": 12, "z": -16, "r": 16 }, "density": 0.55, "minDist": 5 },
+    { "type": "tree_fruit", "area": { "x": 30, "z": 12, "r": 14 }, "density": 0.55, "minDist": 5 },
+    { "type": "tree_round", "density": 0.07, "minDist": 8, "keepClear": 3 },
+    { "type": "bush", "density": 0.18, "minDist": 3 },
+    { "type": "rock", "density": 0.05, "minDist": 5 },
+    { "type": "rock", "area": { "x": 40, "z": 80, "r": 26 }, "density": 0.5, "minDist": 3 },
+    { "type": "tree_dead", "area": { "x": 42, "z": 66, "r": 18 }, "density": 0.25, "minDist": 5 }
+  ],
+  "landmarks": [
+    {
+      "type": "mountain_overhang",
+      "id": "mountain_overhang",
+      "at": [42, 0, 118],
+      "rotY": 3.1416,
+      "params": { "height": 96, "radius": 36, "lean": 0.38, "color": "#B0A2B8", "clear": 30 }
+    },
+    { "type": "fence", "id": "ch03_fence", "path": "wrong_hill", "from": 0.06, "to": 0.46, "offset": 3.4 },
+    { "type": "sign", "id": "ch03_sign", "at": [-10, 0, -33], "rotY": 2.4 }
+  ],
+  "npcs": [
+    { "id": "wiseman", "recipe": "wiseman", "role": "story", "at": [-6, 0, -31], "rotY": -2.1 },
+    { "id": "evangelist", "recipe": "evangelist", "role": "story", "at": [-140, 0, 130], "rotY": 0 }
+  ],
+  "triggers": [
+    { "id": "ch03_fork_near", "shape": "circle", "at": [-40, 0, -46], "r": 9, "script": "forkNear", "once": false },
+    { "id": "ch03_detour_start", "shape": "circle", "at": [8, 0, -22], "r": 7, "script": "detourStart", "once": false },
+    { "id": "ch03_under_mountain", "shape": "circle", "at": [32, 0, 20], "r": 8, "script": "underMountain", "once": false },
+    { "id": "ch03_deeper", "shape": "circle", "at": [38, 0, 46], "r": 7, "script": "deeper", "once": false },
+    { "id": "village_door", "shape": "circle", "at": [36, 0, 34], "r": 1, "script": "villageDoorStart" },
+    { "id": "ch03_rejoin", "shape": "circle", "at": [-14, 0, -40], "r": 6, "script": "rejoin", "once": false },
+    { "id": "ch03_end", "shape": "circle", "at": [120, 0, -69], "r": 7, "script": "ending", "once": false }
+  ],
+  "waystones": [
+    { "id": "ch03_w1", "at": [-118, 0, -50] },
+    { "id": "ch03_w2", "at": [-26, 0, -50] },
+    { "id": "ch03_w3", "at": [96, 0, -62] }
+  ],
+  "promises": [
+    { "id": "p04", "at": [-80, 0.9, -74] },
+    { "id": "p05", "at": [62, 0.9, -66] }
+  ],
+  "ambience": "hills",
+  "music": "burden"
+}

@@ -1,0 +1,105 @@
+[
+  {
+    "id": "ch01_book",
+    "nodes": [
+      { "id": "n1", "speaker": "christian", "text": "ch01.book.1", "anim": "read", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch01.book.2", "anim": "read", "mood": "scared", "next": "n3" },
+      { "id": "n3", "speaker": "christian", "text": "ch01.book.3", "expr": "sad", "mood": "sad",
+        "effects": { "flag": { "ch01.readBook": true } } }
+    ]
+  },
+  {
+    "id": "ch01_day",
+    "nodes": [
+      { "id": "n1", "speaker": "christiana", "text": "ch01.day.1", "anim": "talk", "expr": "surprised", "next": "n2",
+        "effects": { "cam": "close_christiana" } },
+      { "id": "n2", "speaker": "christian", "text": "ch01.day.2", "mood": "sad", "expr": "sad", "next": "n3",
+        "effects": { "cam": "close_christian" } },
+      { "id": "n3", "speaker": "son_1", "text": "ch01.day.3", "bubble": true, "mood": "excited", "next": "n4" },
+      { "id": "n4", "speaker": "son_2", "text": "ch01.day.4", "bubble": true, "mood": "excited", "next": "n5" },
+      { "id": "n5", "speaker": "christiana", "text": "ch01.day.5", "anim": "talk", "next": "n6",
+        "effects": { "cam": "close_christiana" },
+        "choices": [
+          { "text": "ch01.day.c1", "next": "n6", "effects": { "flag": { "ch01.calm": true } } },
+          { "text": "ch01.day.c2", "next": "n6", "effects": { "hope": 5 } }
+        ] },
+      { "id": "n6", "speaker": "christiana", "text": "ch01.day.6", "expr": "happy",
+        "effects": { "cam": "release", "flag": { "ch01.dayTalk": true } } }
+    ]
+  },
+  {
+    "id": "ch01_evening",
+    "nodes": [
+      { "id": "n1", "speaker": "christiana", "text": "ch01.eve.1", "anim": "wave", "expr": "happy", "next": "n2",
+        "effects": { "cam": "close_christiana" } },
+      { "id": "n2", "speaker": "christian", "text": "ch01.eve.2", "mood": "sad", "expr": "sad", "next": "n3",
+        "effects": { "cam": "close_christian" } },
+      { "id": "n3", "speaker": "son_3", "text": "ch01.eve.3", "bubble": true, "next": "n4" },
+      { "id": "n4", "speaker": "son_4", "text": "ch01.eve.4", "bubble": true, "mood": "excited", "next": "n5" },
+      { "id": "n5", "speaker": "christiana", "text": "ch01.eve.5", "anim": "talk", "next": "n6",
+        "effects": { "cam": "close_christiana" },
+        "choices": [
+          { "text": "ch01.eve.c1", "effects": { "hope": 5, "flag": { "ch01.brave": true } } },
+          { "text": "ch01.eve.c2" }
+        ] },
+      { "id": "n6", "speaker": "christian", "text": "ch01.eve.6", "expr": "determined", "mood": "neutral",
+        "effects": { "cam": "release", "flag": { "ch01.eveningTalk": true } } }
+    ]
+  },
+  {
+    "id": "ch01_evangelist",
+    "nodes": [
+      { "id": "n1", "speaker": "evangelist", "text": "ch01.ev.1", "anim": "wave", "next": "n2",
+        "effects": { "cam": "over_shoulder_evangelist" } },
+      { "id": "n2", "speaker": "christian", "text": "ch01.ev.2", "mood": "sad", "expr": "sad", "next": "n3",
+        "effects": { "cam": "close_christian" } },
+      { "id": "n3", "speaker": "evangelist", "text": "ch01.ev.3", "anim": "point", "mood": "excited", "next": "n5",
+        "effects": { "cam": "close_evangelist" },
+        "choices": [
+          { "text": "ch01.ev.c1", "effects": { "hope": 5 } },
+          { "text": "ch01.ev.c2", "next": "n4b" },
+          { "text": "ch01.ev.c3", "next": "n4c", "effects": { "hope": 5, "flag": { "ch01.funny": true } } }
+        ] },
+      { "id": "n4b", "speaker": "evangelist", "text": "ch01.ev.4b", "anim": "point", "next": "n5" },
+      { "id": "n4c", "speaker": "evangelist", "text": "ch01.ev.4c", "expr": "happy", "mood": "excited", "next": "n5" },
+      { "id": "n5", "speaker": "evangelist", "text": "ch01.ev.5", "anim": "reach", "next": "n6",
+        "effects": { "cam": "over_shoulder_evangelist", "give": "note", "sfx": "roll_unroll" } },
+      { "id": "n6", "speaker": "evangelist", "text": "ch01.ev.6", "anim": "point", "expr": "determined", "next": "n7" },
+      { "id": "n7", "speaker": "christian", "text": "ch01.ev.7", "bubble": true, "expr": "determined",
+        "effects": { "cam": "release", "flag": { "ch01.metEvangelist": true } } }
+    ]
+  },
+  {
+    "id": "ch01_chase",
+    "nodes": [
+      { "id": "n1", "speaker": "obstinate", "text": "ch01.chase.1", "anim": "point", "mood": "angry", "expr": "angry",
+        "next": "n2", "effects": { "cam": "over_shoulder_obstinate" } },
+      { "id": "n2", "speaker": "christian", "text": "ch01.chase.2", "next": "n3",
+        "effects": { "cam": "close_christian" } },
+      { "id": "n3", "speaker": "obstinate", "text": "ch01.chase.3", "mood": "angry", "expr": "angry", "next": "n4",
+        "effects": { "cam": "close_obstinate" } },
+      { "id": "n4", "speaker": "pliable", "text": "ch01.chase.4", "bubble": true, "mood": "excited", "anim": "hop",
+        "next": "n6",
+        "choices": [
+          { "text": "ch01.chase.c1", "effects": { "hope": 5, "flag": { "ch01.invited": true } } },
+          { "text": "ch01.chase.c2" },
+          { "text": "ch01.chase.c3", "effects": { "hope": 5 } }
+        ] },
+      { "id": "n6", "speaker": "obstinate", "text": "ch01.chase.6", "mood": "angry", "expr": "angry", "next": "n7",
+        "effects": { "cam": "close_obstinate", "flag": { "ch01.obstinateLeft": true } } },
+      { "id": "n7", "speaker": "pliable", "text": "ch01.chase.7", "mood": "excited", "expr": "happy", "anim": "hop",
+        "effects": { "cam": "release", "flag": { "ch01.pliableJoins": true } } }
+    ]
+  },
+  {
+    "id": "ch01_end",
+    "nodes": [
+      { "id": "n1", "speaker": "pliable", "text": "ch01.end.1", "mood": "excited", "anim": "talk", "next": "n2",
+        "effects": { "cam": "over_shoulder_pliable" } },
+      { "id": "n2", "speaker": "christian", "text": "ch01.end.2", "next": "n3",
+        "effects": { "cam": "close_christian" } },
+      { "id": "n3", "speaker": "pliable", "text": "ch01.end.3", "mood": "excited", "expr": "happy", "anim": "hop",
+        "effects": { "cam": "release", "flag": { "ch01.done": true } } }
+    ]
+  }
+]

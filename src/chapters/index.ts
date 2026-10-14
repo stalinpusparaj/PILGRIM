@@ -9,6 +9,10 @@ export type ChapterModule = { default: ChapterScript };
 
 export const CHAPTERS: Readonly<Record<string, () => Promise<ChapterModule>>> = {
   test: () => import('./test'),
+  '1': () => import('./ch01'),
+  '4': () => import('./ch04'),
+  '2': () => import('./ch02'),
+  '3': () => import('./ch03'),
 };
 
 /** The flow's chapter number as a registry key: 14 → 'epilogue', else the number as text. */
