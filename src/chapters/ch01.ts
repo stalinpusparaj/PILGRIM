@@ -45,6 +45,7 @@ class ChapterOne {
   start(): void {
     const ctx = this.ctx;
     ctx.objective('ch01.objective.readBook');
+    ctx.guide({ landmark: 'book' });
     this.hookBook();
     ctx.onTalk('christiana', () => this.dayTalk(), { once: true });
     ctx.onTrigger('ch01_square', () => this.townSquare(), { once: false });
@@ -96,6 +97,7 @@ class ChapterOne {
     if (this.stage === 'book') {
       this.stage = 'day';
       ctx.objective('ch01.objective.talkFamily');
+      ctx.guide({ npc: 'christiana' });
     }
   }
 
@@ -105,6 +107,7 @@ class ChapterOne {
     if (this.stage === 'book' || this.stage === 'day') {
       this.stage = 'town';
       ctx.objective('ch01.objective.walkTown');
+      ctx.guide(null); // the Way through town
     }
   }
 
@@ -113,6 +116,7 @@ class ChapterOne {
     this.stage = 'homeward';
     this.ctx.toast('ch01.toast.neighbours');
     this.ctx.objective('ch01.objective.goHome');
+    this.ctx.guide({ npc: 'christiana' });
   }
 
   private async eveningTalk(): Promise<void> {
@@ -123,6 +127,7 @@ class ChapterOne {
     if (this.stage === 'evening') {
       this.stage = 'gate';
       ctx.objective('ch01.objective.toGate');
+      ctx.guide({ landmark: 'town_gate' });
     }
   }
 
@@ -134,6 +139,7 @@ class ChapterOne {
     const player = ctx.session.player;
     const evangelist = ctx.npc('evangelist');
     const meet = this.spot('evangelist_meet');
+    if (evangelist) ctx.guide({ npc: 'evangelist' });
     if (evangelist && meet) {
       const wasPlaying = player.mode === 'play';
       if (wasPlaying) player.mode = 'locked';
@@ -145,6 +151,7 @@ class ChapterOne {
     if (!ctx.state.has('note')) ctx.state.give('note'); // a skipped scene still gives it; belt and braces
     ctx.toast('ch01.toast.note');
     ctx.objective('ui.hud.objective.followLight');
+    ctx.guide(null); // the Way, towards the far light
     await this.familyCalls();
     await this.chase();
   }

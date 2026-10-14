@@ -22,6 +22,8 @@ import { services } from '../core/Services';
 import { h, listen, uiRoot } from './dom';
 import { HopeLantern } from './hud-lantern';
 import { InteractBubble } from './hud-bubble';
+import { GuideMarker } from './hud-guide';
+import './hud-guide.css';
 import { ToastQueue } from './hud-toasts';
 import { ChapterCard, ObjectiveLine } from './hud-banners';
 import { HudLayout } from './hud-layout';
@@ -48,6 +50,7 @@ export class HUD {
   private readonly main: HTMLDivElement;
   private readonly lantern: HopeLantern;
   private readonly bubble = new InteractBubble();
+  private readonly guide = new GuideMarker();
   private readonly toasts = new ToastQueue();
   private readonly objective = new ObjectiveLine();
   private readonly card = new ChapterCard();
@@ -66,6 +69,7 @@ export class HUD {
       this.toasts.el,
       this.lantern.el,
       this.bubble.el,
+      this.guide.el,
     );
     this.root = h('div', { className: 'hud ui-passive' }, this.main, this.card.el);
     parent.appendChild(this.root);
@@ -110,6 +114,7 @@ export class HUD {
     if (this.disposed) return;
     this.layout.ensure();
     this.bubble.render(camera, this.shown, this.layout.width, this.layout.height, this.layout.avoid);
+    this.guide.render(camera, this.shown, this.layout.width, this.layout.height, this.layout.avoid);
   }
 
   /** Hearts under the lantern (Chapter VIII, GDD 2.7.7); fractional values draw half hearts; null hides. */

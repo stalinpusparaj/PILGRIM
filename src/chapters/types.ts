@@ -97,6 +97,11 @@ export interface ChapterContext {
 
   /** HUD objective (i18n key) or null; kept in GameState for THE ROLL. */
   objective(key: string | null): void;
+  /**
+   * Where the HUD guide points (chevron / edge arrow): an NPC (followed as it walks), a landmark, a live
+   * position, or null for the default (the Way ahead). Cleared when the chapter ends.
+   */
+  guide(target: { npc: string } | { landmark: string } | THREE.Vector3 | (() => THREE.Vector3 | null) | null): void;
   toast(key: string, params?: Record<string, string | number>): void;
   /** Shows the chapter card again (the manager shows it once when the chapter starts). */
   chapterCard(): void;

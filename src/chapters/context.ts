@@ -184,6 +184,17 @@ export class ChapterRuntime implements ChapterContext {
     this.state.setObjective(key);
   }
 
+  guide(target: { npc: string } | { landmark: string } | THREE.Vector3 | (() => THREE.Vector3 | null) | null): void {
+    const guide = this.session.guide;
+    if (target === null) return guide.clear();
+    if (target instanceof THREE.Vector3 || typeof target === 'function') return guide.set(target);
+    if ('npc' in target) {
+      const npc = this.cast.npc(target.npc);
+      return guide.set(npc ? () => npc.position : null);
+    }
+    guide.set(this.landmark(target.landmark));
+  }
+
   toast(key: string, params?: Record<string, string | number>): void {
     events.emit('hud:toast', params ? { key, params } : { key });
   }
@@ -248,6 +259,7 @@ export class ChapterRuntime implements ChapterContext {
   }
 
   dispose(): void {
+    if (!this.session.isDisposed) this.session.guide.clear();
     if (this.disposed) return;
     this.disposed = true;
     this.clock.dispose();

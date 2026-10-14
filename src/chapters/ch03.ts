@@ -109,6 +109,7 @@ class WrongHill {
 
   private nudgeToWiseman(): void {
     this.ctx.objective('ch03.objective.talkWiseman');
+    this.ctx.guide({ npc: 'wiseman' });
     this.say(this.ctx.session.player.character, 'ch03.christian.talkFirst', 'neutral');
   }
 
@@ -121,6 +122,7 @@ class WrongHill {
       this.hat?.stop();
     }
     if (!this.detourTaken) ctx.objective('ch03.objective.goToVillage');
+    ctx.guide(null); // GDD 2.7.8: the detour must look inviting by itself; the guide keeps to the Way
   }
 
   /** The side road is taken only after the Wiseman talk; before it, the trigger nudges back to him. */
@@ -193,6 +195,7 @@ class WrongHill {
     const { ctx } = this;
     this.setPhase('leading');
     ctx.objective('ui.hud.objective.backToWay');
+    ctx.guide({ npc: 'evangelist' }); // follow him home
     const points = this.pathHome(ev, road);
     const goal = points[points.length - 1];
     if (!goal) return;
@@ -205,6 +208,7 @@ class WrongHill {
     this.setPhase('done');
     this.say(ev.character, 'ch03.evangelist.bye', 'neutral');
     ctx.objective('ch03.objective.followWay');
+    ctx.guide(null);
   }
 
   /** Road points from Evangelist back to the fork (every LEAD.step m), then a few along the Way. */

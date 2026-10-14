@@ -19,3 +19,7 @@ public/__probe.png
 
 # Local Netlify folder
 .netlify
+
+# Android build artifacts
+release/*.aab
+release/*.apk

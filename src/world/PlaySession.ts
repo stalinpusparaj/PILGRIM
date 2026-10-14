@@ -36,6 +36,7 @@ import { HopeSystem } from '../player/Hope';
 import { runCrossDrop } from '../player/CrossDrop';
 import { Waystones } from '../narrative/Waystones';
 import { Promises } from '../narrative/Promises';
+import { Guide } from './Guide';
 import { CollisionWorld } from './Collision';
 import { Zones } from './Zones';
 import { Slough } from './Slough';
@@ -83,6 +84,8 @@ export class PlaySession {
   readonly interactables: Interactables;
   readonly waystones: Waystones;
   readonly promises: Promises;
+  /** Where the HUD points next (service 'guide'). */
+  readonly guide: Guide;
   readonly pits: PitMarks;
   hud: HUD | null = null;
 
@@ -195,6 +198,8 @@ export class PlaySession {
       });
       d.push(() => this.waystones.dispose());
       this.promises = new Promises({ world, player: this.player, state: this.state });
+      this.guide = new Guide({ way: world.ways.main, player: this.player });
+      this.disposers.push(() => this.guide.dispose());
       d.push(() => this.promises.dispose());
       this.god = this.godMode;
 
@@ -318,6 +323,7 @@ export class PlaySession {
       ...addPlayLoop(this.engine.loop, {
         ...this.systems(),
         tick: (dt) => {
+          this.guide.update(dt);
           this.hud?.update(dt);
           this.state.tickPlaytime(dt);
         },

@@ -70,10 +70,12 @@ class Chapter2 {
   private onAlone(): void {
     this.alone = true;
     this.ctx.objective(OBJECTIVE.steps);
+    this.ctx.guide({ npc: 'help' }); // Help waits on the far bank: that is the way out
   }
 
   private onHelped(): void {
     this.ctx.objective(OBJECTIVE.goOn);
+    this.ctx.guide(null);
   }
 
   private async end(): Promise<void> {

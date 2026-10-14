@@ -1118,6 +1118,20 @@ export class Promises { constructor(o: { world: PromiseWorld; player; state? });
   `setWaystone`, Hope ≥ 60, autosave, toast, `waystone:read`; while the Roll is lost only `ui.toast.needRoll`.
 - Promises: walk within 1.1 m at about the scroll's height: collect, chime, sparkle, toast `ui.toast.promise`.
 
+### Guide — `src/world/Guide.ts` (service 'guide'), `src/ui/hud-guide.ts`
+```ts
+export type GuideTarget = THREE.Vector3 | (() => THREE.Vector3 | null);
+export class Guide { constructor(o: { way: Way; player: { renderPosition } }); set(t: GuideTarget | null): void; clear(): void;
+  readonly custom: boolean; update(dt): void; sample(): GuideSample /* {target, player, custom, idle, offWay, distance}; reused */; dispose(): void }
+export const GUIDE_AHEAD_M = 14; export const OFF_WAY_M = 4;   // event 'guide:changed' {custom}
+```
+- Default target: the main Way 14 m ahead of the player (4 m ahead of the nearest point when off the Way); none past
+  the Way's end. Chapters aim it with `ctx.guide(...)`; the context clears it on dispose.
+- The HUD draws it (`GuideMarker`, hud-guide.css): a bobbing golden chevron 1.9 m over the goal when on screen, an
+  arrow on the safe-area edge turned towards it when not. A chapter goal always shows until within 2.5 m; the
+  default shows the edge arrow whenever the Way ahead is off screen and the chevron only after 5 s standing still
+  or off the Way.
+
 ### HUD — `src/ui/HUD.ts` (+ `hud-*.ts`, `hud.css`), service 'hud'
 ```ts
 export class HUD { constructor(parent?: HTMLElement);   // default #ui
@@ -1361,6 +1375,7 @@ interface ChapterContext {
   onTrigger(id: string, fn: () => void, opts?: { once?: boolean /* true */ }): () => void;
   onZone(type: string, enter?: (id: string) => void, exit?: (id: string) => void): () => void;
   objective(key: string | null): void; toast(key, params?): void; chapterCard(): void;
+  guide(target: { npc: string } | { landmark: string } | THREE.Vector3 | (() => THREE.Vector3 | null) | null): void;  // where the HUD guide points; null = the Way ahead
   music(id: SongId, state?: MusicState): void; ambience(id: AmbienceId | null): void;
   wait(seconds: number): Promise<void>;                               // game time; never resolves after dispose
   waitFor<K extends EventName>(name: K, pred?: (p: EventMap[K]) => boolean): Promise<EventMap[K]>;

@@ -103,6 +103,7 @@ class WicketGate {
     } else console.error(`[ch04] the level has no "${ID.gate}" landmark`);
 
     ctx.objective(KEY.reachGate);
+    ctx.guide({ landmark: ID.gate });
     ctx.onZone(
       ID.zone,
       () => {
@@ -166,6 +167,7 @@ class WicketGate {
     ctx.ambience('birdsong');
     ctx.toast(KEY.safeInside);
     ctx.objective(null);
+    ctx.guide(null);
     await ctx.talk(ID.talk, keeper ? { with: ID.keeper } : {});
     if (session.isDisposed || this.disposed) return;
     ctx.objective(KEY.followStraight);
