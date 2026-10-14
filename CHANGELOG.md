@@ -2,6 +2,11 @@
 
 All notable changes to PILGRIM: THE NARROW WAY. Dates are release dates.
 
+## 0.1.1 — 2026-10-14 — Guide (versionCode 2)
+
+- **Guide.** The HUD now points to the next goal: a bobbing golden chevron over it when on screen, an arrow on the screen edge when not. Chapters aim it at the Book, Christiana, the town gate, Evangelist, Help, Mr. Worldly Wiseman and the Wicket Gate; otherwise it points along the Way and stays quiet while you are moving on it. Detours are never pointed at.
+- Play Store release guide (`release/PLAY-STORE-GUIDE.md`); `.aab` / `.apk` build artifacts are git-ignored.
+
 ## 0.1.0 — 2026-10-14 — Free demo (Chapters I–IV), first Android submission
 
 ### The game
