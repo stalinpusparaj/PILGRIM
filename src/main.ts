@@ -23,6 +23,7 @@ import { Input } from './core/Input';
 import { createDebug, installCoreDebug, type Debug } from './core/Debug';
 import { AudioEngine } from './audio/AudioEngine';
 import { h, uiRoot } from './ui/dom';
+import { installJuice } from './ui/Juice';
 import { startMode, type FlowStart, type ModeKind, type ModeRunner } from './modes';
 import type { LabProbe } from './gen/lab-probe';
 import type { DialogueTestScene } from './narrative/DialogueTestScene';
@@ -296,6 +297,8 @@ async function boot(): Promise<void> {
     installCoreDebug(engine, quality, input, debug);
     installPhase0Debug(debug, engine, quality, rebuildScene);
   }
+
+  installJuice(); // sparkles, vignettes, button squash: event-driven, app-lifetime
 
   // Started before the loop so its first frame already shows the mode (the test world's loading scene).
   launch();

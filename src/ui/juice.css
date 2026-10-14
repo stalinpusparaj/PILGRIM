@@ -1,0 +1,189 @@
+/*
+ * UI "juice" (src/ui/Juice.ts): the small, bouncy, toy-like motion that makes every screen feel alive.
+ * Everything is plain CSS and inline DOM (GDD 2.3: no files, no images): sparkle bursts, soft edge
+ * vignettes, button squash and glint, staggered menu entrances, the title's floating light motes.
+ * Rules: one-shot or very slow loops only, nothing flashes faster than 3/s (GDD 2.15); the global
+ * reduce-motion rules in styles.css cut all of it to nothing, and Juice.ts spawns no particles then.
+ * One-shot animations come in -a / -b pairs so alternating the class replays them without a reflow.
+ */
+
+/* ---------------------------------------------------------------- layers */
+
+/* Soft colour at the screen edges: gold for a gift or a Promise, green for a waystone, red for a bonk. */
+.pg-vignette {
+  position: absolute; inset: 0; z-index: 3; /* over the canvas, under the HUD (4) */
+  pointer-events: none; opacity: 0; --vig: rgba(255, 210, 122, 0.55);
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 42%, var(--vig) 100%);
+}
+.pg-vignette[data-tone="gold"] { --vig: rgba(255, 210, 122, 0.75); }
+.pg-vignette[data-tone="leaf"] { --vig: rgba(120, 200, 110, 0.65); }
+.pg-vignette[data-tone="berry"] { --vig: rgba(216, 87, 74, 0.6); }
+.pg-vignette[data-tone="white"] { --vig: rgba(255, 248, 234, 0.8); }
+.pg-vignette.flash-a { animation: pg-vignette-a 0.9s ease-out both; }
+.pg-vignette.flash-b { animation: pg-vignette-b 0.9s ease-out both; }
+.pg-vignette.is-long.flash-a { animation-duration: 2.2s; }
+.pg-vignette.is-long.flash-b { animation-duration: 2.2s; }
+@keyframes pg-vignette-a { 0% { opacity: 0; } 18% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes pg-vignette-b { 0% { opacity: 0; } 18% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Sparkle bursts live above the HUD and the touch controls, under every menu. */
+.pg-sparks { position: absolute; inset: 0; z-index: 45; overflow: hidden; pointer-events: none; }
+.pg-spark {
+  position: absolute; left: 0; top: 0; width: var(--s, 12px); height: var(--s, 12px); margin: calc(var(--s, 12px) / -2);
+  background: var(--c, #ffd27a); will-change: transform, opacity;
+  animation: pg-spark var(--t, 0.9s) cubic-bezier(0.18, 0.8, 0.32, 1) both;
+  translate: var(--x, 0px) var(--y, 0px);
+}
+.pg-spark--star {
+  clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
+}
+.pg-spark--dot { border-radius: 50%; }
+.pg-spark--ring { border-radius: 50%; background: transparent; border: 3px solid var(--c, #ffd27a); }
+@keyframes pg-spark {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.2) rotate(0deg); }
+  12% { opacity: 1; transform: translate(calc(var(--dx) * 0.25), calc(var(--dy) * 0.25)) scale(1.15) rotate(40deg); }
+  100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 26px)) scale(0.3) rotate(var(--rot, 180deg)); }
+}
+/* A growing ring for big moments (the Burden falling, a gift). */
+.pg-spark--ring { animation-name: pg-ring; animation-timing-function: ease-out; }
+@keyframes pg-ring {
+  0% { opacity: 0.9; transform: scale(0.2); }
+  100% { opacity: 0; transform: scale(var(--grow, 9)); }
+}
+
+/* ---------------------------------------------------------------- buttons: squash + glint */
+
+.btn { position: relative; }
+/* A soft sheen sweeps across a hovered or focused button, then stops at the far edge (no loop). */
+.btn:not(:disabled)::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.38) 50%, rgba(255, 255, 255, 0) 62%);
+  background-size: 260% 100%; background-position: 120% 0; opacity: 0;
+}
+.btn:not(:disabled):hover::after, .btn:not(:disabled).is-focused::after, .btn:not(:disabled):focus-visible::after {
+  opacity: 1; animation: pg-glint 0.9s var(--ease-out) both;
+}
+@keyframes pg-glint { from { background-position: 120% 0; } to { background-position: -40% 0; } }
+/* Pressed (Juice.ts adds the class on pointerdown / activation): a toy-like squash that stacks on the hover lift. */
+.btn.squash-a { animation: pg-squash-a 0.34s var(--ease-bounce); }
+.btn.squash-b { animation: pg-squash-b 0.34s var(--ease-bounce); }
+@keyframes pg-squash-a { 0% { scale: 1; } 35% { scale: 1.06 0.9; } 70% { scale: 0.98 1.03; } 100% { scale: 1; } }
+@keyframes pg-squash-b { 0% { scale: 1; } 35% { scale: 1.06 0.9; } 70% { scale: 0.98 1.03; } 100% { scale: 1; } }
+
+/* ---------------------------------------------------------------- menus: staggered entrances */
+
+/* Pause, confirm, chapters, credits...: the panel drops in with a bounce and its buttons follow one by one. */
+.pg-menu-panel.pop-in { animation: pg-panel-drop 0.55s var(--ease-bounce) both; }
+@keyframes pg-panel-drop {
+  from { opacity: 0; transform: translateY(-28px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+.pg-menu-panel .pg-menu-list > *, .pg-title__menu > * {
+  animation: pg-item-in 0.5s var(--ease-bounce) both;
+  animation-delay: calc(60ms + var(--i, 0) * 55ms);
+}
+.pg-menu-panel .pg-menu-title { animation: pg-item-in 0.45s var(--ease-bounce) both; }
+.pg-menu-list > :nth-child(1), .pg-title__menu > :nth-child(1) { --i: 0; }
+.pg-menu-list > :nth-child(2), .pg-title__menu > :nth-child(2) { --i: 1; }
+.pg-menu-list > :nth-child(3), .pg-title__menu > :nth-child(3) { --i: 2; }
+.pg-menu-list > :nth-child(4), .pg-title__menu > :nth-child(4) { --i: 3; }
+.pg-menu-list > :nth-child(5), .pg-title__menu > :nth-child(5) { --i: 4; }
+.pg-menu-list > :nth-child(6), .pg-title__menu > :nth-child(6) { --i: 5; }
+.pg-menu-list > :nth-child(n + 7), .pg-title__menu > :nth-child(n + 7) { --i: 6; }
+@keyframes pg-item-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------------------------------------------------------------- title screen */
+
+/* The logo drops in and settles; the subtitle's tracking opens; the emblem floats and its sun breathes. */
+.pg-title__word { display: inline-block; animation: pg-logo-drop 0.9s var(--ease-bounce) both; }
+.pg-title__sub { animation: pg-sub-in 1.1s var(--ease-out) 0.25s both; }
+.pg-title__credit { animation: pg-item-in 0.6s var(--ease-out) 0.5s both; }
+.pg-title__emblem svg { animation: pg-emblem-float 4.2s ease-in-out infinite; }
+.pg-title__emblem { position: relative; width: fit-content; margin: 0 auto; }
+.pg-title__emblem::before {
+  content: ''; position: absolute; left: 50%; top: 45%; width: 180%; aspect-ratio: 1; border-radius: 50%;
+  transform: translate(-50%, -50%); pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 232, 163, 0.45), rgba(255, 232, 163, 0.12) 55%, rgba(255, 232, 163, 0));
+  animation: pg-emblem-glow 4.2s ease-in-out infinite;
+}
+@keyframes pg-logo-drop {
+  from { opacity: 0; transform: translateY(-46px) scale(1.08); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pg-sub-in {
+  from { opacity: 0; letter-spacing: 0.08em; }
+  to { opacity: 1; letter-spacing: 0.3em; }
+}
+body.lang-ta .pg-title__sub { animation-name: pg-item-in; }
+@keyframes pg-emblem-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(1.2deg); }
+}
+@keyframes pg-emblem-glow { 0%, 100% { opacity: 0.7; scale: 1; } 50% { opacity: 1; scale: 1.12; } }
+
+/* Floating light motes drifting up over the landscape (spawned by Juice.ts while the title is up). */
+.pg-motes { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.pg-mote {
+  position: absolute; left: var(--mx, 50%); bottom: -4vh; width: var(--ms, 6px); height: var(--ms, 6px);
+  border-radius: 50%; background: #ffe8a3; opacity: 0;
+  box-shadow: 0 0 10px 3px rgba(255, 232, 163, 0.45);
+  animation: pg-mote var(--mt, 14s) linear infinite; animation-delay: var(--md, 0s);
+}
+@keyframes pg-mote {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  12% { opacity: 0.85; }
+  50% { transform: translate(var(--mw, 20px), -46vh) scale(1); }
+  88% { opacity: 0.7; }
+  100% { opacity: 0; transform: translate(calc(var(--mw, 20px) * -0.6), -96vh) scale(0.5); }
+}
+
+/* ---------------------------------------------------------------- HUD, dialogue, satchel */
+
+/* A bonk jolts the whole HUD once (the lantern also shivers on its own, hud.css). */
+.hud-main.jolt-a { animation: pg-jolt-a 0.45s var(--ease-out); }
+.hud-main.jolt-b { animation: pg-jolt-b 0.45s var(--ease-out); }
+@keyframes pg-jolt-a {
+  0%, 100% { translate: 0 0; } 20% { translate: -8px 4px; } 45% { translate: 6px -3px; } 70% { translate: -3px 2px; }
+}
+@keyframes pg-jolt-b {
+  0%, 100% { translate: 0 0; } 20% { translate: -8px 4px; } 45% { translate: 6px -3px; } 70% { translate: -3px 2px; }
+}
+/* A hard landing dips it slightly. */
+.hud-main.thud-a { animation: pg-thud-a 0.35s var(--ease-out); }
+.hud-main.thud-b { animation: pg-thud-b 0.35s var(--ease-out); }
+@keyframes pg-thud-a { 0%, 100% { translate: 0 0; } 30% { translate: 0 5px; } }
+@keyframes pg-thud-b { 0%, 100% { translate: 0 0; } 30% { translate: 0 5px; } }
+
+/* Conversation: the panel bounces up, the name tag pops, choices fan in one after another. */
+.dlg-layer.is-open .dlg-panel { animation: pg-panel-rise 0.55s var(--ease-bounce) both; }
+@keyframes pg-panel-rise {
+  from { opacity: 0; transform: translateY(36px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+.dlg-name { animation: pg-name-pop 0.4s var(--ease-bounce) both; }
+@keyframes pg-name-pop { from { opacity: 0; scale: 0.6; } to { opacity: 1; scale: 1; } }
+.dlg-choices > * { animation: pg-item-in 0.45s var(--ease-bounce) both; animation-delay: calc(var(--i, 0) * 80ms); }
+.dlg-choices > :nth-child(1) { --i: 0; }
+.dlg-choices > :nth-child(2) { --i: 1; }
+.dlg-choices > :nth-child(3) { --i: 2; }
+.dlg-face.has-image { animation: pg-face-in 0.5s var(--ease-bounce) both; }
+.dlg-panel.is-player .dlg-face.has-image { animation-name: pg-face-in-flipped; }
+@keyframes pg-face-in { from { opacity: 0; transform: scale(0.7) rotate(-8deg); } to { opacity: 1; transform: none; } }
+@keyframes pg-face-in-flipped {
+  from { opacity: 0; transform: scaleX(-1) scale(0.7) rotate(8deg); } to { opacity: 1; transform: scaleX(-1); }
+}
+
+/* MY SATCHEL: the bag swings open; each page settles in when its tab is picked. */
+.pg-satchel__panel { animation: pg-satchel-open 0.5s var(--ease-bounce) both; transform-origin: 50% 0; }
+@keyframes pg-satchel-open {
+  from { opacity: 0; transform: translateY(-20px) rotateX(10deg) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.pg-satchel__body > * { animation: pg-item-in 0.4s var(--ease-out) both; }
+.pg-satchel__tab[aria-selected="true"] { animation: pg-squash-a 0.34s var(--ease-bounce); }
+
+/* Loading: the emblem's halo breathes with the bar. */
+.pg-loading__fill { box-shadow: 0 0 14px 2px rgba(255, 210, 122, 0.55); }
