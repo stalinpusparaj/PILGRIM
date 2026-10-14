@@ -1,50 +1,31 @@
 /**
- * Stand-ins the flow uses until the real modules plug in:
- * - the default chapter launcher opens the playable test world (src/world/TestWorld.ts, `content/levels/test.json`) for
- *   every chapter, so title → opening → "chapter" → pause → title can be played and tested before the
- *   ChapterManager exists; `?chapter=test` uses it on purpose;
+ * What the flow plugs in by default:
+ * - the chapter launcher is the ChapterManager (src/world/ChapterManager.ts, its own chunk, loaded on the first
+ *   chapter): every chapter's script on its level; a chapter with no script yet plays the test chapter;
+ *   `?chapter=test` forces the test script (`{ script: 'test' }`);
  * - the default Settings screen is SettingsUI (loaded on first use).
  * GameFlow.setChapterLauncher() / setScreen() replace them. The Satchel lives in flow-satchel.ts.
  */
 import type { Engine } from '../core/Engine';
-import type { TestWorld } from '../world/TestWorld';
-import type { ChapterHandle, ChapterLauncher, ScreenFactory } from './flow-types';
+import type { ChapterManager, ChapterManagerOptions } from '../world/ChapterManager';
+import type { ChapterLauncher, ScreenFactory } from './flow-types';
 
 /**
- * The test world as a chapter. `onWorld` hears the world when it is on screen and null when it goes (the
- * `?chapter=test` mode runner exposes it as `window.__pilgrim.testWorld`).
+ * A launcher backed by one ChapterManager (made on the first launch). `onManager` hears it once it exists (the
+ * mode runner exposes its session and dev probe to tests).
  */
-export function testWorldLauncher(
+export function chapterLauncher(
   engine: Engine,
-  onWorld?: (world: TestWorld | null) => void,
+  opts: ChapterManagerOptions & { onManager?: (m: ChapterManager) => void } = {},
 ): ChapterLauncher {
-  return async () => {
-    const { TestWorld } = await import('../world/TestWorld');
-    const world = new TestWorld(engine);
-    try {
-      await world.start();
-    } catch (err) {
-      world.dispose();
-      throw err;
+  let manager: ChapterManager | null = null;
+  return async (chapter, waystone, state) => {
+    if (!manager) {
+      const { ChapterManager } = await import('../world/ChapterManager');
+      manager ??= new ChapterManager(engine, { script: opts.script });
+      opts.onManager?.(manager);
     }
-    onWorld?.(world);
-    const handle: ChapterHandle = {
-      gameplay: true, // Phase 2: the test world is played (PlaySession), with fly cameras on F1 / keys 2-3
-      satchelMap: () => {
-        const built = world.current;
-        if (!built) return null;
-        const p = world.play?.player;
-        const player = p
-          ? { x: p.renderPosition.x, z: p.renderPosition.z, heading: { x: p.forward.x, z: p.forward.z } }
-          : null;
-        return { level: built.level, player };
-      },
-      dispose: () => {
-        onWorld?.(null);
-        world.dispose();
-      },
-    };
-    return handle;
+    return manager.launch(chapter, waystone, state);
   };
 }
 

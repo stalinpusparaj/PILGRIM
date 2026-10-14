@@ -90,7 +90,7 @@
     { "id": "pliable", "recipe": "pliable", "role": "test", "at": [-58, 0, 24], "rotY": 3.0 },
     { "id": "help", "recipe": "help", "role": "test", "at": [48, 0, -14], "rotY": 2.6 }
   ],
-  "triggers": [],
+  "triggers": [{ "id": "test_cross_near", "shape": "circle", "at": [118, 0, 18], "r": 7, "script": "crossNear" }],
   "waystones": [
     { "id": "test_w1", "at": [-118, 0, -6] },
     { "id": "test_w2", "at": [101, 0, -5] }

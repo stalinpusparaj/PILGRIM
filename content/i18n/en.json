@@ -14,20 +14,15 @@
   "ui.title.lang.label": "Language",
   "ui.title.lang.en": "English",
   "ui.title.lang.ta": "தமிழ்",
-
   "ui.common.back": "BACK",
   "ui.common.close": "CLOSE",
-
   "ui.opening.narration": "As I walked through the wilderness of this world, I lay down to sleep... and as I slept, I dreamed a dream.",
   "ui.opening.click": "Click to play",
   "ui.opening.tap": "Tap to play",
-
   "ui.play.click": "Click to play",
   "ui.play.tap": "Tap to play",
-
   "ui.context.restoring": "Restoring the world...",
   "ui.context.unsupported": "This device can't show the world. Please try another browser.",
-
   "ui.loading.building": "Building the world... {pct}%",
   "ui.loading.line.1": "Fluffing up the clouds...",
   "ui.loading.line.2": "Polishing the waystones...",
@@ -38,7 +33,6 @@
   "ui.loading.line.7": "Planting little trees...",
   "ui.loading.line.8": "Teaching the birds a new song...",
   "ui.loading.failed": "Oh dear, the world could not be built. Please reload the page.",
-
   "ui.hud.objective.followLight": "Follow the shining light",
   "ui.hud.objective.findSteps": "Find the steps",
   "ui.hud.objective.backToWay": "Go back to the Way",
@@ -52,7 +46,6 @@
   "ui.hud.hope": "Hope",
   "ui.hud.hearts": "Hearts",
   "ui.hud.heartsCount": "Hearts: {n} of {max}",
-
   "ui.verb.talk": "Talk",
   "ui.verb.read": "Read",
   "ui.verb.knock": "Knock",
@@ -68,7 +61,6 @@
   "ui.verb.reachSword": "Reach for the sword",
   "ui.verb.warningSign": "Put up a warning sign",
   "ui.verb.showRoll": "Show the Roll",
-
   "ui.toast.rollUpdated": "The Roll is updated",
   "ui.toast.promise": "A Promise!",
   "ui.toast.leftWay": "You left the Way",
@@ -85,7 +77,6 @@
   "ui.toast.gift.prayer": "New gift: Prayer",
   "ui.toast.gift.key_promise": "New gift: Key of Promise",
   "ui.toast.gift.looking_glass": "New gift: Looking glass",
-
   "ui.gift.sword.name": "Sword",
   "ui.gift.shield.name": "Shield",
   "ui.gift.helmet.name": "Helmet",
@@ -94,7 +85,6 @@
   "ui.gift.prayer.name": "Prayer",
   "ui.gift.key_promise.name": "Key of Promise",
   "ui.gift.looking_glass.name": "Looking glass",
-
   "ui.chapter.1.number": "CHAPTER I",
   "ui.chapter.1.title": "THE CITY OF DESTRUCTION",
   "ui.chapter.2.number": "CHAPTER II",
@@ -123,7 +113,6 @@
   "ui.chapter.13.title": "THE RIVER AND THE CELESTIAL CITY",
   "ui.chapter.epilogue.number": "EPILOGUE",
   "ui.chapter.epilogue.title": "CHRISTIANA",
-
   "ui.satchel.title": "MY SATCHEL",
   "ui.satchel.tab.roll": "THE ROLL",
   "ui.satchel.tab.promises": "PROMISES",
@@ -134,7 +123,6 @@
   "ui.satchel.footer.detours": "Detours: {n}",
   "ui.satchel.readAlready": "Read already",
   "ui.satchel.item.key_promise": "A key called Promise.",
-
   "ui.pause.title": "PAUSED",
   "ui.pause.resume": "KEEP GOING",
   "ui.pause.satchel": "SATCHEL",
@@ -144,10 +132,8 @@
   "ui.pause.confirm.text": "Go back to the title? You'll restart from your last waystone.",
   "ui.pause.confirm.yes": "YES",
   "ui.pause.confirm.no": "NO",
-
   "ui.arise.title": "I SHALL ARISE",
   "ui.arise.verse": "When I fall, I shall arise. - Micah 7:8",
-
   "ui.settings.title": "SETTINGS",
   "ui.settings.section.graphics": "Graphics",
   "ui.settings.section.gameplay": "Gameplay",
@@ -231,22 +217,18 @@
   "ui.settings.key.ArrowLeft": "Left arrow",
   "ui.settings.key.ArrowRight": "Right arrow",
   "ui.settings.key.none": "Not set",
-
   "ui.demoEnd.line1": "The Way goes on...",
   "ui.demoEnd.line2": "Nine more chapters wait beyond the gate.",
   "ui.demoEnd.getFull": "GET THE FULL GAME",
   "ui.demoEnd.titleScreen": "TITLE SCREEN",
-
   "ui.end.title": "THE END OF THE DREAM",
   "ui.end.awoke": "So I awoke, and behold it was a dream.",
   "ui.end.sequel.title": "CHRISTIANA'S JOURNEY",
   "ui.end.sequel.soon": "coming soon",
-
   "ui.credits.title": "CREDITS",
   "ui.credits.bunyan": "Based on The Pilgrim's Progress by John Bunyan (1678)",
   "ui.credits.kjv": "Scripture from the King James Version",
   "ui.credits.madeHere": "Every model, sound and tune in this game was made by our own code.",
-
   "ui.touch.jump": "JUMP",
   "ui.touch.use": "USE",
   "ui.touch.pray": "PRAY",
@@ -254,7 +236,6 @@
   "ui.touch.shield": "SHIELD",
   "ui.touch.satchel": "Satchel",
   "ui.touch.pause": "Pause",
-
   "ui.menu.main": "Main menu",
   "ui.opening.holdSkip": "Hold to skip",
   "ui.chapters.locked": "Not reached yet",
@@ -265,7 +246,6 @@
   "ui.credits.code": "3D library: three.js (MIT License)",
   "ui.credits.thanks": "Thank you for playing!",
   "ui.flow.loadFailed": "Oh no! That chapter could not load. Please try again.",
-
   "ui.settings.tabs": "Settings sections",
   "ui.settings.hint.autoCamera": "Auto: on for touch screens, off with a mouse or gamepad.",
   "ui.settings.hint.qualityAuto": "Auto picked {level}.",
@@ -290,7 +270,6 @@
   "ui.settings.touch.satchel": "Satchel: top left corner",
   "ui.settings.touch.pause": "Pause: top right corner",
   "ui.settings.touch.combat": "SWORD and SHIELD only show up when you need them.",
-
   "name.christian": "Christian",
   "name.christiana": "Christiana",
   "name.son_1": "Matthew",
@@ -307,7 +286,6 @@
   "ui.dialogue.next": "Next",
   "ui.dialogue.holdSkip": "Hold to skip",
   "ui.dialogue.choose": "Choose one",
-
   "test.evangelist.1": "Hello, friend! Why do you look so sad?",
   "test.christian.1": "This burden is so heavy. I don't know where to go.",
   "test.evangelist.2": "Do you see that little light, far away? Walk to it, and you will find a gate.",
@@ -318,12 +296,10 @@
   "test.evangelist.4": "Good! Keep your eyes on the light.",
   "test.evangelist.5": "Ha ha! Sacks are lazy, but you can walk!",
   "test.christian.2": "Here I go!",
-
   "ui.cutscene.holdToSkip": "Hold to skip",
   "ui.cutscene.skip": "Skip scene",
   "cutscene.sample.1": "Look over there, far away. Can you see the light?",
   "cutscene.sample.2": "I see it! Let's go together.",
-
   "ui.satchel.tabs": "Satchel pages",
   "ui.satchel.roll.now": "Now",
   "ui.satchel.roll.done": "Done",
@@ -498,11 +474,25 @@
   "friend.atheist.line": "Laughs at the City and walks back the other way.",
   "friend.secret.name": "Secret",
   "friend.secret.line": "Brings Christiana a letter from the King.",
-
   "ui.dialogueTest.kicker": "TEST",
   "ui.dialogueTest.title": "A TALK ON THE WAY",
   "ui.dialogueTest.play": "Play sample",
   "ui.dialogueTest.again": "Play again",
   "ui.dialogueTest.playing": "Talking...",
-  "ui.dialogueTest.missing": "The sample talk is missing."
+  "ui.dialogueTest.missing": "The sample talk is missing.",
+  "bark.generic.lowHope.1": "You look tired, but I am right here.",
+  "bark.generic.lowHope.2": "It is okay to feel sad today.",
+  "bark.generic.lowHope.3": "Hold on, we walk together.",
+  "bark.generic.cheer.1": "Look up, the light is still ahead!",
+  "bark.generic.cheer.2": "One more step, you can do it!",
+  "bark.generic.cheer.3": "The King keeps His promises!",
+  "bark.generic.promise.1": "Look, something is glowing over there!",
+  "bark.generic.promise.2": "I see a shiny scroll nearby!",
+  "bark.generic.promise.3": "A Promise is close, let's find it!",
+  "bark.generic.detour.1": "Hmm, this does not look like the Way.",
+  "bark.generic.detour.2": "Are you sure about this path?",
+  "bark.generic.detour.3": "I think the Way is back there.",
+  "bark.generic.idle.1": "Shall we keep going?",
+  "bark.generic.idle.2": "The road is waiting for us.",
+  "bark.generic.idle.3": "I am ready when you are!"
 }

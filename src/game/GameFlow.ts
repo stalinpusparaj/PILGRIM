@@ -5,12 +5,11 @@
  * the sequel card "CHRISTIANA'S JOURNEY - coming soon" (GDD 2.10), then the credits and back to the title.
  *
  *   const flow = new GameFlow(engine);   // registers services.flow
- *   flow.setChapterLauncher((n, waystone, state) => chapterManager.start(n, waystone, state));
+ *   flow.setChapterLauncher(chapterManager.launch);   // optional: the ChapterManager is the default
  *   flow.start();                         // the title screen
  *
- * Chapters plug in through the launcher (until then the test world stands in for every chapter, see
- * flow-launcher.ts) and report their end with `events.emit('chapter:complete', { chapter })`. Settings and the
- * Satchel are other modules' screens, opened through `setScreen()` factories (both wired by default). During
+ * Chapters plug in through the launcher (the ChapterManager by default, see flow-launcher.ts) and report their
+ * end with `events.emit('chapter:complete', { chapter })`. Settings and the Satchel are other modules' screens, opened through `setScreen()` factories (both wired by default). During
  * play the pause key opens the pause menu and the Satchel key the Satchel (flow-satchel.ts); touch players get a
  * pause icon of the flow's own while the touch controls are hidden (talks, cutscenes: flow-touch.ts).
  * Tests read `window.__pilgrim.services.get('flow').probe()`.
@@ -30,7 +29,7 @@ import { Opening } from '../ui/Opening';
 import { uiRoot } from '../ui/dom';
 import { EndCard } from '../ui/menu-end';
 import { installFlowDebug } from './flow-debug';
-import { settingsScreen, testWorldLauncher } from './flow-launcher';
+import { chapterLauncher, settingsScreen } from './flow-launcher';
 import { PauseController, chapterWantsGameplay } from './flow-pause';
 import { FlowSatchel } from './flow-satchel';
 import { freshState, stateFrom } from './flow-session';
@@ -79,7 +78,7 @@ export class GameFlow {
     this.parent = opts.parent ?? uiRoot();
     this.blank.name = 'flow:blank';
     this.blank.background = new THREE.Color(0x000000);
-    this.launcher = testWorldLauncher(engine);
+    this.launcher = chapterLauncher(engine);
     const stillPlaying = (): boolean => this.current === 'playing' && !this.pauser.isOpen;
     this.satchel = new FlowSatchel(this.parent, () => this.handle, stillPlaying);
     this.screens.set('settings', settingsScreen);
@@ -136,9 +135,9 @@ export class GameFlow {
     return this.hub ? this.hub.ready : this.current === 'playing' || this.current === 'paused';
   }
 
-  /** null restores the default (the test world). */
+  /** null restores the default (the ChapterManager). */
   setChapterLauncher(fn: ChapterLauncher | null): void {
-    this.launcher = fn ?? testWorldLauncher(this.engine);
+    this.launcher = fn ?? chapterLauncher(this.engine);
   }
 
   /** Registers the Settings or Satchel screen (null removes it; the button then does nothing but warn). */

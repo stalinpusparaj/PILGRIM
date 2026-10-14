@@ -4,6 +4,14 @@
  * geometry. Builders live in the built-*.ts files by theme; shared helpers are in built-kit.ts.
  */
 import type { PropBuilder } from '../types';
+import { buildArrow, buildBook, buildBoot, buildCoverRock, buildFarLight } from './built-chapter';
+import {
+  buildCastleRidge,
+  buildMountainOverhang,
+  buildTownGate,
+  buildTownWall,
+  buildVillageDoor,
+} from './built-chapter-town';
 import { buildGate, buildWicketGate } from './built-gates';
 import { buildHouseA, buildHouseB, buildHouseC } from './built-houses';
 import { buildCage, buildCandle, buildFlag, buildLamp, buildSign, buildStall } from './built-market';
@@ -40,4 +48,15 @@ export const BUILT_PROPS: Record<string, PropBuilder> = {
   palace_tower: buildPalaceTower,
   castle_tower: buildCastleTower,
   mountain_peak: buildMountainPeak,
+  // Phase 4 (Chapters I-IV): built-chapter.ts and built-chapter-town.ts.
+  book: buildBook,
+  far_light: buildFarLight,
+  boot: buildBoot,
+  cover_rock: buildCoverRock,
+  arrow: buildArrow,
+  town_wall: buildTownWall,
+  town_gate: buildTownGate,
+  village_door: buildVillageDoor,
+  mountain_overhang: buildMountainOverhang,
+  castle_ridge: buildCastleRidge,
 };

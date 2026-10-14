@@ -42,9 +42,10 @@ wraps a `PlaySession` (Gameplay below) and keeps the Phase 1 fly cameras on keys
 no WebGL). Every other mode still shows the Phase 0 test scene (`src/world/dev/DevScene.ts`) until the title
 screen (Phase 3) and the chapters exist.
 The default mode is the game itself: `GameFlow` (src/game/GameFlow.ts) shows the title screen. `?chapter=…` starts
-the same flow straight in that chapter: `test` runs the test world (`src/world/TestWorld.ts`, built from
-`content/levels/test.json`) as chapter 1; `1..13` / `epilogue` (14) use the flow's chapter launcher, which is the
-test world too until the ChapterManager plugs in. Pause (Esc / Menu) and the Satchel (Tab / View) work through the
+the same flow straight in that chapter through the ChapterManager (`src/world/ChapterManager.ts`, "Chapters
+(Phase 3)" below): `test` plays the test chapter (`src/chapters/test.ts` on `content/levels/test.json`) as chapter
+1; `1..13` / `epilogue` (14) play their scripts, and a chapter with no script yet plays the test chapter in its
+place. Pause (Esc / Menu) and the Satchel (Tab / View) work through the
 flow in every chapter. `?lab=1` → Character Lab (`src/gen/Lab.ts`), `?dialogue=test` → the dialogue demo
 (`src/narrative/DialogueTestScene.ts`), `?music=<id>` → the music test page (`src/audio/MusicTestPage.ts`, plain DOM,
 loaded with a dynamic import before the Engine is created, so it needs no WebGL). The Phase 0 dev scene
@@ -1284,7 +1285,7 @@ class GameFlow {                                        // service 'flow'
   start(): void;                                        // boot → title
   readonly state: 'boot'|'title'|'opening'|'loading'|'playing'|'paused'|'demoEnd'|'endCard'|'credits'|'disposed';
   readonly screen: string; readonly chapter: number | null; readonly ready: boolean;
-  setChapterLauncher(fn: ChapterLauncher | null): void; // null = the test world for every chapter
+  setChapterLauncher(fn: ChapterLauncher | null): void; // null = the default ChapterManager launcher
   setScreen(id: 'settings' | 'satchel', factory: ScreenFactory | null): void;
   showTitle(noticeKey?); newGame(); continueGame(latest?); startChapter(n, waystone?, state?): Promise<void>;
   completeChapter(n); pause(); resume(); quitToTitle(); showDemoEnd();
@@ -1343,6 +1344,76 @@ Christian and Evangelist on a dusk stage play `test_evangelist` (content/dialogu
 runner, panel and bubbles, with a camera host that cuts with `shots.*` + `cutTo` (`<kind>_<actorId>` shot names:
 over_shoulder / ots, close / closeup, two / wide, release) and a small Hope readout. Registers a GameState (Hope 50)
 when none exists. `window.__pilgrim.dialogueTest` is the scene (`play()`, `camera`, `ready`, `active`).
+
+### Chapters (Phase 3) — `src/world/ChapterManager.ts` (+ `chapter-prefetch.ts`, `chapter-devcam.ts`), `src/world/Triggers.ts`, `src/chapters/`
+```ts
+// src/chapters/types.ts
+interface ChapterScript { id: string; level: string /* level file id */;
+  start(ctx: ChapterContext): void | Promise<void>; update?(dt: number, ctx: ChapterContext): void; dispose?(): void }
+interface ChapterContext {
+  readonly chapter: number; readonly engine: Engine; readonly session: PlaySession; readonly state: GameState; readonly level: LevelData;
+  npc(id: string): NPC | null;          // every level.npcs entry with a Character, wrapped (not 'christian': the player)
+  addCompanion(npcId: string, barks?: BarkSet): Companion; removeCompanion(npcId: string): void; readonly companions: readonly Companion[];
+  talk(graphId: string, opts?: { with?: string }): Promise<void>;     // queued; see below
+  cutscene(def: CutsceneDef): Promise<'done' | 'skipped'>;            // actors: christian + every NPC; ground: session.col
+  onTalk(npcId, graph: string | (() => Promise<void>), opts?: { verb?: string /* ui.verb.talk */; once?: boolean /* false */ }): () => void;
+  onInteract(o: Omit<Interactable, 'onUse'> & { onUse(): void }): () => void;
+  onTrigger(id: string, fn: () => void, opts?: { once?: boolean /* true */ }): () => void;
+  onZone(type: string, enter?: (id: string) => void, exit?: (id: string) => void): () => void;
+  objective(key: string | null): void; toast(key, params?): void; chapterCard(): void;
+  music(id: SongId, state?: MusicState): void; ambience(id: AmbienceId | null): void;
+  wait(seconds: number): Promise<void>;                               // game time; never resolves after dispose
+  waitFor<K extends EventName>(name: K, pred?: (p: EventMap[K]) => boolean): Promise<EventMap[K]>;
+  landmark(id: string): THREE.Vector3 | null;                         // ground + lift; null for path landmarks
+  complete(): void;                                                   // 'chapter:complete' {chapter}, once
+  own(dispose: () => void): void;
+}
+// src/chapters/index.ts
+const CHAPTERS: Record<string, () => Promise<{ default: ChapterScript }>>;   // 'test' now; '1'..'13', 'epilogue' later
+function chapterKey(n): string /* 14 → 'epilogue' */; function nextChapterKey(n): string | null; function hasChapter(key): boolean;
+// src/world/Triggers.ts — level.triggers → 'trigger:enter' {id, script} / 'trigger:exit' {id}
+class Triggers { constructor(level, target /* player */); enabled; readonly count; isInside(id); isSpent(id); update(); dispose() }
+// src/world/ChapterManager.ts — service 'chapters' while a chapter is up
+class ChapterManager {
+  constructor(engine: Engine, opts?: { script?: string /* force a key: ?chapter=test */ });
+  readonly launch: ChapterLauncher;          // the flow's launcher → ChapterHandle {gameplay: true, satchelMap, dispose}
+  readonly session: PlaySession | null; readonly context: ChapterRuntime | null; readonly building: boolean;
+  readonly scripts: ChapterScripts;          // load(key), prefetch(key), prefetched
+  readonly progressLog: number[]; dev: ChapterDevProbe | null;   // ?chapter=test → window.__pilgrim.testWorld
+  restart(): Promise<void>;                  // dispose + build the running chapter again (leak checks)
+  end(): void; dispose(): void;
+  probe(): { key, chapter, level, ready, building, builds, npcs, companions, talking, cuts, triggers, prefetched };
+}
+// src/game/flow-launcher.ts
+function chapterLauncher(engine, opts?: { script?: string; onManager?(m: ChapterManager): void }): ChapterLauncher;  // GameFlow's default
+```
+- launch(chapter, waystone, state): the script (`CHAPTERS[chapterKey(n)]`, or the forced key; a chapter with no
+  script yet plays `test` with a `console.info`) → `PlaySession.start(engine, script.level, { state, waystone,
+  loading: chapterLoadingInfo(chapter) })` → `state.setChapter(n)` if it differs → `ChapterRuntime` (the context)
+  + `Triggers` → `'hud:chapterCard'` → `script.start(ctx)` on the next microtask, not awaited (errors logged).
+- Loop: one System at `PLAY_ORDER.interact + 5` (= `NPC_ORDER`): triggers → waits → NPC wrappers (a Companion
+  updates and renders its own NPC) → `script.update`; its render places the NPCs and walks a held talk shot;
+  a System at 999 moves the bubbles after the camera.
+- `talk()`: one DialogueRunner per chapter (registered 'dialogue', no listeners) with a TalkHost; a DialoguePanel
+  is made per talk and freed after it, so no panel listens between talks. Around a talk: player 'locked',
+  following companions stop, the partner stops, faces the player and looks at his head, the player turns to the
+  partner, `state.meet(recipe)`, `'hud:visible'` off; `cam` effects cut `session.view` with `shots.*` + `cutTo`
+  (shot names as the dialogue demo, `parseShot`), the FollowCamera suspended until 'release' / the end (blend
+  0.8 s), cuts on the side the follow camera stood (180° rule), the face lifted over the panel. All restored after.
+- Bubbles: the chapter owns a SpeechBubbles ('bubbles') for companion barks and bubble lines. Cutscenes: a
+  CutscenePlayer made on first `ctx.cutscene()`; the player is in 'cutscene' mode while it plays.
+- Background fetch: reading the level's LAST waystone fetches the next chapter's script chunk, level file and
+  `content/dialogue/<levelFileId>.json` (ChapterScripts.prefetch). The World itself is not pre-built yet (needs a
+  PlaySession option to adopt a built World, DECISIONS).
+- dispose (handle / restart), newest first: loop systems, `script.dispose()`, the context (waits, the talk and
+  panel, the cutscene player, interactables, listeners, `own()` disposers, companions, NPC wrappers, bubbles),
+  triggers, the session. Building and disposing the test chapter 5 times keeps GPU geometries / textures and
+  `events.count()` flat (tests/chapters.spec.ts).
+- The test chapter (`src/chapters/test.ts`): Pliable is a companion, Evangelist has [E] Talk → `test_evangelist`,
+  objective `ui.hud.objective.followLight`, trigger `test_cross_near` (content/levels/test.json) → toast.
+- `tests/chapters.spec.ts`: the Evangelist talk by keyboard in English and Tamil (third answer: Hope +10, cuts,
+  babble, Tamil panel text; screenshots `test-results/phase3/chapter-talk-<lang>.png`), 5 builds with flat
+  memory and listeners, title → START → opening → Chapter I (the test chapter in its place), clean consoles.
 
 ## Audio (Phase 3) — `src/audio/`, `content/music/`
 

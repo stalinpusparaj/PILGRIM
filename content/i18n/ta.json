@@ -14,20 +14,15 @@
   "ui.title.lang.label": "மொழி",
   "ui.title.lang.en": "English",
   "ui.title.lang.ta": "தமிழ்",
-
   "ui.common.back": "பின்செல்",
   "ui.common.close": "மூடு",
-
   "ui.opening.narration": "இந்த உலகம் என்னும் பெரிய காட்டின் வழியே நான் நடந்து போனபோது, படுத்துத் தூங்கினேன்... தூங்கும்போது ஒரு கனவு கண்டேன்.",
   "ui.opening.click": "விளையாடக் கிளிக் செய்",
   "ui.opening.tap": "விளையாடத் தொடு",
-
   "ui.play.click": "விளையாடக் கிளிக் செய்",
   "ui.play.tap": "விளையாடத் தொடு",
-
   "ui.context.restoring": "உலகத்தை மீண்டும் அமைக்கிறோம்...",
   "ui.context.unsupported": "இந்தச் சாதனத்தில் உலகத்தைக் காட்ட முடியவில்லை. வேறு உலாவியில் முயற்சி செய்.",
-
   "ui.loading.building": "உலகத்தை உருவாக்குகிறோம்... {pct}%",
   "ui.loading.line.1": "மேகங்களைப் பஞ்சு போல ஆக்குகிறோம்...",
   "ui.loading.line.2": "வழிக்கற்களைப் பளபளவென்று துடைக்கிறோம்...",
@@ -38,7 +33,6 @@
   "ui.loading.line.7": "சின்னச் சின்ன மரங்களை நடுகிறோம்...",
   "ui.loading.line.8": "பறவைகளுக்குப் புதிய பாட்டுச் சொல்லித் தருகிறோம்...",
   "ui.loading.failed": "அச்சச்சோ, உலகத்தைக் கட்ட முடியவில்லை. பக்கத்தை மீண்டும் திறந்து பாருங்கள்.",
-
   "ui.hud.objective.followLight": "மின்னும் ஒளியைப் பின்தொடர்",
   "ui.hud.objective.findSteps": "படிக்கற்களைக் கண்டுபிடி",
   "ui.hud.objective.backToWay": "பாதைக்குத் திரும்பிப் போ",
@@ -52,7 +46,6 @@
   "ui.hud.hope": "நம்பிக்கை",
   "ui.hud.hearts": "இதயங்கள்",
   "ui.hud.heartsCount": "இதயங்கள்: {max}-இல் {n}",
-
   "ui.verb.talk": "பேசு",
   "ui.verb.read": "படி",
   "ui.verb.knock": "தட்டு",
@@ -68,7 +61,6 @@
   "ui.verb.reachSword": "வாளை எட்டிப் பிடி",
   "ui.verb.warningSign": "எச்சரிக்கைப் பலகையை வை",
   "ui.verb.showRoll": "சுருளைக் காட்டு",
-
   "ui.toast.rollUpdated": "சுருள் புதுப்பிக்கப்பட்டது",
   "ui.toast.promise": "ஒரு வாக்குறுதி!",
   "ui.toast.leftWay": "நீ பாதையை விட்டு விலகிவிட்டாய்",
@@ -85,7 +77,6 @@
   "ui.toast.gift.prayer": "புதிய பரிசு: ஜெபம்",
   "ui.toast.gift.key_promise": "புதிய பரிசு: வாக்குறுதிச் சாவி",
   "ui.toast.gift.looking_glass": "புதிய பரிசு: தொலைநோக்கி",
-
   "ui.gift.sword.name": "வாள்",
   "ui.gift.shield.name": "கேடயம்",
   "ui.gift.helmet.name": "தலைக்கவசம்",
@@ -94,7 +85,6 @@
   "ui.gift.prayer.name": "ஜெபம்",
   "ui.gift.key_promise.name": "வாக்குறுதிச் சாவி",
   "ui.gift.looking_glass.name": "தொலைநோக்கி",
-
   "ui.chapter.1.number": "அத்தியாயம் 1",
   "ui.chapter.1.title": "அழிவின் நகரம்",
   "ui.chapter.2.number": "அத்தியாயம் 2",
@@ -123,7 +113,6 @@
   "ui.chapter.13.title": "ஆறும் பரலோக நகரமும்",
   "ui.chapter.epilogue.number": "இறுதிப் பகுதி",
   "ui.chapter.epilogue.title": "கிறிஸ்தியானா",
-
   "ui.satchel.title": "என் தோள்பை",
   "ui.satchel.tab.roll": "சுருள்",
   "ui.satchel.tab.promises": "வாக்குறுதிகள்",
@@ -134,7 +123,6 @@
   "ui.satchel.footer.detours": "விலகிய பாதைகள்: {n}",
   "ui.satchel.readAlready": "ஏற்கெனவே படித்தது",
   "ui.satchel.item.key_promise": "‘வாக்குறுதி’ என்று பெயருள்ள ஒரு சாவி.",
-
   "ui.pause.title": "இடைநிறுத்தம்",
   "ui.pause.resume": "தொடர்ந்து போ",
   "ui.pause.satchel": "தோள்பை",
@@ -144,10 +132,8 @@
   "ui.pause.confirm.text": "முதல் திரைக்குத் திரும்பவா? கடைசி வழிக்கல்லில் இருந்து மீண்டும் தொடங்குவாய்.",
   "ui.pause.confirm.yes": "ஆம்",
   "ui.pause.confirm.no": "இல்லை",
-
   "ui.arise.title": "நான் மீண்டும் எழுவேன்",
   "ui.arise.verse": "கீழே விழுந்தாலும், நான் மீண்டும் எழுவேன். - மீகா 7:8",
-
   "ui.settings.title": "அமைப்புகள்",
   "ui.settings.section.graphics": "காட்சி",
   "ui.settings.section.gameplay": "விளையாட்டு",
@@ -231,22 +217,18 @@
   "ui.settings.key.ArrowLeft": "இடது அம்புக்குறி",
   "ui.settings.key.ArrowRight": "வலது அம்புக்குறி",
   "ui.settings.key.none": "அமைக்கவில்லை",
-
   "ui.demoEnd.line1": "பாதை இன்னும் தொடர்கிறது...",
   "ui.demoEnd.line2": "வாசலுக்கு அப்பால் இன்னும் ஒன்பது அத்தியாயங்கள் காத்திருக்கின்றன.",
   "ui.demoEnd.getFull": "முழு விளையாட்டையும் பெறு",
   "ui.demoEnd.titleScreen": "முதல் திரை",
-
   "ui.end.title": "கனவின் முடிவு",
   "ui.end.awoke": "பிறகு நான் விழித்தேன். இதோ, அது ஒரு கனவுதான்.",
   "ui.end.sequel.title": "கிறிஸ்தியானாவின் பயணம்",
   "ui.end.sequel.soon": "விரைவில் வருகிறது",
-
   "ui.credits.title": "உருவாக்கியவர்கள்",
   "ui.credits.bunyan": "ஜான் பனியன் எழுதிய “மோட்சப் பிரயாணம்” (The Pilgrim's Progress, 1678) நூலைத் தழுவியது",
   "ui.credits.kjv": "வேத வசனங்கள்: கிங் ஜேம்ஸ் பதிப்பு (King James Version)",
   "ui.credits.madeHere": "இந்த விளையாட்டின் ஒவ்வொரு உருவமும், ஒலியும், இசையும் எங்கள் சொந்த நிரல் (code) மூலம் உருவாக்கப்பட்டவை.",
-
   "ui.touch.jump": "குதி",
   "ui.touch.use": "பயன்படுத்து",
   "ui.touch.pray": "ஜெபி",
@@ -254,7 +236,6 @@
   "ui.touch.shield": "கேடயம்",
   "ui.touch.satchel": "தோள்பை",
   "ui.touch.pause": "இடைநிறுத்து",
-
   "ui.menu.main": "முதன்மைப் பட்டியல்",
   "ui.opening.holdSkip": "தவிர்க்க, அழுத்திப் பிடி",
   "ui.chapters.locked": "இன்னும் வந்து சேரவில்லை",
@@ -265,7 +246,6 @@
   "ui.credits.code": "3D நிரல் நூலகம்: three.js (MIT உரிமம்)",
   "ui.credits.thanks": "விளையாடியதற்கு நன்றி!",
   "ui.flow.loadFailed": "ஐயோ! அந்த அத்தியாயம் திறக்கவில்லை. மீண்டும் முயற்சி செய்.",
-
   "ui.settings.tabs": "அமைப்புப் பகுதிகள்",
   "ui.settings.hint.autoCamera": "தானாக: தொடுதிரையில் ஆன், சுட்டி அல்லது கேம்பேடில் ஆஃப்.",
   "ui.settings.hint.qualityAuto": "தானாகத் தேர்ந்தது: {level}.",
@@ -290,7 +270,6 @@
   "ui.settings.touch.satchel": "தோள்பை: மேல் இடது மூலை",
   "ui.settings.touch.pause": "இடைநிறுத்தம்: மேல் வலது மூலை",
   "ui.settings.touch.combat": "வாளும் கேடயமும் தேவைப்படும்போது மட்டும் வரும்.",
-
   "name.christian": "கிறிஸ்தியான்",
   "name.christiana": "கிறிஸ்தியானா",
   "name.son_1": "மத்தேயு",
@@ -307,7 +286,6 @@
   "ui.dialogue.next": "அடுத்து",
   "ui.dialogue.holdSkip": "தவிர்க்க அழுத்திப் பிடி",
   "ui.dialogue.choose": "ஒன்றைத் தேர்ந்தெடு",
-
   "test.evangelist.1": "வணக்கம், நண்பனே! ஏன் இவ்வளவு சோகமாக இருக்கிறாய்?",
   "test.christian.1": "இந்தச் சுமை மிகவும் கனமாக இருக்கிறது. எங்கே போவது என்று எனக்குத் தெரியவில்லை.",
   "test.evangelist.2": "தூரத்தில் தெரியும் அந்தச் சிறிய வெளிச்சத்தைப் பார்க்கிறாயா? அதை நோக்கி நட, ஒரு வாசலைக் காண்பாய்.",
@@ -318,12 +296,10 @@
   "test.evangelist.4": "நல்லது! அந்த வெளிச்சத்தையே பார்த்துக்கொண்டு போ.",
   "test.evangelist.5": "ஹா ஹா! மூட்டைகள் சோம்பேறிகள், ஆனால் நீ நடக்கலாம்!",
   "test.christian.2": "இதோ, நான் புறப்படுகிறேன்!",
-
   "ui.cutscene.holdToSkip": "தவிர்க்க அழுத்திப் பிடி",
   "ui.cutscene.skip": "காட்சியைத் தவிர்",
   "cutscene.sample.1": "அங்கே, தூரத்தில் பார். அந்த ஒளி தெரிகிறதா?",
   "cutscene.sample.2": "ஆமாம், தெரிகிறது! சேர்ந்து போகலாம்.",
-
   "ui.satchel.tabs": "தோள்பைப் பக்கங்கள்",
   "ui.satchel.roll.now": "இப்போது",
   "ui.satchel.roll.done": "முடிந்தது",
@@ -498,11 +474,25 @@
   "friend.atheist.line": "நகரத்தைப் பார்த்துச் சிரித்துவிட்டு, எதிர்ப்பக்கமாகத் திரும்பி நடக்கிறான்.",
   "friend.secret.name": "இரகசியம்",
   "friend.secret.line": "ராஜாவிடமிருந்து கிறிஸ்தியானாவுக்கு ஒரு கடிதம் கொண்டு வருகிறாள்.",
-
   "ui.dialogueTest.kicker": "சோதனை",
   "ui.dialogueTest.title": "வழியில் ஒரு பேச்சு",
   "ui.dialogueTest.play": "மாதிரியை இயக்கு",
   "ui.dialogueTest.again": "மீண்டும் இயக்கு",
   "ui.dialogueTest.playing": "பேசுகிறார்கள்...",
-  "ui.dialogueTest.missing": "மாதிரிப் பேச்சு கிடைக்கவில்லை."
+  "ui.dialogueTest.missing": "மாதிரிப் பேச்சு கிடைக்கவில்லை.",
+  "bark.generic.lowHope.1": "நீ சோர்வாக இருக்கிறாய், ஆனால் நான் உன்னுடன் இருக்கிறேன்.",
+  "bark.generic.lowHope.2": "இன்று சோகமாக இருந்தாலும் பரவாயில்லை.",
+  "bark.generic.lowHope.3": "தைரியமாக இரு, நாம் சேர்ந்து நடப்போம்.",
+  "bark.generic.cheer.1": "மேலே பார், வெளிச்சம் இன்னும் முன்னே இருக்கிறது!",
+  "bark.generic.cheer.2": "இன்னும் ஒரு அடி, உன்னால் முடியும்!",
+  "bark.generic.cheer.3": "ராஜா தம் வாக்குறுதிகளைக் காப்பார்!",
+  "bark.generic.promise.1": "பார், அங்கே ஏதோ ஒளிர்கிறது!",
+  "bark.generic.promise.2": "அருகில் ஒரு மின்னும் சுருளைப் பார்க்கிறேன்!",
+  "bark.generic.promise.3": "ஒரு வாக்குறுதி அருகில் இருக்கிறது, தேடுவோம்!",
+  "bark.generic.detour.1": "ம்ம், இது பாதை போலத் தெரியவில்லையே.",
+  "bark.generic.detour.2": "இந்த வழி சரிதானா?",
+  "bark.generic.detour.3": "பாதை அங்கே பின்னால் இருக்கிறது என்று நினைக்கிறேன்.",
+  "bark.generic.idle.1": "தொடர்ந்து நடப்போமா?",
+  "bark.generic.idle.2": "பாதை நமக்காகக் காத்திருக்கிறது.",
+  "bark.generic.idle.3": "நீ தயாரானதும் நானும் தயார்!"
 }

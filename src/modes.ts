@@ -4,8 +4,8 @@
  * Playwright leak checks).
  *
  * - `flow`: the game itself (src/game/GameFlow.ts): the title screen by default, or straight into a chapter
- *   (`?chapter=test` → the test world, `?chapter=N` → chapter N; the test world stands in for every chapter until
- *   the ChapterManager plugs in). Pause and the Satchel work through the flow.
+ *   (`?chapter=test` → the test chapter, src/chapters/test.ts; `?chapter=N` → chapter N), all through the
+ *   ChapterManager (src/world/ChapterManager.ts). Pause and the Satchel work through the flow.
  * - `lab`: the Character Lab (`?lab=1`, dev builds or `?debug=1` only, like every URL param).
  * - `dialogueTest`: `?dialogue=test`, the Phase 3 dialogue demo (src/narrative/DialogueTestScene.ts).
  *
@@ -19,6 +19,7 @@ import type { DialogueTestScene } from './narrative/DialogueTestScene';
 import { dialogueTestRunner } from './narrative/dtest-mode';
 import type { TestWorld } from './world/TestWorld';
 import type { PlaySession } from './world/PlaySession';
+import type { ChapterManager } from './world/ChapterManager';
 
 export type ModeKind = 'flow' | 'lab' | 'dialogueTest';
 
@@ -26,7 +27,7 @@ export type ModeKind = 'flow' | 'lab' | 'dialogueTest';
 export interface FlowStart {
   chapter: number;
   waystone: string | null;
-  /** `?chapter=test`: the test world (content/levels/test.json) as the chapter. */
+  /** `?chapter=test`: the test chapter (src/chapters/test.ts on content/levels/test.json). */
   test: boolean;
 }
 
@@ -38,7 +39,10 @@ export interface ModeRunner {
   readonly ready: boolean;
   /** `?lab=1` only: the Lab probe (tests, console). */
   readonly lab: LabProbe | null;
-  /** `?chapter=test` only: the test world while it is the running chapter. */
+  /**
+   * `?chapter=test` only: the running chapter's dev surface (the ChapterManager's ChapterDevProbe), which keeps
+   * the test world's public shape (ready, current, play, progressLog, setCameraMode, rebuild).
+   */
   readonly testWorld: TestWorld | null;
   /** The running play session (Christian, camera, systems), null while loading or in a non-play mode. */
   readonly play: PlaySession | null;
@@ -76,35 +80,39 @@ class RunnerState {
 function flowRunner(engine: Engine, start: FlowStart | null): ModeRunner {
   const st = new RunnerState();
   let flow: GameFlow | null = null;
-  let world: TestWorld | null = null;
-  const started = import('./game/GameFlow').then(async ({ GameFlow }) => {
-    if (st.disposed) return;
-    flow = new GameFlow(engine);
-    if (!start) {
-      flow.start();
-    } else {
-      if (start.test) {
-        const { testWorldLauncher } = await import('./game/flow-launcher');
-        flow.setChapterLauncher(testWorldLauncher(engine, (w) => (world = w)));
-      }
-      await flow.startChapter(start.chapter, start.waystone);
-    }
-    st.ready = !st.disposed;
-  });
+  let chapters: ChapterManager | null = null;
+  const started = Promise.all([import('./game/GameFlow'), import('./game/flow-launcher')]).then(
+    async ([{ GameFlow }, { chapterLauncher }]) => {
+      if (st.disposed) return;
+      flow = new GameFlow(engine);
+      const onManager = (m: ChapterManager): void => {
+        chapters = m;
+      };
+      flow.setChapterLauncher(
+        chapterLauncher(engine, { script: start?.test ? 'test' : undefined, onManager }),
+      );
+      if (!start) flow.start();
+      else await flow.startChapter(start.chapter, start.waystone);
+      st.ready = !st.disposed;
+    },
+  );
+  const chapterReady = (): boolean => !!chapters?.session && !chapters.building;
   return {
     kind: 'flow',
     started,
     get ready() {
       if (!st.ready || st.disposed || !flow) return false;
       if (!start) return flow.state !== 'title' || flow.ready; // the title: once its landscape is on screen
-      return flow.ready && (world?.ready ?? !start.test);
+      return flow.ready && chapterReady();
     },
     lab: null,
     get testWorld() {
-      return st.disposed ? null : world;
+      if (st.disposed || !start?.test) return null;
+      // main.ts types this as TestWorld: the dev probe has the same public surface the tests use.
+      return (chapters?.dev ?? null) as unknown as TestWorld | null;
     },
     get play() {
-      return st.disposed ? null : (world?.play ?? null);
+      return st.disposed ? null : (chapters?.session ?? null);
     },
     setFov: () => {}, // the title scene and the chapters follow settings:changed themselves
     dispose: () => {
@@ -112,7 +120,7 @@ function flowRunner(engine: Engine, start: FlowStart | null): ModeRunner {
       st.disposed = true;
       flow?.dispose();
       flow = null;
-      world = null;
+      chapters = null;
       blankView(engine);
     },
   };

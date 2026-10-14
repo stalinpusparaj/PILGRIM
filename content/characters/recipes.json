@@ -201,6 +201,51 @@
     "voice": { "pitch": 0.72, "speed": 0.95, "wave": "sine", "vowel": 0.45 },
     "style": { "bounce": 0.75, "stiffness": 0.15, "swagger": 0.3, "lean": 0.0 }
   },
+  "wiseman": {
+    "id": "wiseman",
+    "name": "Mr. Worldly Wiseman",
+    "body": "adult",
+    "build": { "height": 1.04, "girth": 1.02, "head": 1.0, "legs": 1.02, "arms": 1.0, "belly": 1.12 },
+    "skin": "#9C6644",
+    "colors": {
+      "top": "#6A3D7A",
+      "bottom": "#3E2A48",
+      "feet": "#2A2026",
+      "accent": "#C9A66B",
+      "trim": "#C9A66B",
+      "buttons": "#C9A66B",
+      "hair": "#4A3A36",
+      "hat": "#4E2B5C",
+      "cane": "#3A2A22"
+    },
+    "parts": { "top": "coat", "bottom": "trousers", "hair": "short", "beard": "none", "hat": "tall", "extras": ["buttons"] },
+    "props": [{ "type": "cane", "bone": "propR" }],
+    "expression": "determined",
+    "voice": { "pitch": 1.15, "speed": 0.9, "wave": "sawtooth", "vowel": 0.7 },
+    "style": { "bounce": 0.5, "stiffness": 0.6, "swagger": 0.45, "lean": -0.45 }
+  },
+  "goodwill": {
+    "id": "goodwill",
+    "name": "Goodwill",
+    "body": "elder",
+    "build": { "height": 1.0, "girth": 1.06, "head": 1.02, "legs": 0.98, "arms": 1.02, "belly": 1.08 },
+    "skin": "#F1C7A3",
+    "colors": {
+      "top": "#8A5A3B",
+      "bottom": "#8A5A3B",
+      "feet": "#3E2E24",
+      "accent": "#E7D3B0",
+      "belt": "#E7D3B0",
+      "hair": "#D8D4CC",
+      "beard": "#D8D4CC",
+      "keys": "#E8C25A"
+    },
+    "parts": { "top": "robe", "bottom": "robe", "hair": "bald", "beard": "full", "hat": "none", "extras": ["belt"] },
+    "props": [{ "type": "keys", "bone": "propL" }],
+    "expression": "happy",
+    "voice": { "pitch": 1.0, "speed": 1.2, "wave": "triangle", "vowel": 0.5 },
+    "style": { "bounce": 0.8, "stiffness": 0.2, "swagger": 0.1, "lean": 0.05 }
+  },
   "crowd_1": {
     "id": "crowd_1",
     "name": "Townsman",

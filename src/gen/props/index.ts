@@ -18,6 +18,18 @@ export { NATURE_PROPS } from './nature';
 
 export const PROPS: Record<string, PropBuilder> = { ...NATURE_PROPS, ...BUILT_PROPS };
 
+/**
+ * Adds chapter-specific props (e.g. src/chapters/ch04-props.ts registers 'arrow' when imported). Chapter modules
+ * register before their level is built. Re-registering the same builder is a no-op; a different one throws.
+ */
+export function registerProps(builders: Record<string, PropBuilder>): void {
+  for (const [type, builder] of Object.entries(builders)) {
+    const existing = PROPS[type];
+    if (existing && existing !== builder) throw new Error(`registerProps: prop type "${type}" already exists`);
+    PROPS[type] = builder;
+  }
+}
+
 /** Build one prop at the origin (facing +Z, on y = 0). Throws for an unknown type. */
 export function buildProp(type: string, rng: Rng, pal: Palette, params: PropParams = {}): PropResult {
   if (!Object.hasOwn(PROPS, type)) {

@@ -114,7 +114,17 @@ test('every recipe builds, and each character mesh is exactly one draw call', as
   ]) {
     expect(ids).toContain(required);
   }
-  for (const id of ['obstinate', 'pliable', 'help', 'son_1', 'son_2', 'son_3', 'son_4'])
+  for (const id of [
+    'obstinate',
+    'pliable',
+    'help',
+    'son_1',
+    'son_2',
+    'son_3',
+    'son_4',
+    'wiseman',
+    'goodwill',
+  ])
     expect(ids).toContain(id);
   expect(ids.filter((id) => id.startsWith('crowd_')).length).toBeGreaterThanOrEqual(8);
 

@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { existsSync, readdirSync } from 'node:fs';
 
 /**
  * Smoke tests run headless in the installed Google Chrome (no browser download; DECISIONS #6) against the
@@ -6,8 +7,13 @@ import { defineConfig } from '@playwright/test';
  * (software GL) elsewhere, with the GPU blocklist ignored so CI and older GPUs still get a context.
  */
 
-// The project has no @types/node (dev-dependency allowlist, GDD 2.3), so read the platform defensively.
-const platform = (globalThis as unknown as { process?: { platform?: string } }).process?.platform;
+// The project has no @types/node (dev-dependency allowlist, GDD 2.3), so reach Node through typed globals.
+interface NodeGlobals {
+  process?: { platform?: string; env?: Record<string, string | undefined> };
+  require?: (id: string) => unknown;
+}
+const node = globalThis as unknown as NodeGlobals;
+const platform = node.process?.platform;
 
 const chromeArgs =
   platform === 'darwin'
@@ -19,6 +25,26 @@ const chromeArgs =
 const PORT = 5317;
 const BASE_URL = `http://localhost:${PORT}`;
 
+/**
+ * Google Chrome, wherever macOS put it: Playwright's 'chrome' channel only looks at /Applications/Google
+ * Chrome.app, but the app may be renamed (e.g. "Google Chrome 2.app") after an update. CHROME_PATH overrides.
+ */
+function findChrome(): { channel?: 'chrome'; executablePath?: string } {
+  const env = node.process?.env?.['CHROME_PATH'];
+  if (env) return { executablePath: env };
+  if (platform !== 'darwin') return { channel: 'chrome' };
+  const stock = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+  try {
+    if (existsSync(stock)) return { channel: 'chrome' };
+    const app = readdirSync('/Applications').find((n: string) => /^Google Chrome.*\.app$/.test(n));
+    if (app) return { executablePath: `/Applications/${app}/Contents/MacOS/Google Chrome` };
+  } catch {
+    /* fall through */
+  }
+  return { channel: 'chrome' };
+}
+const chrome = findChrome();
+
 export default defineConfig({
   testDir: 'tests',
   fullyParallel: false,
@@ -28,10 +54,13 @@ export default defineConfig({
   timeout: 60_000,
   use: {
     baseURL: BASE_URL,
-    channel: 'chrome',
+    ...(chrome.channel ? { channel: chrome.channel } : {}),
     headless: true,
     viewport: { width: 1280, height: 720 },
-    launchOptions: { args: chromeArgs },
+    launchOptions: {
+      args: chromeArgs,
+      ...(chrome.executablePath ? { executablePath: chrome.executablePath } : {}),
+    },
   },
   webServer: {
     // Generate the icons first so favicon.svg and the manifest exist even when Playwright is run directly.
