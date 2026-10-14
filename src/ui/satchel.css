@@ -1,0 +1,202 @@
+/*
+ * MY SATCHEL (src/ui/SatchelUI.ts): the scrim, panel, header, tabs and footer (the pages are in satchel-pages.css).
+ * Uses the tokens of styles.css: cream panels, chunky rims, system fonts,
+ * text scale, safe areas. Touch targets: tabs 56-64 px, close 60 px, actions 56 px (72 px on touch screens).
+ * Motion is gentle and one-shot (no flashing); the global reduce-motion rules in styles.css cut it to nothing.
+ */
+
+.pg-satchel {
+  --sheet: #fffaf0;
+  --parchment: #f8ecd0;
+  --parchment-edge: #e3cc98;
+  position: fixed;
+  inset: 0;
+  z-index: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--gap) + var(--safe-top)) calc(var(--gap) + var(--safe-right))
+    calc(var(--gap) + var(--safe-bottom)) calc(var(--gap) + var(--safe-left));
+  background: var(--scrim);
+  font-family: var(--font-body);
+  pointer-events: auto;
+  touch-action: none;
+  animation: pilgrim-fade-in var(--dur) var(--ease-out) both;
+}
+
+.pg-satchel__panel {
+  display: flex;
+  flex-direction: column;
+  width: min(900px, 100%);
+  height: min(780px, 100%);
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  overflow: hidden;
+  touch-action: auto;
+}
+
+/* ------------------------------------------------------------------ header */
+
+.pg-satchel__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px 10px 22px;
+}
+.pg-satchel__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--fs-title);
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+.pg-satchel__padHint {
+  display: none;
+  gap: 6px;
+  align-items: center;
+}
+.pg-satchel.is-pad .pg-satchel__padHint { display: inline-flex; }
+.pg-satchel__padHint svg { display: block; }
+.pg-satchel__close {
+  position: relative;
+  flex: none;
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  padding: 0;
+  border-radius: 50%;
+}
+.pg-satchel__closeIcon { display: inline-flex; }
+.pg-satchel__padB {
+  display: none;
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+}
+.pg-satchel.is-pad .pg-satchel__padB { display: inline-flex; }
+
+/* ------------------------------------------------------------------ tabs */
+
+.pg-satchel__tabs {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: -3px;
+  padding: 0 12px;
+}
+.pg-satchel__tab {
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 64px;
+  margin: 0;
+  padding: 6px 4px 9px;
+  border: 3px solid var(--panel-edge);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  background: var(--panel-deep);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: var(--fs-small);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  touch-action: manipulation;
+  transform: translateY(6px);
+  transition: transform var(--dur) var(--ease-out), background-color var(--dur) linear, color var(--dur) linear;
+}
+.pg-satchel__tab:hover { color: var(--ink); }
+/* Selected: raised, sheet-coloured, with a gold bar on top (a shape, not only a colour). */
+.pg-satchel__tab[aria-selected="true"] {
+  background: var(--sheet);
+  color: var(--ink);
+  transform: none;
+  box-shadow: inset 0 6px 0 var(--accent);
+}
+.pg-satchel__tab:focus-visible { outline-offset: -7px; }
+.pg-satchel__tabIcon { display: inline-flex; }
+.pg-satchel__tabLabel { max-width: 100%; }
+
+/* ------------------------------------------------------------------ page body */
+
+.pg-satchel__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 18px clamp(12px, 3vw, 26px) 26px;
+  background: var(--sheet);
+  border-top: 3px solid var(--panel-edge);
+  color: var(--ink);
+  scrollbar-width: thin;
+  scrollbar-color: var(--panel-edge) transparent;
+}
+.pg-satchel__pageTitle {
+  display: none;
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-size: var(--fs-large);
+  letter-spacing: 0.04em;
+}
+.pg-satchel__section {
+  margin: 4px 0 10px;
+  color: var(--ink-soft);
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.pg-satchel__empty {
+  margin: 0;
+  padding: 40px 12px;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  font-size: var(--fs-large);
+  text-align: center;
+}
+
+/* Focus stops: the global :focus-visible ring, and the same ring for pad / arrow-key moves. */
+.pg-satchel [tabindex]:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+.pg-satchel.is-nav :focus { outline: 4px solid var(--focus); outline-offset: 3px; }
+.pg-satchel.is-nav .pg-satchel__tab:focus { outline-offset: -7px; }
+
+/* ------------------------------------------------------------------ footer */
+
+.pg-satchel__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 20px;
+  padding: 10px 18px calc(10px);
+  background: var(--panel-deep);
+  border-top: 3px solid var(--panel-edge);
+  color: var(--ink);
+  font-size: var(--fs-small);
+  font-weight: 800;
+}
+.pg-satchel__hope { display: inline-flex; }
+.pg-satchel__hope svg { display: block; }
+.pg-satchel__flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transform: scale(calc(0.35 + 0.65 * var(--hope, 1)));
+  transition: transform 700ms var(--ease-bounce);
+}
+.pg-satchel__count { display: inline-flex; align-items: center; gap: 6px; }
+.pg-satchel__countIcon { display: inline-flex; color: var(--accent-deep); }
+.pg-satchel__count--detours .pg-satchel__countIcon { color: var(--berry); }

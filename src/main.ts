@@ -5,10 +5,10 @@
  * Order: flags → settings → i18n → save (all register themselves on import) → engine → audio (the 'audio'
  * service; unlocked by the first gesture) → quality (resolved before the loop starts, so the benchmark has the
  * GPU to itself) → input → debug panel → mode → start.
- * Modes (src/modes.ts): `?lab=1` → Character Lab, `?chapter=test` → the test world, `?music=<id>` → the music
- * test page (no Engine, no WebGL; the page builds its own AudioEngine). Everything else still shows the Phase 0
- * test scene until the title screen and chapters exist. The debug panel is created before the mode so a mode can
- * add its own F1 controls while it starts.
+ * Modes (src/modes.ts): no params → the game (GameFlow: title screen → opening → chapters), `?chapter=…` → the
+ * game started in that chapter (`test` = the test world), `?lab=1` → Character Lab, `?dialogue=test` → the
+ * dialogue demo, `?music=<id>` → the music test page (no Engine, no WebGL; the page builds its own AudioEngine).
+ * The debug panel is created before the mode so a mode can add its own F1 controls while it starts.
  */
 import './ui/styles.css';
 import { events } from './core/Events';
@@ -23,8 +23,9 @@ import { Input } from './core/Input';
 import { createDebug, installCoreDebug, type Debug } from './core/Debug';
 import { AudioEngine } from './audio/AudioEngine';
 import { h, uiRoot } from './ui/dom';
-import { startMode, type ModeKind, type ModeRunner } from './modes';
+import { startMode, type FlowStart, type ModeKind, type ModeRunner } from './modes';
 import type { LabProbe } from './gen/lab-probe';
+import type { DialogueTestScene } from './narrative/DialogueTestScene';
 import type { TestWorld } from './world/TestWorld';
 
 // ------------------------------------------------------------------------------------------- runtime mode
@@ -33,12 +34,15 @@ export type RuntimeMode =
   | { kind: 'title' }
   | { kind: 'lab' }
   | { kind: 'music'; id: string }
+  | { kind: 'dialogueTest' }
   | { kind: 'chapter'; id: string; waystone: string | null };
 
 /** `?chapter=` accepts test, 1..13 and epilogue (GDD 2.15). */
 const CHAPTER_ID = /^(test|epilogue|[1-9]|1[0-3])$/;
 /** The demo build ends after Chapter IV (GDD 2.1). */
 const DEMO_LAST_CHAPTER = 4;
+/** `?chapter=epilogue` is chapter 14 in the flow and the save format; `?chapter=test` runs as chapter 1. */
+const EPILOGUE_CHAPTER = 14;
 /** Loop order of the audio listener sync: right after the Engine's render system (1000), so it reads the
  * camera matrix of the frame just drawn. */
 const AUDIO_LISTENER_ORDER = 1001;
@@ -46,6 +50,7 @@ const AUDIO_LISTENER_ORDER = 1001;
 export function selectMode(params: UrlParams): RuntimeMode {
   if (params.lab) return { kind: 'lab' };
   if (params.music) return { kind: 'music', id: params.music };
+  if (params.dialogue === 'test') return { kind: 'dialogueTest' };
   const chapter = params.chapter;
   if (chapter && CHAPTER_ID.test(chapter)) {
     const number = Number(chapter);
@@ -55,11 +60,19 @@ export function selectMode(params: UrlParams): RuntimeMode {
   return { kind: 'title' };
 }
 
-/** Which runner shows a mode today: the Lab, the test world, or (until later phases) the Phase 0 scene. */
+/** Which runner shows a mode: the Lab, the dialogue demo, or the game flow (title or a chapter). */
 export function modeKind(mode: RuntimeMode): ModeKind {
   if (mode.kind === 'lab') return 'lab';
-  if (mode.kind === 'chapter' && mode.id === 'test') return 'testWorld';
-  return 'dev';
+  if (mode.kind === 'dialogueTest') return 'dialogueTest';
+  return 'flow';
+}
+
+/** Where the game flow starts: null = the title screen. */
+export function flowStart(mode: RuntimeMode): FlowStart | null {
+  if (mode.kind !== 'chapter') return null;
+  const test = mode.id === 'test';
+  const chapter = test ? 1 : mode.id === 'epilogue' ? EPILOGUE_CHAPTER : Number(mode.id);
+  return { chapter, waystone: mode.waystone, test };
 }
 
 function describeMode(mode: RuntimeMode): string {
@@ -68,6 +81,8 @@ function describeMode(mode: RuntimeMode): string {
       return `chapter ${mode.id}${mode.waystone ? ` @ ${mode.waystone}` : ''}`;
     case 'music':
       return `music ${mode.id}`;
+    case 'dialogueTest':
+      return 'dialogue test';
     default:
       return mode.kind;
   }
@@ -88,6 +103,8 @@ export interface PilgrimHandle {
   readonly lab: LabProbe | null;
   /** `?chapter=test`: the test world (build time, progress log, rebuild). */
   readonly testWorld: TestWorld | null;
+  /** `?dialogue=test`: the dialogue demo scene (play the sample, its camera). */
+  readonly dialogueTest: DialogueTestScene | null;
   /** Disposes the current mode and starts it again (leak checks). Resolves when it is back on screen. */
   restartMode(): Promise<void>;
 }
@@ -131,6 +148,9 @@ Object.defineProperty(window, '__pilgrim', {
     },
     get testWorld() {
       return state.runner?.testWorld ?? null;
+    },
+    get dialogueTest() {
+      return state.runner?.dialogueTest ?? null;
     },
     restartMode: () => (state.restart ? state.restart() : Promise.reject(new Error('[main] not booted'))),
     services,
@@ -221,8 +241,9 @@ async function boot(): Promise<void> {
 
   // The mode runner (src/modes.ts) owns its scene; restarting disposes it first (F1 "Rebuild scene").
   const kind = modeKind(state.mode);
+  const start = flowStart(state.mode);
   const launch = (): ModeRunner => {
-    const runner = startMode(kind, engine);
+    const runner = startMode(kind, engine, start);
     state.runner = runner;
     runner.started.catch((err: unknown) => console.error(`[main] the ${kind} mode could not start`, err));
     return runner;

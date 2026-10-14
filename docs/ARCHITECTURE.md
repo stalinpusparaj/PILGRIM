@@ -27,39 +27,46 @@ it lives and *how modules talk*. If you need to change a contract here, change i
 
 | URL | Mode |
 |---|---|
-| (none) | Title screen → opening narration → Chapter I |
+| (none) | Title screen → opening narration → Chapter I (GameFlow, Phase 3) |
 | `?lab=1` | Character Lab (Phase 1) |
 | `?music=<id>` | Music test page (Phase 3) |
-| `?chapter=test` / `?chapter=1..13` / `?chapter=epilogue` | Load a chapter directly (debug) |
+| `?dialogue=test` | Dialogue demo: the sample conversation with choices, camera cuts, babble and Hope (Phase 3) |
+| `?chapter=test` / `?chapter=1..13` / `?chapter=epilogue` | Load a chapter directly (debug), through GameFlow |
 | `&waystone=ch08_w1&debug=1&god=1&skipIntro=1` | Debug params (GDD 2.15) |
 
-Phase 1 wires two modes: `?lab=1` → Character Lab (`src/gen/Lab.ts`) and `?chapter=test` → the test world
-(`src/world/TestWorld.ts`, built from `content/levels/test.json`). `?music=<id>` opens the music test page
-(`src/audio/MusicTestPage.ts`, plain DOM, loaded with a dynamic import before the Engine is created, so it needs
-no WebGL). Every other mode still shows the Phase 0 test scene (`src/world/dev/DevScene.ts`) until the title
-screen (Phase 3) and the chapters exist.
+The default mode is the game itself: `GameFlow` (src/game/GameFlow.ts) shows the title screen. `?chapter=…` starts
+the same flow straight in that chapter: `test` runs the test world (`src/world/TestWorld.ts`, built from
+`content/levels/test.json`) as chapter 1; `1..13` / `epilogue` (14) use the flow's chapter launcher, which is the
+test world too until the ChapterManager plugs in. Pause (Esc / Menu) and the Satchel (Tab / View) work through the
+flow in every chapter. `?lab=1` → Character Lab (`src/gen/Lab.ts`), `?dialogue=test` → the dialogue demo
+(`src/narrative/DialogueTestScene.ts`), `?music=<id>` → the music test page (`src/audio/MusicTestPage.ts`, plain DOM,
+loaded with a dynamic import before the Engine is created, so it needs no WebGL). The Phase 0 dev scene
+(`src/world/dev/`) is no longer started by any mode.
 ```ts
 export type RuntimeMode =
-  | { kind: 'title' } | { kind: 'lab' } | { kind: 'music'; id: string }
+  | { kind: 'title' } | { kind: 'lab' } | { kind: 'music'; id: string } | { kind: 'dialogueTest' }
   | { kind: 'chapter'; id: string; waystone: string | null };
-export function selectMode(params: UrlParams): RuntimeMode;  // lab > music > chapter > title
-export function modeKind(mode: RuntimeMode): ModeKind;       // 'lab' | 'testWorld' | 'dev' (which runner shows it)
+export function selectMode(params: UrlParams): RuntimeMode;  // lab > music > dialogue > chapter > title
+export function modeKind(mode: RuntimeMode): ModeKind;       // 'lab' | 'dialogueTest' | 'flow'
+export function flowStart(mode: RuntimeMode): FlowStart | null;  // null = title; test → chapter 1, epilogue → 14
 ```
 Mode runners (`src/modes.ts`) own a mode's scene, camera, loop systems and DOM:
 ```ts
-export type ModeKind = 'dev' | 'lab' | 'testWorld';
+export type ModeKind = 'flow' | 'lab' | 'dialogueTest';
+export interface FlowStart { chapter: number; waystone: string | null; test: boolean }
 export interface ModeRunner {
   readonly kind: ModeKind;
-  readonly started: Promise<void>;   // the mode is on screen (Lab: first character; test world: built and shown)
-  readonly ready: boolean;
+  readonly started: Promise<void>;   // the mode is on screen (Lab: first character; title; chapter started)
+  readonly ready: boolean;           // title: its landscape is drawn; chapter: playing (test world built)
   readonly lab: LabProbe | null;     // ?lab=1 only
-  readonly testWorld: TestWorld | null;
+  readonly testWorld: TestWorld | null;              // ?chapter=test only, while it is the running chapter
+  readonly dialogueTest?: DialogueTestScene | null;  // ?dialogue=test only
   setFov(fov: number): void;
-  dispose(): void;                   // frees everything; the engine is left drawing an empty scene
+  dispose(): void;                   // frees everything (the flow and its chapter); the engine draws an empty scene
 }
-export function startMode(kind: ModeKind, engine: Engine): ModeRunner;
+export function startMode(kind: ModeKind, engine: Engine, start?: FlowStart | null): ModeRunner;
 ```
-- The Lab and the test world are dynamic imports (their own chunks), so the default mode does not ship them.
+- Every runner is a dynamic import (its own chunk): GameFlow, the Lab, the test world and the dialogue demo.
 - `main.ts` keeps one runner; F1 "Rebuild scene" and `window.__pilgrim.restartMode()` dispose it and start a
   new one (leak checks). The debug panel is created before the mode starts, so a mode can add F1 controls.
 - `?chapter=` accepts `test`, `1`..`13`, `epilogue`; anything else falls back to the title. Demo builds
@@ -92,7 +99,7 @@ imported; `engine`, `quality`, `input` and `debug` register in their constructor
 export interface BuildFlags { DEMO: boolean; IGNORANCE_EPILOGUE: boolean; STORE_URL: string; DEV: boolean }
 export interface UrlParams {
   chapter: string | null; waystone: string | null; debug: boolean; god: boolean;
-  skipIntro: boolean; lab: boolean; music: string | null;
+  skipIntro: boolean; lab: boolean; music: string | null; dialogue: string | null;
 }
 export const buildFlags: BuildFlags;            // from import.meta.env (VITE_DEMO, IGNORANCE_EPILOGUE, VITE_STORE_URL)
 export function parseUrlParams(search?: string): UrlParams;
@@ -942,29 +949,180 @@ export class Interactables { add(i: Interactable): () => void; readonly focused:
 New events (declared in their modules): `zone:enter`, `zone:exit`, `player:bonk {reason}`, `player:arise`,
 `player:landed`, `interact:focus {id|null}`, `interact:use {id}`, `waystone:read` (core), `burden:dropped` (core).
 
-## Story and UI (Phase 3) — `src/narrative/`, `src/ui/`, `content/dialogue/`, `content/promises.json`
+## Story and UI (Phase 3) — `src/narrative/`, `src/ui/`, `src/game/`, `content/dialogue/`, `content/promises.json`, `content/friends.json`
 
+Built in the story worktree (Phase 3a); companions and the ChapterManager follow on main. New services:
+`dialogue` (DialogueRunner), `bubbles` (SpeechBubbles), `cutscene` (CutscenePlayer), `letterbox` (Letterbox),
+`satchel` (SatchelUI), `flow` (GameFlow). Each declares itself by declaration merging and unregisters in `dispose()`
+only while it still owns the key.
+
+### Dialogue — `DialogueTypes.ts` (format + protocol), `Dialogue.ts` (runner, re-exports everything)
+Helpers: `dialogue-rules.ts` (validateGraph, cond grammar, constants), `dialogue-parse.ts`, `dialogue-registry.ts`
+(lazy files), `dialogue-effects.ts`, `dialogue-actors.ts` (faces, gestures, mouths; restored at the end),
+`dialogue-voice.ts` (voices, moods, text speed). `tools/validate-dialogue.mjs` runs the same rules in Node (build
+and test run it).
 ```ts
-// src/narrative/DialogueTypes.ts — GDD 2.8 graph format (content/dialogue/chXX.json: an array of graphs)
-export interface DialogueGraph { id: string; nodes: DialogueNode[] }
-export interface DialogueNode { id: string; speaker: string /* npc id from the level, or 'christian' */; text: string /* i18n key */;
-  anim?: string; expr?: Expression; mood?: Mood; bubble?: boolean /* world-space bubble instead of the panel */;
-  next?: string; choices?: DialogueChoice[] /* max 3 */; effects?: DialogueEffects; cond?: string /* flag key, '!' negates */ }
-export interface DialogueChoice { text: string; next?: string; effects?: DialogueEffects; cond?: string }
-export interface DialogueEffects { hope?: number; give?: string; take?: string; detour?: string; flag?: Record<string, FlagValue>;
-  anim?: string; cam?: string; sfx?: SfxId; music?: SongId; end?: boolean }
-// src/narrative/Dialogue.ts — UI-agnostic runner; the game supplies a host
-export interface DialogueHost { actor(speaker: string): Character | null; camera?(shot: string, speaker: string): void;
-  effect?(e: DialogueEffects): void }
-export class DialogueRunner { constructor(host: DialogueHost); readonly active: boolean;
-  play(graph: DialogueGraph | string): Promise<void>; skipLine(): void; choose(i: number): void; stop(): void; dispose(): void }
-// src/narrative/SpeechBubbles.ts — world-space bubbles (barks and simple lines), typewriter + babble in sync
-// src/ui/DialoguePanel.ts — bottom panel with a generated portrait, choices (1-3 / click / pad), skip (Space; hold 1 s = scene)
-// src/narrative/Cutscene.ts — spline camera rails, letterbox, actor tracks, timed events, hold-Space skip
-// src/ui/{Title,Opening,Pause,SettingsUI,ChapterSelect,Credits,DemoEnd,Menu}.ts — GDD 2.14 screens; Menu = focus nav
-// src/ui/SatchelUI.ts (+ satchel-*.ts) — MY SATCHEL: THE ROLL, PROMISES, FRIENDS MET, MAP, CARRIED
-// src/game/GameFlow.ts — title → opening → chapters → demo end / end → credits (chapters plug in via ChapterManager)
+// content/dialogue/<file>.json: an array of graphs. Graph ids start with '<file>_' (play('ch01_x') loads ch01.json);
+// the FIRST node is the start; every text is an i18n key that must exist in en.json AND ta.json.
+interface DialogueGraph { id: string; nodes: DialogueNode[] }
+interface DialogueNode { id; speaker /* NPC id or 'christian' */; text; anim?; expr?: Expression; mood?: Mood;
+  bubble?: boolean /* world-space bubble */; next?; choices?: DialogueChoice[] /* max 3 */; effects?; cond? }
+interface DialogueChoice { text; next? /* default: the node's next */; effects?; cond? }
+interface DialogueEffects { hope?; give? /* 'roll' | 'gift:<id>' (key_promise quietly) | item */; take?; detour?;
+  flag?: Record<string, FlagValue | null /* clears */>; anim? /* '<clip>' | '<speaker>:<clip>' */;
+  cam? /* shot name; 'release' = back to the follow rig */; sfx?; music?; end? }
+// cond: terms joined by '&', each optionally '!': flagKey, flagKey=value, hasRoll, burden, gift:<id>, item:<id>,
+// detour:<id>, hope<30 / hope>=60 / chapter>=7. A node whose cond fails jumps to its next (effects skipped).
+interface DialogueHost { actor(speaker: string): Character | null; camera?(shot: string, speaker: string): void;
+  effect?(e: DialogueEffects, ctx: EffectContext /* {graph, node, speaker, from: 'node'|'choice'} */): void }
+class DialogueRunner {                                  // registers 'dialogue' (opts.register !== false)
+  constructor(host: DialogueHost, opts?: { register?: boolean; state?: () => GameState | undefined });
+  readonly active: boolean; readonly busy: boolean; readonly graphId: string | null;
+  readonly phase: 'idle' | 'loading' | 'typing' | 'shown' | 'choosing' | 'busy';
+  readonly line: DialogueLine | null; readonly choices: DialogueChoiceView[];
+  actor(speaker: string): Character | null;           // the host's lookup (DialoguePanel anchors bubble lines)
+  play(graph: DialogueGraph | string): Promise<void>; // queued while another plays; resolves when it ends
+  lineDone(): void; advance(): void; skipLine(): void /* Space */; skipScene(): void /* hold Space 1 s */;
+  choose(index: number): void; stop(): void; dispose(): void;
+}
 ```
+UI protocol (full text in DialogueTypes.ts): `'dialogue:start' {id, speakers}` (+ `'audio:duck' {on: true, by: 'dialogue'}`) →
+`'dialogue:line'` `{graph, node, speaker, recipe, key, mood, expr, bubble, voice, cps, hasChoices, index}` → the UI
+reveals `t(key)` with `revealTimes(text, cps)` and babbles with `speakLine(line, text, at?)`, calls `lineDone()` when
+the text is shown (`'dialogue:choices' {graph, node, speaker, choices: [{index, key}]}` fires inside it), then
+`advance()` or `choose(index)`. Also `'dialogue:reveal'`, `'dialogue:lineEnd'`, `'dialogue:chose'`,
+`'dialogue:cam'` (only without `host.camera`), then `'audio:duck' {on: false, by: 'dialogue'}` and core
+`'dialogue:end' {id}`.
+Node effects run on entering the node (a camera cut lands with its line); choice effects after `'dialogue:chose'`.
+A skipped scene still applies effects and stops on the next question. The host (ChapterManager / PlaySession) locks
+the player, hides the HUD and calls `GameState.meet()` on 'dialogue:start' / 'dialogue:end'.
+`TEXT_SPEED_CPS` (dialogue-voice.ts) is the one text-speed table: slow 20, normal 40, instant 0 (whole line; babble
+still at 40 cps, a short burst in bubbles and captions); cutscene captions read it through `textCps()` too.
+`src/narrative/story-input.ts`: `dialogueHoldsInput()`, `cutsceneHoldsInput()`, `storyHoldsInput()`. A conversation
+and a cutscene can overlap; each gives gameplay input back at its end only when the other is not still running.
+
+### Bubbles, panel, portraits, typewriter
+```ts
+// src/ui/typewriter.ts — every text reveal (panel, bubbles, cutscene captions): grapheme-safe (Tamil), revealTimes clock
+typewrite(el, text, opts?: { voice?; mood?; at?; speed?; cps? /* 0 = instant */; lang?; speak?; onProgress? })
+  → { skip(); cancel(); done: Promise<void>; finished; duration };
+// src/narrative/SpeechBubbles.ts — world-space bubbles over heads (barks, bubble lines); service 'bubbles'
+class SpeechBubbles { constructor(camera?: THREE.Camera | null, parent = uiRoot());
+  speak(c: Character, key: string, o?: BubbleOptions): BubbleHandle /* {skip(), dismiss(), revealed, closed} */;
+  show(c, key, o?): () => void /* dismiss */; update(camera | frameDt | undefined): void /* every frame */;
+  clear(); dispose(); readonly count }
+// BubbleOptions: mood, durationSec (2 s after the text; Infinity = until dismissed), onDone, params, pile (stack a
+// speaker's bubbles, max 6), voice (null = silent), cps, speak, talk (flap the mouth), onRevealed,
+// announce (false: no screen-reader span; the DialoguePanel announces its bubble lines itself, with the name)
+// src/ui/DialoguePanel.ts — the one conversation UI: bottom panel (portrait, name, text, 1-3 choices) + bubble lines
+class DialoguePanel { constructor(runner?: DialogueRunner | null /* default: 'dialogue' service */,
+  opts?: { parent?; actor?(speaker): Character | null /* default runner.actor */; restoreGameplay?; touchButtonsAfter? });
+  readonly visible: boolean; dispose() }
+// src/ui/Portraits.ts — generated portraits (PNG data URLs, LRU 48): portraitUrl(recipe | id, expr?), hasPortrait,
+// preloadPortraits(ids), portraitColors(recipe), clearPortraits(), PORTRAIT_SIZE 160. Panel and Satchel share it.
+```
+Panel input (dialogue-input.ts, a loop System at order -50): Space / E / pad A / tap reveal then advance; hold 1 s
+(or the skip ring) = skipScene; choices by 1-3, click / tap, arrows / d-pad + Enter / A (confirm keys arm after
+0.45 s). Keyboard focus stays in the layer: Tab / Shift+Tab move the choice highlight (which also follows DOM
+focus), Enter confirms the highlighted choice; an Enter remapped to Skip or Use is left to Input. The skip ring
+skips at once on an activation without a hold (screen reader click, Enter on it). On touch it sits under GameFlow's
+pause icon (top right) and the panel keeps clear of both. Phones on their side (height <= 520 px) put the answers
+beside the question. While a conversation is up gameplay input is off (`setGameplayActive(false)`, no touch
+buttons); it comes back only in a play session (the 'player' service) unless `restoreGameplay` says otherwise, and
+not while a cutscene still plays. Speaker names are `name.<recipeId>` keys (`speakerName()` in dialogue-strings.ts
+also tries the id without its outfit suffix).
+
+### Cutscenes — `src/narrative/Cutscene.ts` (+ `cutscene-*.ts`), `src/ui/Letterbox.ts`
+```ts
+class CutscenePlayer {                                  // service 'cutscene'; adds itself to engine.loop at order 950
+  constructor(engine: Engine); play(def: CutsceneDef, ctx?: CutsceneContext): Promise<'done' | 'skipped'>;
+  skip(force?); readonly playing; readonly current: string | null; readonly time; dispose() }
+interface CutsceneDef { id; skippable? /* true */; duration?; camera?: (CameraTrack | DeferredShot)[];
+  actors?: ActorTrack[]; events?: TimedEvent[]; blendOut? /* 0.8 s back to the rig */ }
+// CameraTrack {start, end, path: PointSource[], look: PointSource[], ease?, fov?: number | [from, to]}: centripetal
+// Catmull-Rom rails by arc length. PointSource: [x,y,z] | Vector3 | () => Vector3 | {actor, at?: feet|chest|head,
+// offset?, local?} | 'camera'. DeferredShot {start, end, shot: () => CameraTrack} frames actors where they are then.
+// ActorTrack {actor, actions: [{at, do: play|overlay|expression|moveTo|lookAt|face|place|say|show|hide, ...}]}
+// TimedEvent {at, essential?, run | sfx | music | emit}: essential events still fire on skip, last.
+// CutsceneContext {actors?, ground?, animate?, say?, restoreGameplay? /* true */}
+shots.closeUp(c, o?) / shots.overShoulder(listener, speaker, o?) / shots.two(a, b, o?) → CameraTrack  // ~4 s
+// ShotOptions {duration, push, fov, side, keepSideOf (180° rule), lift (raise the subject above a bottom panel)};
+// overShoulder steps clear of a burdened listener's sack (Character.burdenSize). retime(track, start, end?).
+cutTo(engine | camera, track, { progress?, actors? }): void   // instant cut; the caller suspends the 'cameraRig'
+class Letterbox { constructor(parent?); show(on, { instant? }); readonly shown; dispose() }  // service 'letterbox'
+```
+Hold Space / pad A 1 s (or the on-screen ring) skips; skipping puts every actor in its end state. Lines go to
+`ctx.say`, else the 'bubbles' service, else letterbox captions (typewriter + babble, music ducked with
+`by: 'caption'`). Gameplay input comes back at the end unless `restoreGameplay: false` or a conversation still runs. Reduce camera
+motion holds each shot's final framing. Events: `'cutscene:start' {id}`, `'cutscene:end' {id, result}`, plus
+`hud:visible` off / on. The HUD (main) should reuse the 'letterbox' service rather than draw a second one.
+
+### Screens and flow — `src/game/GameFlow.ts` (+ `flow-*.ts`), `src/ui/{Title,TitleScene,Opening,Pause,ChapterSelect,Credits,DemoEnd,Menu}.ts`, `menu-*.ts`, `SettingsUI.ts` (+ `settings-*.ts`), `SatchelUI.ts` (+ `satchel-*.ts`)
+```ts
+class GameFlow {                                        // service 'flow'
+  constructor(engine: Engine, opts?: { parent?: HTMLElement });
+  start(): void;                                        // boot → title
+  readonly state: 'boot'|'title'|'opening'|'loading'|'playing'|'paused'|'demoEnd'|'endCard'|'credits'|'disposed';
+  readonly screen: string; readonly chapter: number | null; readonly ready: boolean;
+  setChapterLauncher(fn: ChapterLauncher | null): void; // null = the test world for every chapter
+  setScreen(id: 'settings' | 'satchel', factory: ScreenFactory | null): void;
+  showTitle(noticeKey?); newGame(); continueGame(latest?); startChapter(n, waystone?, state?): Promise<void>;
+  completeChapter(n); pause(); resume(); quitToTitle(); showDemoEnd();
+  showEndCard(variant?: 'dream' | 'sequel'); showCredits('menu' | 'end');
+  probe(): FlowProbe /* {state, screen, chapter, loopPaused, titleReady, continueAvailable, focused, menuDepth} */;
+  dispose(): void;
+}
+type ChapterLauncher = (chapter: number, waystone: string | null, state: GameState) => Promise<ChapterHandle>;
+interface ChapterHandle { dispose(): void; readonly gameplay?: boolean /* true */; setPaused?(paused: boolean): void;
+  satchelMap?(): SatchelMapContext | null /* level + player for MAP when the flow owns the Satchel */ }
+type ScreenFactory = (ctx: { parent; from: 'title' | 'pause'; close(): void }) => { dispose(): void };
+```
+- Flow: title → START (new GameState; the opening narration while Chapter I loads behind it; click / tap to play,
+  `?skipIntro=1` skips) | CONTINUE (latest save, its chapter and waystone) | CHAPTERS (any chapter reached;
+  `?god=1` all; demo builds lock V+) → playing ⇄ paused. Escape / pad B / pad Menu on the opening go back to the
+  title. `'chapter:complete' {chapter}` (ChapterManager) → next chapter, the demo end after IV (VITE_DEMO), or after
+  XIII the end card ('dream') → Epilogue (14) → the sequel card ('sequel', "CHRISTIANA'S JOURNEY - coming soon",
+  GDD 2.10) → end credits → title. Emits `'flow:state' {state, prev}`, `'game:pause' {reason: 'menu'}` /
+  `'game:resume'` around the pause menu, and opens the pause menu when the tab is hidden mid-play (not under an open
+  Satchel, which already holds the pause; a Satchel still loading when the game pauses does not open).
+- During play (a loop System at order -1000): the pause action (Esc, pad Menu, touch icon) opens the pause menu; the
+  satchel action (Tab, pad View, touch icon) opens the Satchel (`flow-satchel.ts`: the registered 'satchel'
+  service, or one the flow makes whose MAP reads `ChapterHandle.satchelMap`). Neither opens within 250 ms of a menu
+  handling input; the Satchel does not open during a conversation or cutscene, and closing either menu keeps
+  gameplay input off while a conversation or cutscene still runs (`storyHoldsInput()`, story-input.ts). The pause
+  menu gives the focus back to what had it (a dialogue choice) and ducks the music with `by: 'pause'`.
+- Touch: while the flow is playing and gameplay input is off (a conversation, a cutscene, a chapter with
+  `gameplay: false`), Input hides the touch controls and their pause icon; GameFlow then shows its own pause icon in
+  the same place (`flow-touch.ts`, `.pg-flow-pause`, z-index 35).
+- `Menu` (src/ui/Menu.ts + menu-pad/nav/stack/screen): one focus helper for every menu: arrows, Tab trap, Enter /
+  Space / E, Escape / Backspace = back, Home / End, [ ] = tabs; the pad polled in its own frame (d-pad / stick, A,
+  B, LB / RB, Menu); hover and tap; a visible `.is-focused` ring for keyboard, pad and mouse. Menus stack; a screen
+  that is not a Menu (Settings, Satchel) covers one with `suspend()`. Items are `[data-menu-item]` (`menuButton()`),
+  and `Texts` re-translates bound elements on 'lang:changed'.
+- `TitleScene` builds `content/levels/title.json`: zone type `farLight` (where the far shining light stands) and a
+  'way' band zone of type `cameraRail` (from, to, height, offset, seconds) for the camera glide.
+- `SettingsUI` (GDD 2.14 Settings): `new SettingsUI(parent?)`, `open({ tab?: 'graphics' | 'gameplay' | 'audio' |
+  'text' | 'controls' }): Promise<void>` (resolves on close), `close()`, `dispose()`, `isOpen`, `currentTab`. Bound
+  live to Settings; Controls remaps through `Input.captureNextKey()` / `rebind()` / `resetBindings()`.
+- `SatchelUI` (GDD 2.14 MY SATCHEL): `new SatchelUI({ parent?, map?, canUse?, resumeGameplay?, register? })`,
+  `open(tab?, { level?, player?, canUse? }): Promise<void>`, `close()`, `showTab(tab)`, `isOpen`, `tab`, `dispose()`;
+  `satchelScreen(get?)` (the pause-menu ScreenFactory), `openSatchel(tab?)`. Pauses the loop, closes itself on the
+  Satchel / Pause action, B or a tap outside. Events `'satchel:opened' {tab}`, `'satchel:tab' {tab}`,
+  `'satchel:closed'`, `'satchel:use' {id}` (after closing; the Key of Promise in Ch XI). Data:
+  `content/promises.json` (24 Promises p01..p24 by chapter, KJV text in English, the game's own line in Tamil,
+  GDD 2.16 rule 6) and `content/friends.json` (FRIENDS MET cards; `meet()` ids match an id, an alias, or the id
+  without `_<n>`). `satchel-data.ts` exposes `PROMISES`, `promiseById`, `FRIENDS`, `friendFor`, `knownPromiseCount`.
+- Layers in `#ui` (z-index): speech bubbles 25, dialogue layer 30, the flow's touch pause icon 35, title 50,
+  pause / menus 400, Satchel 700, loading 800, settings 850, opening / end cards 860.
+- Fit: the title's head scales with the window height and short laptop windows tighten the menu; when large text
+  still runs past the bottom, a bobbing "more" arrow shows until the menu is scrolled to the end. Phone Settings
+  tabs wrap (all five in sight); the opening narration follows Settings > Text size (opening.css).
+
+### Dialogue demo — `?dialogue=test` (`src/narrative/DialogueTestScene.ts` + `dtest-*.ts`, `content/levels/dialogue_test.json`)
+Christian and Evangelist on a dusk stage play `test_evangelist` (content/dialogue/test.json) through the real
+runner, panel and bubbles, with a camera host that cuts with `shots.*` + `cutTo` (`<kind>_<actorId>` shot names:
+over_shoulder / ots, close / closeup, two / wide, release) and a small Hope readout. Registers a GameState (Hope 50)
+when none exists. `window.__pilgrim.dialogueTest` is the scene (`play()`, `camera`, `ready`, `active`).
 
 ## Audio (Phase 3) — `src/audio/`, `content/music/`
 
@@ -974,7 +1132,7 @@ once (side-effect free, types only) to get the audio events on the global bus.
 
 Gameplay code never touches Web Audio. It emits:
 `events.emit('sfx', { id: 'bonk', at: [x, y, z] })`, `'music:play' {id, fade?, state?}`, `'music:state' {state}`,
-`'music:stop'`, `'music:silence'`, `'ambience:set' {id|null}`, `'audio:duck' {on}`, or uses the service:
+`'music:stop'`, `'music:silence'`, `'ambience:set' {id|null}`, `'audio:duck' {on, by?}`, or uses the service:
 ```ts
 // src/audio/AudioEngine.ts — registers itself as services 'audio'; main.ts builds it right after the Engine
 export class AudioEngine {
@@ -989,7 +1147,7 @@ export class AudioEngine {
                        readonly current: AmbienceId | null };
   readonly babble: { speak(voice: VoiceParams, text: string, opts?: { mood?: Mood; cps?: number; at?: Vec3 }): { stop(): void; readonly done: Promise<void> } };
   setListener(camera: THREE.Camera): void;                   // every rendered frame (main.ts); allocation-free
-  duck(on: boolean): void;                                    // music bus and its reverb send -6 dB
+  duck(on: boolean, by?: string): void;  // music bus and its reverb send -6 dB while any owner `by` holds it
   dispose(): void;
   readonly context: AudioContext | null;                     // dev / tests / test page, null before unlock
   readonly buses: AudioBuses | null;                         // master, music, voice, effects, ambience, musicSend, ambienceSend, out
@@ -1041,7 +1199,7 @@ Gameplay usage: the three joy jumps play `{ id: 'joy_note', pitch: stepPitch('jo
 ropes `stepPitch('rope_snap', i)`; dialogue emits `'audio:duck' {on}` around lines; the Cross emits
 `'music:silence'`, waits 1.5 s, then `'music:play' { id: 'pilgrim', state: 'joy' }`.
 
-## Tools and tests (Phase 0, Phase 1)
+## Tools and tests (Phase 0, Phase 1, Phase 3)
 
 - `tools/check-assets.mjs` — GDD 2.3. Fails (exit 1, readable message) if:
   - `public/` contains any file that is not text-based (`.svg`, `.json`, `.webmanifest`, `.txt`, `.js`, `.css`, `.html`) **and**
@@ -1065,7 +1223,13 @@ ropes `stepPitch('rope_snap', i)`; dialogue emits `'audio:duck' {on}` around lin
     `vite.config.ts` plugin leaves files with those names out of `dist/`.
   - Helpers: `tools/lib/sniff.mjs` (magic numbers, OS metadata) and `tools/lib/imports.mjs` (import rules).
 - `npm run dev`, `npm run build` and `npm test` run gen-icons and check-assets first (build and test also run
-  validate-levels and `tsc`).
+  validate-levels, validate-dialogue and `tsc`).
+- `tools/validate-dialogue.mjs` (Phase 3) checks `content/dialogue/*.json` with the game's own rules
+  (dialogue-parse.ts + dialogue-rules.ts through Node type stripping): shape, unknown fields, graph ids prefixed by
+  their file, unknown `next` ids, max 3 choices, cond syntax, unreachable nodes, at most 5 lines in a row, every
+  text key in en.json AND ta.json, anim / expr / mood / sfx / song / gift names read from the sources, at most 2
+  sentences per line and no GDD 2.16 sectarian words. Speakers that are not NPCs of the matching level and very
+  long lines are warnings.
 - `playwright.config.ts` uses the installed Google Chrome (`channel: 'chrome'`) so no browser download is
   needed; `webServer` runs `gen-icons` then `vite` on the dedicated port 5317 (`reuseExistingServer: false`).
   Headless, with `--use-angle=metal` / swiftshader fallback flags.
@@ -1079,8 +1243,9 @@ ropes `stepPitch('rope_snap', i)`; dialogue emits `'audio:duck' {on}` around lin
   (`stats.drawCalls > 0`), zero console errors and zero page errors; runs check-assets via `child_process` and
   expects exit 0; puts a fake `.png` in `public/`, expects exit 1, then removes it (in `finally`).
 - `window.__pilgrim` (always present, read-only): `{ ready, engine, services, events, mode, modeReady, lab,
-  testWorld, restartMode() }` for tests; `ready` turns true after the first rendered frame, `modeReady` once the
-  mode is on screen; `lab` is the LabProbe (`?lab=1`), `testWorld` the TestWorld (`?chapter=test`).
+  testWorld, dialogueTest, restartMode() }` for tests; `ready` turns true after the first rendered frame, `modeReady` once the
+  mode is on screen; `lab` is the LabProbe (`?lab=1`), `testWorld` the TestWorld (`?chapter=test`), `dialogueTest`
+  the dialogue demo scene (`?dialogue=test`). GameFlow is `services.get('flow')` (`probe()` for tests).
 - Phase 1 specs (`tests/support.ts` holds the shared console capture, frame waits and typings):
   - `tests/lab.spec.ts`: `?lab=1` boots with zero console errors/warnings; every recipe builds and its main mesh is
     exactly 1 draw call (2 only with a glow mesh), < 2500 triangles; every recipe runs all 22 clips and 8
@@ -1097,3 +1262,24 @@ ropes `stepPitch('rope_snap', i)`; dialogue emits `'audio:duck' {on}` around lin
   - Both save the Phase 1 report screenshots to `test-results/phase1/` (lab-lineup, lab-lineup-wide, lab-closeup,
     lab-crowd, test-world, test-world-wide, test-world-low). Playwright clears `test-results/` at the start of each
     run.
+- Phase 3 specs (`tests/story-support.ts`: flow probe, fake standard gamepad, dialogue drivers):
+  - `tests/story.spec.ts`: `?dialogue=test` plays the sample in English (key 2) and Tamil (a click) with a clean
+    console: every line shows, Hope moves by the chosen amount, the camera cuts between lines, babble is spoken for
+    every line, the last line is a world bubble; the title screen keyboard-only and gamepad-only through CHAPTERS,
+    SETTINGS (text size changes and persists after a reload) and START (the opening); `?chapter=test` opens MY
+    SATCHEL with Tab (the five GDD tabs, "Promises: 0 of 24", "Detours: 0", the Key card reading exactly "A key
+    called Promise.") and the pause menu with Esc (and its SATCHEL); the language toggle puts the title in Tamil
+    with no overflow at 375 px.
+  - `tests/story-shots.spec.ts`: report screenshots in `test-results/phase3a/` at 1280×720 and 412×915 (touch), in
+    English and Tamil (`<screen>[-ta]-<desktop|phone>.png`): title, chapters, credits, settings (+ text tab),
+    opening, demo end, pause, the five Satchel pages, the dialogue panel with choices and a world bubble.
+  - `tests/story-fixes.spec.ts` (review fixes, behaviour): a hidden tab under the Satchel leaves no pause menu;
+    the flow's touch pause icon during a fly-through and a conversation; pausing mid-conversation keeps the duck
+    and the focus, Tab + Enter pick the highlighted choice, Enter remapped to Skip only reveals; the skip ring
+    without a hold; bubble lines announced once; overlapping cutscene and conversation hand input back last;
+    captions at the Slow text speed; Escape / pad B on the opening; the sequel card before the end credits.
+  - `tests/story-layout.spec.ts` (review fixes, layout, screenshots `test-results/phase3a/fix-*.png`): the title
+    menu fits 1280×720 with CONTINUE (or shows the "more" arrow until scrolled); CHAPTER label contrast >= 4.5:1;
+    the opening narration follows the text size; phone Settings tabs all in sight at XL; demo-end heading capped;
+    Satchel footer >= 20 px; on a phone on its side the question stays in view beside its answers and the Satchel
+    tabs drop their labels at XL.

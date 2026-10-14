@@ -21,6 +21,8 @@ export interface UrlParams {
   skipIntro: boolean;
   lab: boolean;
   music: string | null;
+  /** `?dialogue=test`: the dialogue demo (Phase 3). */
+  dialogue: string | null;
 }
 
 /** Everything above, bundled for the service registry. */
@@ -36,7 +38,7 @@ declare module './Services' {
   }
 }
 
-/** Ids in the URL (chapter, waystone, music) are short slugs; anything else is ignored. */
+/** Ids in the URL (chapter, waystone, music, dialogue) are short slugs; anything else is ignored. */
 const ID_PATTERN = /^[a-z0-9_-]{1,64}$/;
 
 function envString(value: unknown): string {
@@ -91,6 +93,7 @@ export function parseUrlParams(search?: string): UrlParams {
     skipIntro: boolParam(params, 'skipIntro'),
     lab: boolParam(params, 'lab'),
     music: idParam(params, 'music'),
+    dialogue: idParam(params, 'dialogue'),
   };
 }
 
@@ -106,7 +109,16 @@ export const debugEnabled: boolean = buildFlags.DEV || parsed.debug;
 export const urlParams: UrlParams = Object.freeze(
   debugEnabled
     ? parsed
-    : { chapter: null, waystone: null, debug: false, god: false, skipIntro: false, lab: false, music: null },
+    : {
+        chapter: null,
+        waystone: null,
+        debug: false,
+        god: false,
+        skipIntro: false,
+        lab: false,
+        music: null,
+        dialogue: null,
+      },
 );
 
 services.register('flags', Object.freeze({ build: buildFlags, url: urlParams, debug: debugEnabled }));

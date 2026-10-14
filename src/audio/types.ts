@@ -155,6 +155,9 @@ export interface AudioEventMap {
   /** Silence everything except effects for `seconds` (the Cross: 1.5 s of silence before the theme). */
   'music:silence': { fade?: number };
   'ambience:set': { id: AmbienceId | null; fade?: number };
-  /** Dialogue ducks music by 6 dB while active (GDD 2.13). */
-  'audio:duck': { on: boolean };
+  /**
+   * Dialogue ducks music by 6 dB while active (GDD 2.13). Several owners (`by`: 'dialogue', 'pause', 'caption'...)
+   * can hold the duck at once; the music comes back up only when every owner has let go. No `by` = 'default'.
+   */
+  'audio:duck': { on: boolean; by?: string };
 }
