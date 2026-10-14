@@ -104,6 +104,9 @@ export class Engine {
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    // ACES at exposure 1 measured best (Phase 2 colour pass): sunlit ground lands within ~2.5 dE of its vertex
+    // colour; AgX greys the world (chroma x0.64), Neutral oversaturates and darkens. Dark faces were the light
+    // balance, fixed in palette.ts.
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
     // r186 removed PCFSoftShadowMap; PCFShadowMap is the soft-filtered PCF path now.

@@ -52,6 +52,8 @@ export interface Palette {
 /** GDD 2.11 skin tones. Heroes and villains are spread across all of them (GDD 1.6, 2.16 rule 5). */
 export const SKIN_TONES = ['#F1C7A3', '#E0A57A', '#C68A5E', '#9C6644', '#6E4A33'] as const;
 
+// Light balance: hemisphere fill x1.5 and sun x0.76 against Phase 1 (DECISIONS, Phase 2 colour pass), so faces turned
+// away from the sun keep their design-sheet colour while sunlit ground reads exactly as before under ACES.
 const SUN_HIGH: [number, number, number] = [0.45, 0.8, 0.35];
 const SUN_LOW: [number, number, number] = [0.8, 0.35, 0.2];
 
@@ -62,11 +64,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#E9C3A2', near: 60, far: 320 },
     light: {
       sun: '#FFE2B8',
-      sunIntensity: 2.2,
+      sunIntensity: 1.67,
       sunDir: SUN_LOW,
       hemiSky: '#C9D6F0',
       hemiGround: '#8A7A5A',
-      hemiIntensity: 1.1,
+      hemiIntensity: 1.65,
     },
     ground: {
       low: '#8DBF6A',
@@ -86,11 +88,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#CFE2E8', near: 60, far: 300 },
     light: {
       sun: '#FFF1DC',
-      sunIntensity: 2.4,
+      sunIntensity: 1.82,
       sunDir: SUN_HIGH,
       hemiSky: '#CFE6F2',
       hemiGround: '#7A8A5A',
-      hemiIntensity: 1.1,
+      hemiIntensity: 1.65,
     },
     ground: {
       low: '#8DBF6A',
@@ -111,11 +113,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#B9876F', near: 35, far: 230 },
     light: {
       sun: '#F2B47E',
-      sunIntensity: 1.8,
+      sunIntensity: 1.37,
       sunDir: SUN_LOW,
       hemiSky: '#B98A8E',
       hemiGround: '#5E4E44',
-      hemiIntensity: 1.0,
+      hemiIntensity: 1.5,
     },
     ground: {
       low: '#8F8A62',
@@ -142,11 +144,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#98A09C', near: 25, far: 170 },
     light: {
       sun: '#E8E4D4',
-      sunIntensity: 1.4,
+      sunIntensity: 1.06,
       sunDir: SUN_HIGH,
       hemiSky: '#A9B2AE',
       hemiGround: '#4E4230',
-      hemiIntensity: 1.2,
+      hemiIntensity: 1.8,
     },
     ground: {
       low: '#5B4A35',
@@ -167,11 +169,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#BFDCE6', near: 60, far: 320 },
     light: {
       sun: '#FFF0D6',
-      sunIntensity: 2.4,
+      sunIntensity: 1.82,
       sunDir: SUN_HIGH,
       hemiSky: '#BFE0F0',
       hemiGround: '#6A8A4A',
-      hemiIntensity: 1.1,
+      hemiIntensity: 1.65,
     },
     ground: {
       low: '#8DBF6A',
@@ -192,11 +194,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#C9BFAE', near: 40, far: 240 },
     light: {
       sun: '#FFEFCF',
-      sunIntensity: 2.0,
+      sunIntensity: 1.52,
       sunDir: SUN_HIGH,
       hemiSky: '#C4C8D8',
       hemiGround: '#6E6050',
-      hemiIntensity: 1.1,
+      hemiIntensity: 1.65,
     },
     ground: {
       low: '#8FA86A',
@@ -217,11 +219,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#3E302C', near: 20, far: 90 },
     light: {
       sun: '#F2C98A',
-      sunIntensity: 1.2,
+      sunIntensity: 0.91,
       sunDir: SUN_HIGH,
       hemiSky: '#F2C98A',
       hemiGround: '#5A3A2A',
-      hemiIntensity: 0.9,
+      hemiIntensity: 1.35,
     },
     ground: {
       low: '#8B5A3C',
@@ -242,11 +244,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#F5D9BE', near: 50, far: 280 },
     light: {
       sun: '#FFE4BE',
-      sunIntensity: 2.2,
+      sunIntensity: 1.67,
       sunDir: SUN_LOW,
       hemiSky: '#FFE9C8',
       hemiGround: '#7AA050',
-      hemiIntensity: 1.2,
+      hemiIntensity: 1.8,
     },
     ground: {
       low: '#9ED26A',
@@ -267,11 +269,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#A99BC9', near: 50, far: 280 },
     light: {
       sun: '#FFD9B0',
-      sunIntensity: 1.9,
+      sunIntensity: 1.44,
       sunDir: SUN_LOW,
       hemiSky: '#B9AEE0',
       hemiGround: '#5F8A48',
-      hemiIntensity: 1.1,
+      hemiIntensity: 1.65,
     },
     ground: {
       low: '#7FBF5F',
@@ -292,11 +294,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#8E7FA0', near: 40, far: 230 },
     light: {
       sun: '#FFD2A8',
-      sunIntensity: 1.8,
+      sunIntensity: 1.37,
       sunDir: SUN_LOW,
       hemiSky: '#A99BC4',
       hemiGround: '#5A7A4A',
-      hemiIntensity: 1.1,
+      hemiIntensity: 1.65,
     },
     ground: {
       low: '#7FAF6A',
@@ -317,11 +319,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#14121C', near: 6, far: 45 },
     light: {
       sun: '#6A6E8A',
-      sunIntensity: 0.25,
+      sunIntensity: 0.19,
       sunDir: SUN_HIGH,
       hemiSky: '#2A2838',
       hemiGround: '#0E0C14',
-      hemiIntensity: 0.35,
+      hemiIntensity: 0.52,
     },
     ground: {
       low: '#2A2632',
@@ -342,11 +344,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#EAD9E6', near: 50, far: 260 },
     light: {
       sun: '#FFEED8',
-      sunIntensity: 2.4,
+      sunIntensity: 1.82,
       sunDir: SUN_HIGH,
       hemiSky: '#E9DDF5',
       hemiGround: '#8A7A5A',
-      hemiIntensity: 1.2,
+      hemiIntensity: 1.8,
     },
     ground: {
       low: '#A9C77A',
@@ -367,11 +369,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#C9DCD8', near: 50, far: 280 },
     light: {
       sun: '#FFF0D6',
-      sunIntensity: 2.2,
+      sunIntensity: 1.67,
       sunDir: SUN_HIGH,
       hemiSky: '#CFE6F0',
       hemiGround: '#6A8A4A',
-      hemiIntensity: 1.1,
+      hemiIntensity: 1.65,
     },
     ground: {
       low: '#A6D96A',
@@ -392,11 +394,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#C6E6F2', near: 70, far: 360 },
     light: {
       sun: '#FFF2DA',
-      sunIntensity: 2.5,
+      sunIntensity: 1.9,
       sunDir: SUN_HIGH,
       hemiSky: '#CFEAF8',
       hemiGround: '#6FA05A',
-      hemiIntensity: 1.15,
+      hemiIntensity: 1.72,
     },
     ground: {
       low: '#8FD17E',
@@ -417,11 +419,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#FCEBD0', near: 60, far: 340 },
     light: {
       sun: '#FFF1D2',
-      sunIntensity: 2.6,
+      sunIntensity: 1.98,
       sunDir: SUN_HIGH,
       hemiSky: '#FFF0D8',
       hemiGround: '#88B070',
-      hemiIntensity: 1.3,
+      hemiIntensity: 1.95,
     },
     ground: {
       low: '#9CD47A',
@@ -447,11 +449,11 @@ export const PALETTES: Record<PaletteId, Palette> = {
     fog: { color: '#C99A80', near: 35, far: 230 },
     light: {
       sun: '#F6C08A',
-      sunIntensity: 1.9,
+      sunIntensity: 1.44,
       sunDir: SUN_LOW,
       hemiSky: '#C9A0A4',
       hemiGround: '#5E4E44',
-      hemiIntensity: 1.05,
+      hemiIntensity: 1.58,
     },
     ground: {
       low: '#8F8A62',

@@ -12,7 +12,9 @@
       { "type": "plateau", "x": -95, "z": -70, "r": 32, "height": 4 },
       { "type": "ridge", "x": 0, "z": -128, "r": 90, "height": 11, "dir": 0.12 },
       { "type": "cliff", "x": 112, "z": 92, "r": 34, "height": 7, "dir": 1.2 },
-      { "type": "valley", "x": -120, "z": 105, "r": 40, "depth": 3, "dir": 0.8 }
+      { "type": "valley", "x": -120, "z": 105, "r": 40, "depth": 3, "dir": 0.8 },
+      { "type": "hill", "x": 118, "z": 20, "r": 14, "height": 3.5 },
+      { "type": "basin", "x": -49, "z": 4.5, "r": 3.6, "depth": 0.9 }
     ]
   },
   "way": [
@@ -21,19 +23,32 @@
     [-62, 0, 18],
     [-30, 0, 0],
     [2, 0, -16],
-    [36, 0, -6],
-    [70, 0, 14],
+    [30, 0, -24],
+    [48, 0, -34],
+    [62, 0, -38],
+    [78, 0, -32],
+    [90, 0, -14],
     [104, 0, 4],
     [134, 0, -6]
   ],
   "detours": [
-    { "id": "hill_path", "points": [[-30, 0, 0], [-25, 0, 18], [-12, 0, 34], [4, 0, 46]], "width": 2.6 }
+    {
+      "id": "hill_path",
+      "points": [
+        [-30, 0, 0],
+        [-25, 0, 18],
+        [-12, 0, 34],
+        [4, 0, 46]
+      ],
+      "width": 2.6
+    }
   ],
   "zones": [
     { "id": "bog", "type": "slough", "shape": "circle", "x": 62, "z": -36, "r": 20, "hopeDrain": 1 },
     { "id": "meadow", "type": "meadow", "shape": "box", "x": -78, "z": 58, "size": [70, 50] },
     { "id": "woods", "type": "woods", "shape": "circle", "x": -30, "z": -62, "r": 34 },
-    { "id": "hilltop", "type": "detour", "shape": "circle", "x": 12, "z": 56, "r": 16 }
+    { "id": "hilltop", "type": "detour", "shape": "circle", "x": 12, "z": 56, "r": 16 },
+    { "id": "pit_a", "type": "pit", "shape": "circle", "x": -49, "z": 4.5, "r": 1.3 }
   ],
   "scatter": [
     { "type": "tree_cone", "zone": "woods", "density": 1.1, "minDist": 4 },
@@ -53,15 +68,24 @@
     { "type": "house_b", "id": "test_house_b", "at": [-74, 0, -6], "rotY": 0.2 },
     { "type": "fence", "id": "test_fence", "at": [-124, 0, 10], "rotY": -0.55 },
     { "type": "gate", "id": "test_gate", "at": [-100, 0, 21], "rotY": 3.0 },
+    {
+      "type": "wall",
+      "id": "test_ledge",
+      "at": [-80, 0, 20],
+      "rotY": -0.22,
+      "params": { "length": 5, "height": 1.0, "thick": 1.5, "pillars": false, "clear": 4 }
+    },
+    { "type": "pit", "id": "test_pit", "at": [-49, 0, 4.5], "params": { "r": 1.5, "clear": 3 } },
     { "type": "waystone", "id": "test_marker", "at": [-48, 0, 20], "rotY": 3.6 },
     { "type": "stall", "id": "test_stall", "at": [-10, 0, 8], "rotY": 3.6 },
     { "type": "cage", "id": "test_cage", "at": [22, 0, -28], "rotY": 0.3 },
+    { "type": "steps", "id": "test_steps", "path": "way", "from": 0.64, "to": 0.745 },
     { "type": "arbour", "id": "test_arbour", "at": [88, 0, 24], "rotY": 3.3 },
     { "type": "cross", "id": "test_cross", "at": [118, 0, 18], "rotY": 3.4 },
-    { "type": "tomb", "id": "test_tomb", "at": [126, 0, 27], "rotY": 3.9 }
+    { "type": "tomb", "id": "test_tomb", "at": [126, 0, 28], "rotY": 3.9 }
   ],
   "npcs": [
-    { "id": "christian", "recipe": "christian_burdened", "role": "test", "at": [-132, 0, -10], "rotY": 1.0 },
+    { "id": "obstinate", "recipe": "obstinate", "role": "test", "at": [-126, 0, -16], "rotY": 1.0 },
     { "id": "evangelist", "recipe": "evangelist", "role": "test", "at": [-104, 0, 2], "rotY": 0.6 },
     { "id": "pliable", "recipe": "pliable", "role": "test", "at": [-58, 0, 24], "rotY": 3.0 },
     { "id": "help", "recipe": "help", "role": "test", "at": [48, 0, -14], "rotY": 2.6 }
@@ -69,13 +93,13 @@
   "triggers": [],
   "waystones": [
     { "id": "test_w1", "at": [-118, 0, -6] },
-    { "id": "test_w2", "at": [96, 0, 12] }
+    { "id": "test_w2", "at": [101, 0, -5] }
   ],
   "promises": [
-    { "id": "test_p1", "at": [-4, 0, 50] },
-    { "id": "test_p2", "at": [40, 0, -30] }
+    { "id": "test_p1", "at": [-110, 0, 3] },
+    { "id": "test_p2", "at": [-80, 1.0, 20] }
   ],
-  "water": [{ "kind": "mud", "shape": "circle", "x": 62, "z": -36, "r": 13, "level": -1.7 }],
+  "water": [{ "kind": "mud", "shape": "circle", "x": 64, "z": -38, "r": 14, "level": -2.0 }],
   "ambience": "meadow",
   "music": "pilgrim"
 }

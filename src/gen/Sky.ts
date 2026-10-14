@@ -16,6 +16,7 @@ import * as THREE from 'three';
 import type { QualityPreset } from '../core/Quality';
 import { services } from '../core/Services';
 import { colorOf, jitter, lowSphere, merge, xform } from './geom';
+import { WORLD_FX_PARS, fxUniforms } from './fx/WorldFX';
 import { mix, type Palette } from './palette';
 import { Rng, hashString } from './rng';
 
@@ -30,6 +31,7 @@ const SHADOW = { half: 30, distance: 80, near: 1, far: 200, bias: -0.0005, norma
 const WHITE = '#FFFFFF';
 
 const SKY_COMMON = /* glsl */ `
+${WORLD_FX_PARS}
 uniform vec3 uTop;
 uniform vec3 uHorizon;
 uniform vec3 uBottom;
@@ -73,6 +75,7 @@ void main() {
   gl_FragColor = vec4(c, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
+  gl_FragColor.rgb = worldFxGrade(gl_FragColor.rgb); // low-Hope look (fx/WorldFX.ts)
 }
 `;
 
@@ -106,6 +109,7 @@ void main() {
   gl_FragColor = vec4(mix(c, skyGradient(d), haze), 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
+  gl_FragColor.rgb = worldFxGrade(gl_FragColor.rgb);
 }
 `;
 
@@ -117,6 +121,7 @@ function luminance(hex: string): number {
 
 function skyUniforms(pal: Palette): Record<string, THREE.IUniform> {
   return {
+    ...fxUniforms, // shared references: the world look reaches the sky too
     uTop: { value: colorOf(pal.sky.top).clone() },
     uHorizon: { value: colorOf(pal.sky.horizon).clone() },
     uBottom: { value: colorOf(pal.sky.bottom).clone() },
@@ -179,7 +184,8 @@ export class Sky {
     this.domeGeometry = new THREE.BufferGeometry();
     this.domeGeometry.setAttribute('position', ico.getAttribute('position'));
     ico.dispose();
-    const sunStrength = Math.min(1, Math.max(0.3, pal.light.sunIntensity / 1.6));
+    // 1.22 = 1.6 x 0.76: palette suns were scaled by 0.76 in the Phase 2 colour pass, so the disc is unchanged.
+    const sunStrength = Math.min(1, Math.max(0.3, pal.light.sunIntensity / 1.22));
     this.domeMaterial = new THREE.ShaderMaterial({
       name: 'sky:dome',
       uniforms: {

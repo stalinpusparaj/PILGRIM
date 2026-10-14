@@ -34,7 +34,9 @@ it lives and *how modules talk*. If you need to change a contract here, change i
 | `&waystone=ch08_w1&debug=1&god=1&skipIntro=1` | Debug params (GDD 2.15) |
 
 Phase 1 wires two modes: `?lab=1` → Character Lab (`src/gen/Lab.ts`) and `?chapter=test` → the test world
-(`src/world/TestWorld.ts`, built from `content/levels/test.json`). `?music=<id>` opens the music test page
+(`src/world/TestWorld.ts`, built from `content/levels/test.json`). Since Phase 2 the test world is played: TestWorld
+wraps a `PlaySession` (Gameplay below) and keeps the Phase 1 fly cameras on keys 1-3 (1 = the gameplay camera,
+2 = orbit, 3 = overview; the orbit and overview suspend the FollowCamera through CameraRig). `?music=<id>` opens the music test page
 (`src/audio/MusicTestPage.ts`, plain DOM, loaded with a dynamic import before the Engine is created, so it needs
 no WebGL). Every other mode still shows the Phase 0 test scene (`src/world/dev/DevScene.ts`) until the title
 screen (Phase 3) and the chapters exist.
@@ -54,6 +56,7 @@ export interface ModeRunner {
   readonly ready: boolean;
   readonly lab: LabProbe | null;     // ?lab=1 only
   readonly testWorld: TestWorld | null;
+  readonly play: PlaySession | null;   // the running play session (?chapter=test), null while loading
   setFov(fov: number): void;
   dispose(): void;                   // frees everything; the engine is left drawing an empty scene
 }
@@ -223,6 +226,7 @@ export class Input {
   released(a: Action): boolean;
   holdTime(a: Action): number;                 // seconds held (0 when not held)
   readonly pointerLocked: boolean;
+  readonly mouseLooks: boolean;                // true once the mouse has really turned the camera (>= 400 px of look this session)
   requestPointerLock(): void;                  // desktop only; shows the "Click to play" overlay when not locked during gameplay
   releasePointerLock(): void;                  // frees the mouse on purpose (debug panel, overlays): not a pause press
   setGameplayActive(active: boolean): void;    // false in menus: no pointer lock, touch controls hidden, held input released
@@ -274,7 +278,7 @@ export interface SettingsData {
   textSize: 'M' | 'L' | 'XL'; textSpeed: 'slow' | 'normal' | 'instant'; lang: 'en' | 'ta';
   bindings: Partial<Record<Action, string[]>>;  // only overrides; defaults live in Input
 }
-export const DEFAULT_SETTINGS: SettingsData;     // difficulty 'easy', fov 55, autoCamera 'default' (on for touch)
+export const DEFAULT_SETTINGS: SettingsData;     // difficulty 'easy', fov 55, autoCamera 'default' (on for touch and keyboard-only players)
 export const SETTINGS_STORAGE_KEY = 'pilgrim.settings.v1';
 export const SETTINGS_RANGES;                    // resolutionScale 0.5-1, fov 45-75, cameraSpeed 0.25-3, volume 0-1
 export function sanitizeSettings(raw: unknown): SettingsData;
@@ -602,13 +606,16 @@ export interface WaterOptions { kind: 'water' | 'mud'; pal: Palette; shape: 'cir
 export interface WaterBody { mesh: THREE.Mesh; update(t: number): void; dispose(): void }   // t = absolute seconds
 export function createWater(o: WaterOptions): WaterBody;   // flat in local XZ at y = 0: caller sets mesh.position
 // src/gen/Particles.ts
-export type ParticlePreset = 'dust' | 'sparkle' | 'smoke' | 'ember' | 'rain' | 'zzz' | 'fire' | 'motes' | 'stars' | 'splash';
-export interface EmitOptions { dir?: THREE.Vector3; color?: string; spread?: number }
+export type ParticlePreset = 'dust' | 'sparkle' | 'smoke' | 'ember' | 'rain' | 'zzz' | 'fire' | 'motes' | 'stars' | 'splash' | 'breath';
+export interface EmitOptions { dir?: THREE.Vector3; color?: string; spread?: number;
+  cone?: number;            // 0 = straight along dir, 1 = any way (default: the preset's)
+  vel?: THREE.Vector3;      // added to every start velocity (puffs from someone walking keep up)
+  follow?: THREE.Vector3 }  // orbit presets ('stars'): a live centre the ring follows (the caller keeps it updated)
 export class Particles { constructor(max: number, seed?: number); readonly object: THREE.InstancedMesh; readonly max: number;
   emit(preset: ParticlePreset, pos: THREE.Vector3, count?: number, opts?: EmitOptions): void;
   update(dt: number, camera: THREE.Camera): void; setLight(pal: Palette): void; clear(): void; dispose(): void; }
 export class ParticleEmitter { constructor(p: Particles, preset: ParticlePreset, ratePerSec: number, opts?: EmitOptions);
-  update(dt: number, pos: THREE.Vector3): void; }                          // chimneys, fires, a rain field round the camera
+  update(dt: number, pos: THREE.Vector3): void; }   // src/gen/fx/ParticleEmitter.ts, re-exported; chimneys, fires, rain
 ```
 - The sky dome is redrawn around the rendering camera in its shader (no lag, never clipped), not tone mapped, and
   its eye-level band is the fog colour so fogged ground meets the sky without a seam. Clouds: 7/12/18 by quality.
@@ -842,6 +849,7 @@ export function chapterLoadingInfo(id: string): LoadingInfo;
 // src/world/TestWorld.ts (?chapter=test) + TestCamera.ts (follow / orbit / overview, keys 1-3)
 export class TestWorld { constructor(engine: Engine); start(): Promise<void>; dispose(): void;
   readonly camera: THREE.PerspectiveCamera; readonly current: World | null; readonly ready: boolean;
+  readonly play: PlaySession | null;       // Phase 2: the session that plays the level (current = play.world)
   readonly progressLog: number[];          // every loading-bar value of the last build (tests)
   readonly cameraMode: TestCameraMode; setCameraMode(m: TestCameraMode): void; rebuild(): Promise<void>; }
 ```
@@ -876,71 +884,277 @@ HUD request events (declared there): `hud:toast {key, params?}`, `hud:chapterCar
 
 ## Gameplay (Phase 2) — `src/player/`, `src/world/`, `src/narrative/`, `src/ui/`
 
+Everything below is built for a level by `PlaySession` (last block) and runs in its loop slots (`PLAY_ORDER`).
+Services registered by Phase 2: `player`, `cameraRig` (the FollowCamera), `burden`, `zones`, `slough`,
+`interactables`, `waystones`, `hud`. All are unregistered on dispose (only if they are still the registered one).
+
+### Collision and the kinematic controller (GDD 2.15) — `src/world/Collision.ts` (+ `collision-*.ts`), `src/player/Controller.ts`
 ```ts
-// src/world/Collision.ts — static + dynamic colliders over the terrain (no physics engine, GDD 2.15)
 export type SurfaceKind = 'dirt' | 'stone' | 'mud' | 'wood' | 'grass' | 'water';
+export interface CollisionSource { terrain: GroundField; colliders: readonly Collider[];
+  level: Pick<LevelData, 'zones' | 'water'>; ways: { main: Way; detours: readonly Way[] } }   // a World satisfies it
+export interface GroundHit { y: number; nx: number; ny: number; nz: number; steep: boolean; handle: number /* -1 terrain */ }
+export interface LedgeHit { top: number; at: THREE.Vector3 }
 export class CollisionWorld {
-  constructor(world: World);                        // terrain + world.colliders, uniform grid broadphase
-  groundAt(x: number, z: number, fromY?: number): number;   // terrain or the highest walkable top at/below fromY+stepUp
-  addCollider(c: Collider, opts?: { walkable?: boolean; tag?: string }): number;  // handle; walkable tops can be stood on
+  constructor(world: CollisionSource);              // terrain + world.colliders, ~8 m uniform grid broadphase
+  stepUp: number;                                   // 0.3 default for groundAt / resolve
+  slopeLimit: number;                               // degrees (the controller sets it from MoveParams)
+  readonly size: number; readonly colliderCount: number;
+  readonly contactCount: number; readonly contactNx: Float64Array; readonly contactNz: Float64Array;
+  readonly contactHandle: Int32Array;               // filled by resolve()
+  groundAt(x: number, z: number, fromY?: number): number;   // terrain or the highest walkable top <= fromY + stepUp (any height without fromY)
+  probeGround(x: number, z: number, fromY: number, stepUp: number, footRadius: number, out: GroundHit): GroundHit;  // a floor's top also when fromY is inside it
+  ceilingAbove(x: number, z: number, headY: number, radius: number): number;   // Infinity = open sky
+  addCollider(c: Collider, opts?: { walkable?: boolean /* false */; tag?: string; floor?: boolean /* false */ }): number;  // handle (never reused), -1 after dispose
+                                                    // floor: a floor only (mud surfaces): holds up anything over it or sunk into it, never a wall or a ledge
   removeCollider(handle: number): void; setEnabled(handle: number, on: boolean): void;
-  /** Capsule (feet at pos.y) vs colliders: pushes pos out horizontally, in place. Returns true if anything was hit. */
-  resolve(pos: THREE.Vector3, radius: number, height: number): boolean;
-  raycast(origin: THREE.Vector3, dir: THREE.Vector3, maxDist: number): number | null;  // terrain + colliders (camera arm)
-  surfaceAt(x: number, z: number): SurfaceKind;    // zones (mud/water) → Way band 'dirt' → 'grass'; wood/stone by collider tag
-  ledgeAhead(pos: THREE.Vector3, forward: THREE.Vector3, radius: number): { top: number; at: THREE.Vector3 } | null;  // 0.6-1.8 m
+  resolve(pos: THREE.Vector3, radius: number, height: number, stepUp?: number): boolean;  // capsule push-out (feet at pos.y), in place
+  overlaps(x: number, feetY: number, z: number, radius: number, height: number, stepUp?: number): boolean;
+  raycast(origin: THREE.Vector3, dir: THREE.Vector3, maxDist: number): number | null;   // terrain + colliders; shapes holding the origin are ignored
+  surfaceAt(x: number, z: number, y?: number): SurfaceKind;   // tagged/walkable top under the feet → water/mud areas → mud/water zones (or a zone's `surface`) → Way band 'dirt' → 'grass'
+  ledgeAhead(pos: THREE.Vector3, forward: THREE.Vector3, radius: number, height?: number): LedgeHit | null;  // walkable collider top 0.6-1.8 m up (not a floor); scratch result
   dispose(): void;
 }
-// src/player/Controller.ts — in-house kinematic controller
-export interface MoveParams { walkSpeed: number; runSpeed: number; jumpHeight: number; gravity: number;
+export function makeGroundHit(): GroundHit;
+
+export interface MoveParams { walkSpeed: number; runSpeed: number; jumpHeight: number; gravity: number /* sign ignored */;
   accel: number; airControl: number; slopeLimit: number /* 40° */; stepUp: number /* 0.3 */ }
 export interface StepResult { jumped: boolean; landed: boolean; landSpeed: number; grounded: boolean; blocked: boolean }
+export const DEFAULT_MOVE_PARAMS: Readonly<MoveParams>;   // free: 3.4 / 6 / 1.1 m, g 24, accel 30, air 0.5
+export const COYOTE_TIME = 0.1; export const JUMP_BUFFER = 0.1;
 export class KinematicController {
   constructor(col: CollisionWorld, radius?: number /* 0.35 */, height?: number /* 1.5 */);
-  readonly position: THREE.Vector3; readonly velocity: THREE.Vector3; readonly grounded: boolean;
-  step(dt: number, wish: { x: number; z: number } /* desired horizontal velocity, m/s */, jump: boolean, p: MoveParams): StepResult;
-  teleport(p: THREE.Vector3): void;                // coyote time 0.1 s and jump buffer 0.1 s inside
+  readonly position: THREE.Vector3;  // feet
+  readonly velocity: THREE.Vector3; readonly groundNormal: THREE.Vector3;
+  readonly grounded: boolean; readonly sliding: boolean; readonly groundHandle: number; readonly airTime: number;
+  readonly stepOffset: number;       // visual-only eased height offset after a step up/down (the Player adds it when drawing)
+  step(dt: number, wish: { x: number; z: number } /* m/s */, jump: boolean /* rising edge counts */, p: MoveParams): StepResult;  // reused result
+  teleport(p: THREE.Vector3): void;  // exact feet; snaps to ground within 5 cm below
+  launch(vy: number): void;
+  cancelJump(): void;                // forgets a buffered jump press (the Player calls it when leaving 'play')
 }
-// src/player/Player.ts — owns the Character and the controller (registered as service 'player')
-export type PlayerMode = 'play' | 'locked' | 'cutscene';   // locked: no input, physics on; cutscene: scripts move it
+```
+- World colliders are walkable on top except upright cylinders taller than 2.2 m (trunks, posts); added colliders
+  default to not walkable. A walkable top within `stepUp` of the feet is a step, not a wall; in the air, within
+  0.05 m of the feet or below where the feet were when the sub-step began (they crossed it: a landing).
+- Steep ground (> slopeLimit) blocks walking and jumping into it and slides you down at 3 m/s. Ground snapping
+  downhill, sub-steps of at most half a radius (no tunnelling), exact jump parabola (apex = jumpHeight), exact
+  touchdown speed, map edge 0.5 m inside the terrain. Deterministic for a fixed dt; nothing allocates per step.
+
+### Player — `src/player/Player.ts` (+ `player-anim/-move/-air/-ledge/-outfit/-debug.ts`, `Bonk.ts`, `Footsteps.ts`), service 'player'
+```ts
+export type PlayerMode = 'play' | 'locked' | 'cutscene';   // locked: no input, physics on; cutscene: scripts own the root
 export class Player {
   constructor(o: { world: World; col: CollisionWorld; state: GameState; recipe: string; spawn: THREE.Vector3; facing: number });
-  readonly character: Character; readonly controller: KinematicController;
-  readonly renderPosition: THREE.Vector3;           // interpolated (fixed 60 Hz update, render alpha)
-  readonly forward: THREE.Vector3; mode: PlayerMode;
-  speedScale: number;                               // multiplier from zones (slough) etc., 1 by default
-  setRecipe(id: string): void;                      // outfit swaps (christian_burdened → _free → _armour)
-  teleport(p: THREE.Vector3, facing?: number): void;
+  readonly character: Character;          // getter: setRecipe() replaces it ('player:recipe' {id})
+  readonly controller: KinematicController; readonly bonks: Bonk;
+  readonly renderPosition: THREE.Vector3; // interpolated feet; the camera follows it (stepOffset eases the drawn body only)
+  readonly forward: THREE.Vector3; readonly facing: number /* yaw */; readonly speed: number;
+  readonly isGrounded: boolean; readonly climbing: boolean; readonly animName: string;
+  mode: PlayerMode;                       // leaving 'cutscene' takes the root's position as the new feet; leaving 'play' drops a buffered jump
+  speedScale: number;                     // the Slough (0.5) and the Cross (slows to 0) write it
+  walkOnly: boolean;                      // scripts slowing him to a stop (the Cross): the stick walks; jump, climbs and USE do nothing
+  setRecipe(id: string): void;            // sparkle outfit swap, same clip and pose
+  teleport(p: THREE.Vector3, facing?: number): void;   // no streak; safe spots restart here
+  bonk(reason: BonkReason): boolean;
   update(dt: number): void; render(alpha: number): void; dispose(): void;
 }
-// src/player/Camera.ts — GDD 2.5 follow camera; implements CameraRig ('cameraRig' service)
-export class FollowCamera implements CameraRig {
-  constructor(camera: THREE.PerspectiveCamera, player: Player, col: CollisionWorld);
-  update(dt: number): void; render(alpha: number, frameDt: number): void; snap(): void; dispose(): void;
-}
-// src/player/Burden.ts — sizes, speed rules (burdened 2.0 m/s, no run, 0.3 m hop; free 3.4/6/1.1), growth "boing",
-// huff cues, joy jumps. src/player/CrossDrop.ts — runCrossDrop(ctx): Promise<void>, the full GDD 2.7.1 sequence.
-// src/player/Hope.ts — zone drains, low-Hope look (src/gen/fx/WorldFX.ts saturation uniform), 0 → I SHALL ARISE.
-// src/player/Bonk.ts — safe-spot tracker on the Way + bonk(reason) (dust, stars, pop back, Hope -5, toast).
-// src/world/Zones.ts — membership per fixed step: zone:enter / zone:exit {id, type}; hazards (pit, ditch, bogHole).
-// src/world/Slough.ts — sinking + hidden stepping stones (landmark type 'steps' with a path range) revealed by
-//   standing still 2 s or reading a Promise; revealed stones are walkable colliders.
-// src/world/Interactables.ts — focus + [E]; src/narrative/Waystones.ts; src/narrative/Promises.ts (walk-through pickup)
-// src/ui/HUD.ts (+ hud-*.ts, hud.css) — objective, lantern, hearts, interaction bubble, toasts, chapter card,
-//   letterbox(on); src/ui/Arise.ts — I SHALL ARISE screen.
-// src/world/PlaySession.ts — builds World + CollisionWorld + Player + FollowCamera + systems for a level
-//   (?chapter=test now; ChapterManager in Phase 3 reuses it).
 ```
-Interactables API (Phase 3 dialogue uses it for NPCs):
+- Camera-relative movement from `engine.camera`; run only when the move params allow it (never burdened); jump on
+  `pressed('jump')`. Speeds come from the 'burden' service × `speedScale`. Starts as `christian_burdened` while
+  `GameState.burden`, else `christian_free`; dropping the Burden keeps the clothes but switches to the free walk
+  style at once (`GaitStyle`); the Ch VI script calls `setRecipe('christian_free')` for the white clothes.
+- Ledge climbs (`player-ledge.ts`): a 'Climb' interactable (`action: 'jump'`, priority -1) while facing a ledge
+  0.6-1.8 m up (1.3 m burdened); Space / A / JUMP (or USE) climbs.
+- Animation (`player-anim.ts`): idle/walk/run/burdenedWalk with hysteresis, jump clips time-warped to the physics,
+  'land' on hard landings, held clips for bonks and climbs; clips other systems start (pray, kneel, sit) are left
+  alone until they end or the player pushes the stick.
+- `Bonk.ts` (GDD 2.7.3): safe spot every 0.5 s on the main Way's band outside hazards (8 kept; pop back to the
+  newest ≥ 2.5 m away). `bonk(reason)`: dust, 0.2 s hidden, pop back + camera snap, sit dazed with stars ringing
+  the top of his head (they follow it, `EmitOptions.follow`, `render()` per frame), Hope -5, toast
+  `ui.toast.bonk`, input locked 1.2 s. Triggers: 'zone:hazard', standing in a hazard, falling 3 m under the
+  terrain, leaving the map. `enabled = false` (god mode) keeps only 'fall'. `handOverLock(): boolean` gives the
+  bonk's input lock to someone else (I SHALL ARISE when the bonk emptied Hope): the bonk then never unlocks.
+- `Footsteps.ts`: `step_<surface>` sfx per animator foot plant from `CollisionWorld.surfaceAt`.
+- Events: `player:landed {speed, hard}`, `player:jump {joy}`, `player:recipe {id}`, `player:bonk {reason: BonkReason}`.
+
+### Follow camera — `src/player/Camera.ts` (+ `camera-*.ts`), implements CameraRig ('cameraRig')
 ```ts
-export interface Interactable { id: string; pos: THREE.Vector3; radius: number; verb: string /* i18n key, e.g. ui.verb.talk */;
-  enabled: boolean; height?: number /* bubble height above pos */; holdSeconds?: number /* hold E, e.g. iron gate 3 s */;
-  priority?: number; onUse(): void }
-export class Interactables { add(i: Interactable): () => void; readonly focused: Interactable | null; update(dt: number): void; dispose(): void }
-// service 'interactables'
+export class FollowCamera implements CameraRig {
+  constructor(camera: THREE.PerspectiveCamera, player: CameraTarget, col: CameraCollision);  // structural types (camera-types.ts)
+  update(dt: number): void;                       // fixed step: steering, auto-camera, feel, spring arm
+  render(alpha: number, frameDt: number): void;   // after Player.render, before the Engine draws
+  snap(): void; dispose(): void;
+  readonly suspended: boolean; suspend(): void; resume(blend?: number /* 0.6 */): void; focus(out: THREE.Vector3): THREE.Vector3;
+  readonly yaw: number; bump(strength: number): void; debugLine(): string;
+}
 ```
-New events (declared in their modules): `zone:enter`, `zone:exit`, `player:bonk {reason}`, `player:arise`,
-`player:landed`, `interact:focus {id|null}`, `interact:use {id}`, `waystone:read` (core), `burden:dropped` (core).
+- GDD 2.5: 4.5 m behind, 2.2 m above the feet (2.0 burdened), looking at 1.05 m (1.4 burdened), orbit pivot at the
+  head (1.3 m), pitch -0.3..0.9 rad, FOV from Settings (+4° running free). Burdened: the rig slides sideways
+  (1.0 m × sack size, × clamp((aspect / 1.6)², 0, 1) on narrow screens) so the head shows beside the sack, a slow
+  ±0.1 m sway and small heavy-step thuds (none with Reduce camera motion).
+- Auto-camera ('default' = on for touch, and for keyboard/mouse until `input.mouseLooks`: keyboard-only players
+  have no look keys): swings behind the heading while walking, pauses 1.5 s after look input, never while walking
+  at the camera. Spring arm: rays from the pivot (centre, left, right, below, above) keep 0.3 m clear, pull in
+  fast, ease out after 0.4 s; close in it rises and looks over the head. Teleports over 3 m snap. The camera
+  follows `renderPosition` with its own height smoothing (steps up and down rise and fall with no dip or pop).
+- `resume(blend)` snaps the rig behind the player and eases from the cutscene's camera by orbiting the player's
+  head (angle, distance and height eased separately), kept in front of colliders: never through Christian.
+
+### Burden and the Cross — `src/player/Burden.ts` ('burden'), `src/player/CrossDrop.ts` (+ `cross-*.ts`)
+```ts
+export const FREE_MOVE: Readonly<MoveParams>;      // 3.4 / 6 / 1.1 m, g 24, accel 30, air 0.5
+export const BURDENED_MOVE: Readonly<MoveParams>;  // 2.0, no run, 0.3 m hop, g 28, accel 7, air 0.3
+export const BURDEN_MAX = 1.6; export const BURDEN_SIZE_FLAG = 'burden.size'; export const JOY_JUMPS = 3;
+export class BurdenSystem {
+  constructor(player: BurdenPlayer, state: GameState, world?: World | null);   // BurdenPlayer: structural (cross-types.ts)
+  params(): MoveParams;       // one reused object; bigger sack walks slower (1.6 m/s at 1.6)
+  readonly size: number;      // 0 free, 1 normal, up to 1.6 (kept in GameState flag 'burden.size')
+  grow(amount: number): void; // "boing": sfx, dust, sack spring, camera bump; ruts from size 1.1
+  readonly joyJumpsLeft: number; consumeJoyJump(): boolean;   // the Player calls it on take-off
+  readonly isDropping: boolean; beginDrop(): void; completeDrop(): void;   // CrossDrop only
+  update(dt: number): void; dispose(): void;
+}
+export interface CrossDropContext { player: BurdenPlayer; world: World; burden: BurdenSystem; state: GameState;
+  tomb: THREE.Vector3; skip?: () => boolean;
+  signal?: AbortSignal }   // the owner going away: stop at once, NO end state (no music, events, state change, camera hand-back)
+export function runCrossDrop(ctx: CrossDropContext): Promise<void>;   // no-op when not burdened
+```
+- The sequence (GDD 2.7.1, ~13 s, a loop system at `PLAY_ORDER.cameraOverride`, pauses with the game): input
+  slows to a stop (`walkOnly`: no hops or climbs), 'music:silence', HUD hidden → 'locked' until his feet are on
+  the ground, then 'cutscene' → kneel (side view with the cross he faces in frame) → look up → three rope snaps
+  0.75 s apart (rising pitch) → the sack (the character's own sack triangles) falls, bounces twice down the terrain
+  into the tomb's mouth → 'tomb_thoom' → 1.5 s of silence (the camera comes back to him inside it) →
+  `music:play pilgrim joy`, `state.setBurden(false)`, 'burden:dropped' → big stretch → joy leap → control returns
+  with three joy jumps. `skip()` (hold Space / A / JUMP 1 s) jumps to the end state; `signal` aborting (the
+  PlaySession owns the run and aborts it on dispose) stops it with no end state.
+- Camera (`cross-camera.ts`, `cross-shots.ts`, `cross-occlusion.ts`): `CrossCamera.to({ pos, look, fov }, s)` eases
+  on a rail orbiting his chest (angle the short way, distance, height; at most ~65°/s on average, so a long swing
+  takes longer than asked) with the view travelling from the old subject to the new one through him, and the FOV
+  eased (widening leads the move). Shots: kneel → over his shoulder from the side away from the tomb (he and the
+  tomb in depth; on portrait screens the swing starts during the rope snaps) while the view follows the sack and
+  pushes in on the tomb's mouth (a narrower FOV) → return in front of him. A 2 m keep-out round his chest; the
+  collider pull-in is kept as an amount short of the shot and reset per shot.
+- Events: `burden:grew {size, amount}`, `burden:joyJump {n, left}`.
+
+### Hope — `src/player/Hope.ts`, `src/gen/fx/WorldFX.ts`, `src/ui/Arise.ts`
+```ts
+export const HOPE_LOW = 30; export const HOPE_RECOVER = 40; export const ALONE_EXTRA = 0.5;
+export function saturationForHope(hope: number): number;   // 1 from 30 up, 0.35 at 0
+export class HopeSystem {
+  constructor(state: GameState, world: World, opts?: { position?: (out: THREE.Vector3) => THREE.Vector3 | null });
+  enabled: boolean; readonly drainPerSecond: number; readonly lowHope: boolean; readonly arisePending: boolean;
+  update(dt: number): void; dispose(): void;
+}
+// WorldFX: shared uniforms for every world shader (lit materials patched once, sky, clouds, water, particles)
+export const fxUniforms: { uDesaturation; uLanternPos; uLanternRadius; uLanternOn; uLanternColor };
+export const WORLD_FX_PARS: string;   // GLSL worldFxGrade(c), worldFx(c, worldPos): after fog, on the final colour
+export function patchWorldFx(m: THREE.Material): void; export function bindWorldFx(m: THREE.ShaderMaterial): boolean;
+export function applyWorldFx(root: THREE.Object3D): number; export const SATURATION_LOW = 0.35;
+export const worldFx: { saturation; targetSaturation; setSaturation(v, immediate?); setLantern(on, pos?, radius?, colorHex?); update(dt); reset() };
+// Arise
+export function runArise(opts: { respawn: () => void; parent?: HTMLElement }): Promise<void>;  // sets Hope >= 60 after respawn
+export function cancelArise(): void; export function isArising(): boolean;
+export const ARISE_TIMING = { fadeIn: 0.9, textIn: 0.8, hold: 3, fadeOut: 1 };
+```
+- Drain: the strongest overlapping zone with `hopeDrain` (Hope/s; optional `aloneDrain`, else half extra while
+  flag `alone`; the Helmet halves 'shadow' zones), in 0.5 steps. None while the cameraRig is suspended, during an
+  arise, with ?god=1 or `enabled = false`. Below 30: the world eases to grey (the 'glow' material keeps its warmth)
+  and 'music:state' sad; above 40 back to calm. Hope 0: `player:arise` once (after any cutscene).
+- Events: `player:arise` (void), `hope:low {low}`.
+
+### Zones, the Slough, interactables, waystones, Promises
+```ts
+// src/world/Zones.ts — service 'zones'
+export class Zones { constructor(world: ZoneWorld, target?: ZoneTarget | null);   // Player, controller or {position}
+  enabled: boolean; setTarget(t): void; readonly active: readonly ActiveZone[]; inZone(type): boolean; inZoneId(id): boolean;
+  zoneOf(type): ActiveZone | null; hopeDrain(): number; isTypeAt(type, x, z): boolean; update(dt): void; clear(): void; dispose(): void }
+export const HAZARD_ZONE_TYPES = ['pit', 'ditch', 'bogHole', 'hazard'];
+// src/world/Slough.ts (+ slough-steps.ts, slough-stone.ts) — service 'slough'
+export class Slough { constructor(o: { world: SloughWorld; col: ColliderHost; player: PlayerLike; zones?: Zones });
+  autoReveal: boolean; readonly depth: number; readonly sinking: boolean; readonly onStone: boolean;
+  readonly stepSets: string[]; isRevealed(id): boolean; reveal(id?: string): void;
+  update(dt): void; render(alpha, frameDt): void; dispose(): void }
+export const SINK_MAX = 0.55; export function stepsFlag(id: string): string;   // GameState flag 'steps.<id>'
+// src/world/Interactables.ts — service 'interactables'
+export interface Interactable { id: string; pos: THREE.Vector3; radius: number; verb: string /* i18n key */; enabled: boolean;
+  height?: number; holdSeconds?: number; priority?: number; action?: 'use' | 'jump' /* bubble button, default 'use' */; onUse(): void }
+export class Interactables { constructor(player: PlayerLike, input?: UseInput | null);
+  add(i: Interactable): () => void; readonly focused: Interactable | null; readonly holdProgress: number;
+  get(id): Interactable | null; useFocused(): boolean; update(dt): void; dispose(): void }
+// src/narrative/Waystones.ts — service 'waystones'
+export class Waystones { constructor(o: { world; player: PlayerLike; interactables?; state?; save? });
+  lastWaystone(): WaystoneSpot | null; spot(id): WaystoneSpot | null; readonly ids: string[]; read(id): void; update(dt): void; dispose(): void }
+export interface WaystoneSpot { id: string; pos: THREE.Vector3 /* 1.4 m in front of the stone */; facing: number }
+// src/narrative/Promises.ts
+export class Promises { constructor(o: { world: PromiseWorld; player; state? }); collect(id): boolean; update(dt): void; dispose(): void }
+```
+- Zones: circle / box (rotY) / 'way' band, the terrain painter's geometry; entered at the outline, left 0.35 m past
+  it. `zone:enter` / `zone:exit` {id, type}; `zone:hazard` {id, type} once per visit when grounded inside a hazard.
+- Slough: in a 'slough' zone (not on a stone) speedScale eases to 0.5; walking sinks 0.09 m/s, running (or holding
+  run) 0.3 m/s, to 0.55 m (the root bone is lowered); standing still 2 s or 'promise:read' raises the nearest
+  hidden 'steps' set in a ripple; risen stones are walkable 'stone' colliders and give full speed back.
+  `slough:steps {id}`. The player walks ON `level.water` mud surfaces: Slough adds a floor-only collider (no wall,
+  no ledge; feet sunk into it come up onto it) and warns when the ground at a mud body's edge lies more than 0.3 m
+  under its surface (content: the terrain is generated, so validate-levels cannot see it).
+- Interactables: nearest enabled thing in reach and in front (priority first, hysteresis); press `use` (or hold
+  `holdSeconds`); nothing while `player.mode !== 'play'`. Events `interact:focus {id|null}`, `interact:use {id}`,
+  `interact:hold {id, progress}` (reused payload). Nothing either while `player.walkOnly`.
+- Waystones: verb `ui.verb.read` before the Roll, `ui.verb.readRoll` after; read = overlay, sounds, sparkle,
+  `setWaystone`, Hope ≥ 60, autosave, toast, `waystone:read`; while the Roll is lost only `ui.toast.needRoll`.
+- Promises: walk within 1.1 m at about the scroll's height: collect, chime, sparkle, toast `ui.toast.promise`.
+
+### HUD — `src/ui/HUD.ts` (+ `hud-*.ts`, `hud.css`), service 'hud'
+```ts
+export class HUD { constructor(parent?: HTMLElement);   // default #ui
+  readonly root: HTMLDivElement; readonly visible: boolean; readonly hope: number;
+  update(dt: number): void;              // fixed step: timers, focus, hold, Hope sync
+  render(camera: THREE.Camera): void;    // per frame: projects the interaction bubble
+  setHearts(n: number | null, max?: number /* 5 */): void; previewHope(v: number): void; dispose(): void }
+```
+- Objective top-left (fades after 6 s; again for 3 s on `satchel:closed`), Hope lantern bottom-left (no numbers),
+  hearts under it, interaction bubble over the focused interactable with the current device's glyph
+  (`input.glyph(interactable.action ?? 'use')`), toasts top-centre one at a time, chapter card 3.5 s.
+  `hud:visible {on}` hides all but the chapter card. Passive to pointer input (z-index under the touch controls);
+  on touch the bubble dodges the round buttons and corner icons. No letterbox (Phase 3's Cutscene owns it).
+- Declares `satchel:closed` (void). Reads the 'interactables' service through `hud-focus.ts` (type-only import).
+
+### Play session — `src/world/PlaySession.ts` (+ `play-*.ts`)
+```ts
+export const PLAY_ORDER = { input: 100, zones: 110, interact: 120, camera: 130, cameraOverride: 135, world: 140 };
+export interface PlaySessionOptions { state?: GameState; waystone?: string; onProgress?: (p: number) => void;
+  camera?: THREE.PerspectiveCamera; loading?: LoadingInfo; signal?: AbortSignal }
+export class PlaySession {
+  static start(engine: Engine, levelId: string, opts?: PlaySessionOptions): Promise<PlaySession>;  // rejects on build failure / AbortError
+  readonly world: World; readonly col: CollisionWorld; readonly player: Player; readonly camera: FollowCamera;
+  readonly state: GameState; readonly view: THREE.PerspectiveCamera; readonly levelId: string;
+  readonly burden: BurdenSystem; readonly hope: HopeSystem; readonly zones: Zones; readonly slough: Slough;
+  readonly interactables: Interactables; readonly waystones: Waystones; readonly promises: Promises;
+  readonly pits: PitMarks; hud: HUD | null;
+  god: boolean;                                   // no Hope drain, no bonks (?god=1, F1)
+  respawn(waystone: string | null): void;         // in front of a waystone facing along the Way, else the Way's start
+  setBurden(on: boolean): void; teleport(x: number, z: number, facing?: number): void;
+  spawn(): { x: number; z: number; facing: number };
+  goToCross(): boolean; crossDrop(): Promise<void>;   // debug / tests: the full Cross sequence at the level's tomb
+  readonly isDisposed: boolean; dispose(): void;
+}
+```
+- start(): loading screen → `buildWorld` (gameplay-only landmarks 'pit' / 'steps' are kept out of the prop build
+  and put back, `play-pits.ts`) → state ('state' service or a new one) → CollisionWorld, PitMarks, Player,
+  FollowCamera, BurdenSystem, HopeSystem, Zones, Slough, Interactables, Waystones, Promises → spawn at
+  `opts.waystone` / the state's waystone / the Way's start → shader precompile → show: HUD, gameplay input, touch
+  buttons (jump, use; + pray with the Prayer gift), the level's ambience and music.
+- Loop: player (100) → zones, Slough, Hope, Burden (110) → interactables, waystones, Promises (120) → camera (130)
+  → fly cameras / the Cross (135) → HUD timers, playtime, and per frame shadow focus + `world.update` + HUD bubble
+  (140). `player:arise` → lock (taking over a running bonk's lock), `runArise`, respawn at the last waystone,
+  unlock. dispose() frees newest-first (a running Cross is aborted first: nothing of it outlives the session) and
+  leaves the engine on an empty scene.
+- F1 (play-debug.ts): Burden, Go to the Cross, Cross drop now, God mode, Show colliders / Way, go to each waystone;
+  the systems add their own (Grow, Hope slider, Hope 0, Alone, Reveal steps, Show zones, HUD tests, camera tuning).
+
+New events, all declared in their modules: `zone:enter/exit/hazard`, `player:bonk/landed/jump/recipe/arise`,
+`hope:low`, `burden:grew/joyJump`, `slough:steps`, `interact:focus/use/hold`, `satchel:closed`; core ones used:
+`waystone:read`, `burden:dropped`, `hope:changed`, `hud:toast/visible/chapterCard`, `sfx`, `music:*`.
 
 ## Story and UI (Phase 3) — `src/narrative/`, `src/ui/`, `content/dialogue/`, `content/promises.json`
 
@@ -1079,8 +1293,9 @@ ropes `stepPitch('rope_snap', i)`; dialogue emits `'audio:duck' {on}` around lin
   (`stats.drawCalls > 0`), zero console errors and zero page errors; runs check-assets via `child_process` and
   expects exit 0; puts a fake `.png` in `public/`, expects exit 1, then removes it (in `finally`).
 - `window.__pilgrim` (always present, read-only): `{ ready, engine, services, events, mode, modeReady, lab,
-  testWorld, restartMode() }` for tests; `ready` turns true after the first rendered frame, `modeReady` once the
-  mode is on screen; `lab` is the LabProbe (`?lab=1`), `testWorld` the TestWorld (`?chapter=test`).
+  testWorld, play, restartMode() }` for tests; `ready` turns true after the first rendered frame, `modeReady` once
+  the mode is on screen; `lab` is the LabProbe (`?lab=1`), `testWorld` the TestWorld (`?chapter=test`) and `play`
+  its PlaySession.
 - Phase 1 specs (`tests/support.ts` holds the shared console capture, frame waits and typings):
   - `tests/lab.spec.ts`: `?lab=1` boots with zero console errors/warnings; every recipe builds and its main mesh is
     exactly 1 draw call (2 only with a glow mesh), < 2500 triangles; every recipe runs all 22 clips and 8
@@ -1097,3 +1312,21 @@ ropes `stepPitch('rope_snap', i)`; dialogue emits `'audio:duck' {on}` around lin
   - Both save the Phase 1 report screenshots to `test-results/phase1/` (lab-lineup, lab-lineup-wide, lab-closeup,
     lab-crowd, test-world, test-world-wide, test-world-low). Playwright clears `test-results/` at the start of each
     run.
+- Phase 2 specs (`tests/play-support.ts` holds the session typings, the event log, waits on the simulated clock and
+  movement helpers):
+  - `tests/play.spec.ts`: keyboard, touch and gamepad each move, jump and read a waystone (autosave + toast), and
+    the bubble shows that device's glyph (E keycap, USE picture, X badge); burdened walk 2.0 m/s with no running;
+    the debug Cross drop plays 3 rope snaps, 2 bounces and the thoom (a Space tap in the slow-down never leaves him
+    kneeling in the air; the camera stays > 2.5 m from him, < 8 m/s, with someone in view), then free walk 3.4 m/s,
+    run 6 m/s and exactly three joy jumps; keyboard only, Tab keeps focus on "Click to play" and Enter starts play.
+  - `tests/play-world.spec.ts`: walking through a Promise takes it; the pit bonks back onto the Way (Hope -5,
+    toast); the low wall shows Climb with the jump keycap and climbing takes its Promise; the Slough slows and
+    sinks Christian and standing still raises stones that hold him up, and the mud's edge is no wall; Hope 0 shows
+    I SHALL ARISE and wakes him at the waystone with Hope 60, and a bonk that empties Hope keeps him locked under
+    it; restarting the session 3 times (once mid-Cross: no joy theme or 'burden:dropped' afterwards) keeps GPU
+    memory and `events.count()` flat.
+  - `tests/play-physics.spec.ts`: with the real CollisionWorld and controller, free jumps in place and drops from
+    40 heights land on a walkable box top; walking up a 0.22 m step the follow camera never dips.
+  - Both save report screenshots to `test-results/phase2/` (burdened-walk, interaction-bubble-keyboard/-touch/-pad,
+    touch-controls, cross-drop-ropes/-sack-rolling/-tomb/-stretch, joy-jump, free-run, bonk-stars,
+    slough-steps, hud-lantern-low-hope, arise-screen). Every test runs with a clean console.

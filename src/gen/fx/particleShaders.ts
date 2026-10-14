@@ -8,7 +8,11 @@
  *   aSize   x width, y height, z shape id (fx/particlePresets SHAPE), w additive share (0..1)
  *   aColor  rgb linear colour, a alpha
  *   aVel    xyz velocity, w streak stretch per m/s (> 0 aligns the quad with the on-screen velocity)
+ *
+ * The fragment includes the world-look chunk (fx/WorldFX.ts). Its uniforms are zero-safe, so the particles draw
+ * as before until `bindWorldFx(material)` hands them the shared uniforms (the Hope system does, per world).
  */
+import { WORLD_FX_PARS } from './WorldFX';
 
 export const PARTICLE_VERTEX = /* glsl */ `
 attribute vec4 aOffset; // xyz world position, w rotation
@@ -45,6 +49,7 @@ void main() {
 `;
 
 export const PARTICLE_FRAGMENT = /* glsl */ `
+${WORLD_FX_PARS}
 #ifdef USE_FOG
 uniform vec3 fogColor;
 #ifdef FOG_EXP2
@@ -114,7 +119,7 @@ void main() {
     fogged = mix(fogged, fogColor, f);
   #endif
   // Premultiplied: alpha-blended particles fade into the fog colour, additive ones fade out.
-  vec3 rgb = mix(fogged, gl_FragColor.rgb * (1.0 - f), vAdd);
+  vec3 rgb = worldFxGrade(mix(fogged, gl_FragColor.rgb * (1.0 - f), vAdd)); // low-Hope look (fx/WorldFX.ts)
   gl_FragColor = vec4(rgb * a, a * (1.0 - vAdd));
 }
 `;

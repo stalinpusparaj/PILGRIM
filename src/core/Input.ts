@@ -25,7 +25,8 @@ import {
   type Bindings,
 } from './InputActions';
 import { PointerLockGate } from '../ui/ClickToPlay';
-import { isControl, isFormField } from '../ui/dom';
+import { activatesControl, isFormField } from '../ui/dom';
+import { MOUSE_HABIT_PX, clampMousePx, lookStep } from './input-look';
 import { actionGlyph } from '../ui/Svg';
 import { TOUCH_ACTIONS, TOUCH_RUN_EDGE, TouchControls, type TouchControlId } from '../ui/Touch';
 
@@ -49,12 +50,6 @@ declare module './Events' {
 const PAD_SOURCES = PAD_BINDINGS.map(([button, actions]) => ({ button, actions, token: `p:${button}` }));
 const TOUCH_IDS = Object.keys(TOUCH_ACTIONS) as TouchControlId[];
 const TOUCH_DEADZONE = 0.12;
-/** Look speed before Settings.cameraSpeed: radians per mouse px, per touch px, per second of full stick. */
-const MOUSE_LOOK = 0.0022;
-const TOUCH_LOOK = 0.006;
-const PAD_LOOK = 3.2;
-/** Clamp for single pointer-lock movement events (some platforms report huge spikes). */
-const MAX_MOUSE_EVENT_PX = 250;
 /** Mouse events this soon after a touch are the browser's emulation of that touch. */
 const TOUCH_MOUSE_GUARD_MS = 1000;
 
@@ -81,6 +76,7 @@ export class Input {
   private lastTouchAt = -Infinity;
   private readonly thumb = { x: 0, y: 0 };
   private readonly mouseDelta = { x: 0, y: 0 };
+  private mouseLookPx = 0;
   private readonly touchDelta = { x: 0, y: 0 };
 
   /** `uiRoot` hosts the touch controls and the "Click to play" overlay (default `#ui`). */
@@ -117,6 +113,11 @@ export class Input {
 
   get pointerLocked(): boolean {
     return this.lock.locked;
+  }
+
+  /** True once the mouse has really turned the camera this session (keyboard-only players never do). */
+  get mouseLooks(): boolean {
+    return this.mouseLookPx >= MOUSE_HABIT_PX;
   }
 
   held(a: Action): boolean {
@@ -251,13 +252,7 @@ export class Input {
     const cameraSpeed = settings?.get('cameraSpeed') ?? 1;
     const speed = Number.isFinite(cameraSpeed) ? cameraSpeed : 1;
     const invert = settings?.get('invertY') ? -1 : 1;
-    const right = this.pad.right;
-    // Squared stick response: fine aim near the centre, full speed at the edge.
-    const padStep = PAD_LOOK * FIXED_DT * Math.hypot(right.x, right.y);
-    const x = this.mouseDelta.x * MOUSE_LOOK + this.touchDelta.x * TOUCH_LOOK + right.x * padStep;
-    const y = right.y * padStep - (this.mouseDelta.y * MOUSE_LOOK + this.touchDelta.y * TOUCH_LOOK);
-    this.look.x = x * speed;
-    this.look.y = y * speed * invert;
+    lookStep(this.look, this.mouseDelta, this.touchDelta, this.pad.right, speed, invert);
     this.mouseDelta.x = this.mouseDelta.y = 0;
     this.touchDelta.x = this.touchDelta.y = 0;
   }
@@ -352,8 +347,9 @@ export class Input {
     if (!e.code || isFormField(e.target)) return;
     this.setDevice('kbm');
     if (!this.codeMap.has(e.code)) return;
-    // Tab, Space, arrows (any bound key) must not move focus or scroll during gameplay.
-    if (this.gameplay && !e.ctrlKey && !e.metaKey && !e.altKey && !isControl(e.target)) e.preventDefault();
+    // Tab, Space, arrows (any bound key) must not move focus or scroll during gameplay; a focused button ("Click to
+    // play") keeps only Space / Enter, so Tab can never send focus out of the page.
+    if (this.gameplay && !e.ctrlKey && !e.metaKey && !e.altKey && !activatesControl(e)) e.preventDefault();
     if (e.repeat || e.metaKey) return; // macOS drops keyups while Cmd is held: never latch those
     this.setCode(e.code, true);
   };
@@ -377,8 +373,11 @@ export class Input {
 
   private readonly onMouseMove = (e: MouseEvent): void => {
     if (!this.lock.locked || (e.movementX === 0 && e.movementY === 0)) return;
-    this.mouseDelta.x += clamp(e.movementX, MAX_MOUSE_EVENT_PX);
-    this.mouseDelta.y += clamp(e.movementY, MAX_MOUSE_EVENT_PX);
+    const dx = clampMousePx(e.movementX);
+    const dy = clampMousePx(e.movementY);
+    this.mouseDelta.x += dx;
+    this.mouseDelta.y += dy;
+    this.mouseLookPx = Math.min(1e6, this.mouseLookPx + Math.abs(dx) + Math.abs(dy));
     this.setDevice('kbm');
   };
 
@@ -391,8 +390,4 @@ export class Input {
     this.mouseDelta.x = this.mouseDelta.y = 0;
     if (unexpected) this.actions.tap('pause'); // Esc or alt-tab released the mouse mid-game
   };
-}
-
-function clamp(v: number, limit: number): number {
-  return Math.min(limit, Math.max(-limit, v));
 }

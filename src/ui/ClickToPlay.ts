@@ -66,11 +66,20 @@ export class ClickToPlay {
 
     const activate = (): void => onActivate();
     const noMenu = (e: Event): void => e.preventDefault();
+    // Keyboard players: focus that left the overlay (the window lost focus, a click elsewhere) comes back to it.
+    const regain = (): void => {
+      const a = document.activeElement;
+      if (this.shown && (a === null || a === document.body)) el.focus({ preventScroll: true });
+    };
     el.addEventListener('click', activate);
     el.addEventListener('contextmenu', noMenu);
+    window.addEventListener('focus', regain);
+    document.addEventListener('keydown', regain, true);
     this.offs.push(
       () => el.removeEventListener('click', activate),
       () => el.removeEventListener('contextmenu', noMenu),
+      () => window.removeEventListener('focus', regain),
+      () => document.removeEventListener('keydown', regain, true),
       events.on('lang:changed', () => this.refreshLabel()),
     );
 

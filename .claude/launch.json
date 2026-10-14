@@ -1,6 +1,28 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "pilgrim-dev", "runtimeExecutable": "npx", "runtimeArgs": ["vite", "--port", "5320", "--strictPort"], "port": 5320 }
+    {
+      "name": "pilgrim-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "--port",
+        "5320",
+        "--strictPort"
+      ],
+      "port": 5320
+    },
+    {
+      "name": "pilgrim-story",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "/private/tmp/claude-501/-Users-stalin-Documents-pilgrim/e86d5790-d184-4784-850d-ab551edff3ee/scratchpad/wt-story",
+        "--port",
+        "5321",
+        "--strictPort"
+      ],
+      "port": 5321
+    }
   ]
 }

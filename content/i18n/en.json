@@ -37,6 +37,7 @@
   "ui.loading.line.6": "Counting sheep, but not falling asleep...",
   "ui.loading.line.7": "Planting little trees...",
   "ui.loading.line.8": "Teaching the birds a new song...",
+  "ui.loading.failed": "Oh dear, the world could not be built. Please reload the page.",
 
   "ui.hud.objective.followLight": "Follow the shining light",
   "ui.hud.objective.findSteps": "Find the steps",
@@ -50,6 +51,7 @@
   "ui.hud.objective.crossRiver": "Cross the river",
   "ui.hud.hope": "Hope",
   "ui.hud.hearts": "Hearts",
+  "ui.hud.heartsCount": "Hearts: {n} of {max}",
 
   "ui.verb.talk": "Talk",
   "ui.verb.read": "Read",

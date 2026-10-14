@@ -4,7 +4,7 @@
  */
 
 export type ParticlePreset =
-  'dust' | 'sparkle' | 'smoke' | 'ember' | 'rain' | 'zzz' | 'fire' | 'motes' | 'stars' | 'splash';
+  'dust' | 'sparkle' | 'smoke' | 'ember' | 'rain' | 'zzz' | 'fire' | 'motes' | 'stars' | 'splash' | 'breath';
 
 /** Shape ids drawn by the particle fragment shader (`particleShaders.ts`). */
 export const SHAPE = { puff: 0, star: 1, sparkle: 2, zed: 3, streak: 4 } as const;
@@ -108,6 +108,10 @@ export const PRESETS: Record<ParticlePreset, PresetDef> = {
   // Cartoon bonk stars circling a head (emit at the head; `spread` = orbit radius).
   stars: def({ shape: SHAPE.star, count: 5, life: [1.6, 1.9], size: [0.2, 0.26], speed: [4, 5], spread: 0.42,
     spin: 3, fadeIn: 0.08, colors: ['#FFD84A', '#FFE680'], orbit: true }),
+  // A small, quick puff of breath blown along `dir` (the Burden's "huff"); pass the walker's velocity as `vel`.
+  breath: def({ count: 3, life: [0.35, 0.6], size: [0.09, 0.15], grow: 2.2, speed: [1.1, 1.7], dir: [0, 0, 1],
+    cone: 0.22, flat: 0.4, up: 0.12, spread: 0.04, gravity: -0.1, drag: 2.4, alpha: 0.5, fadeIn: 0.04, lit: true,
+    colors: ['#F4F2EC', '#EAE6DD'] }),
   // Droplets thrown up and out of water or mud (`dir` = surface normal).
   splash: def({ count: 14, life: [0.45, 0.8], size: [0.07, 0.14], grow: 0.7, speed: [2, 3.8], cone: 0.45, up: 1.5,
     gravity: 11, drag: 0.4, stretch: 0.05, alpha: 0.85, fadeIn: 0.02, lit: true,

@@ -1,0 +1,319 @@
+/*
+ * In-game HUD (GDD 2.14), src/ui/HUD.ts. Uses the tokens from styles.css: warm toy palette, radii, font
+ * stacks, the --fs-* text scale (body.text-M/L/XL) and the safe areas. Passive to pointer input everywhere.
+ * Motion is one-shot keyframes and short transitions; body.reduce-motion (styles.css) makes them instant.
+ * One-shot animations come in identical -a / -b pairs: alternating the class replays them without a reflow.
+ * Layout keeps clear of the touch controls (src/ui/Touch.ts): satchel/pause icons 14 px + 72 px at the top
+ * corners, round buttons in the bottom-right corner.
+ */
+
+.hud {
+  position: absolute;
+  inset: 0;
+  z-index: 4; /* under the touch controls (5) */
+  pointer-events: none;
+  font-family: var(--font-body);
+  color: var(--ink-inverse);
+  --hud-touch-top: calc(14px + 72px + 12px); /* below the satchel / pause icons */
+  --hud-touch-side: calc(14px + 72px + 12px); /* beside them */
+}
+.hud * { pointer-events: none; }
+
+.hud-main {
+  position: absolute; inset: 0; transition: opacity var(--dur-slow) var(--ease-out), visibility 0s;
+}
+.hud-main.is-hidden {
+  opacity: 0; visibility: hidden;
+  transition: opacity var(--dur-slow) var(--ease-out), visibility 0s linear var(--dur-slow);
+}
+
+.hud-safe-probe {
+  position: absolute; inset: 0; visibility: hidden;
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+/* Shared chunky pieces: cream pill/panel with a solid offset shadow, and a round gold icon badge. */
+.hud-objective, .hud-toast, .hud-bubble__inner {
+  background: var(--panel); color: var(--ink); border: 3px solid var(--panel-edge); font-weight: 800;
+  box-shadow: 0 5px 0 var(--shadow-solid), 0 10px 22px var(--shadow);
+}
+.hud-objective__icon, .hud-toast__icon {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); box-shadow: inset 0 -3px 0 var(--accent-deep);
+}
+
+/* ---------------------------------------------------------------- objective (top-left) */
+
+.hud-objective {
+  position: absolute; top: calc(var(--gap) + var(--safe-top)); left: calc(var(--gap) + var(--safe-left));
+  max-width: min(440px, 28vw); display: flex; align-items: center; gap: 0.45em;
+  padding: 0.4em 0.95em 0.45em 0.45em; border-radius: var(--radius); font-size: var(--fs-large); line-height: 1.18;
+  text-wrap: balance; overflow-wrap: anywhere; opacity: 0; visibility: hidden;
+}
+.hud.is-touch .hud-objective {
+  top: calc(var(--hud-touch-top) + var(--safe-top)); left: calc(14px + var(--safe-left));
+  max-width: min(440px, 46vw);
+}
+.hud-objective__icon { width: 1.6em; height: 1.6em; }
+.hud-objective__icon svg { width: 66%; height: 66%; }
+.hud-objective.is-in-a { animation: hud-objective-in-a 0.62s var(--ease-bounce) both; }
+.hud-objective.is-in-b { animation: hud-objective-in-b 0.62s var(--ease-bounce) both; }
+.hud-objective.is-in-a .hud-objective__icon { animation: hud-wiggle-a 0.9s ease-out 0.25s both; }
+.hud-objective.is-in-b .hud-objective__icon { animation: hud-wiggle-b 0.9s ease-out 0.25s both; }
+.hud-objective.is-out { animation: hud-objective-out 0.6s var(--ease-out) both; }
+
+@keyframes hud-objective-in-a {
+  from { opacity: 0; visibility: visible; transform: translateX(-28px) scale(0.92); }
+  to { opacity: 1; visibility: visible; transform: none; }
+}
+@keyframes hud-objective-in-b {
+  from { opacity: 0; visibility: visible; transform: translateX(-28px) scale(0.92); }
+  to { opacity: 1; visibility: visible; transform: none; }
+}
+@keyframes hud-objective-out {
+  from { opacity: 1; visibility: visible; transform: none; }
+  to { opacity: 0; visibility: hidden; transform: translateY(-6px); }
+}
+@keyframes hud-wiggle-a {
+  0%, 100% { transform: none; } 25% { transform: rotate(-14deg) scale(1.12); }
+  55% { transform: rotate(10deg); } 80% { transform: rotate(-4deg); }
+}
+@keyframes hud-wiggle-b {
+  0%, 100% { transform: none; } 25% { transform: rotate(-14deg) scale(1.12); }
+  55% { transform: rotate(10deg); } 80% { transform: rotate(-4deg); }
+}
+
+/* ---------------------------------------------------------------- toasts (top centre) */
+
+.hud-toasts {
+  --hud-toast-w: min(520px, 38vw); position: absolute; top: calc(var(--gap) + var(--safe-top)); left: 50%;
+  width: var(--hud-toast-w); margin-left: calc(var(--hud-toast-w) / -2); display: flex; justify-content: center;
+}
+/* Touch: between the satchel and pause icons. */
+.hud.is-touch .hud-toasts {
+  --hud-toast-w: max(160px, min(560px, calc(100vw - 2 * var(--hud-touch-side) - var(--safe-left) - var(--safe-right))));
+  top: calc(14px + var(--safe-top));
+}
+.hud-toast {
+  display: inline-flex; align-items: center; gap: 0.5em; max-width: 100%; padding: 0.38em 1.05em 0.42em 0.42em;
+  border-color: var(--accent-deep); border-radius: 999px;
+  box-shadow: 0 5px 0 var(--accent-deep), 0 10px 22px var(--shadow); font-size: calc(var(--fs-body) * 1.08);
+  line-height: 1.2; text-align: center; text-wrap: balance; overflow-wrap: anywhere; opacity: 0;
+  visibility: hidden;
+}
+.hud-toast[data-tone="leaf"] { border-color: #3f7d3f; box-shadow: 0 5px 0 #3f7d3f, 0 10px 22px var(--shadow); }
+.hud-toast[data-tone="berry"] { border-color: #a63d33; box-shadow: 0 5px 0 #a63d33, 0 10px 22px var(--shadow); }
+.hud-toast__icon { width: 1.75em; height: 1.75em; }
+.hud-toast[data-tone="leaf"] .hud-toast__icon { background: var(--leaf); color: #fff; box-shadow: inset 0 -3px 0 #3f7d3f; }
+.hud-toast[data-tone="berry"] .hud-toast__icon { background: var(--berry); color: #fff; box-shadow: inset 0 -3px 0 #a63d33; }
+.hud-toast__icon svg { width: 64%; height: 64%; }
+.hud-toast.is-in { animation: hud-toast-in 0.5s var(--ease-bounce) both; }
+.hud-toast.is-out { animation: hud-toast-out 0.35s var(--ease-out) both; }
+
+@keyframes hud-toast-in {
+  from { opacity: 0; visibility: visible; transform: translateY(-22px) scale(0.9); }
+  to { opacity: 1; visibility: visible; transform: none; }
+}
+@keyframes hud-toast-out {
+  from { opacity: 1; visibility: visible; transform: none; }
+  to { opacity: 0; visibility: hidden; transform: translateY(-12px) scale(0.96); }
+}
+
+/* ---------------------------------------------------------------- Hope lantern + hearts (bottom-left) */
+
+.hud-lantern {
+  position: absolute; left: calc(var(--gap) + var(--safe-left)); bottom: calc(var(--gap) + var(--safe-bottom));
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; --flame: 1; --glow: 1;
+}
+.hud-lantern__body { position: relative; width: calc(var(--fs-body) * 3.8); aspect-ratio: 64 / 88; }
+.hud-lantern__halo {
+  position: absolute; left: 50%; top: 56%; width: 190%; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 214, 120, 0.62), rgba(255, 190, 80, 0.24) 55%,
+    rgba(255, 190, 80, 0));
+  opacity: var(--glow); transform: translate(-50%, -50%) scale(calc(0.5 + var(--glow) * 0.5));
+  transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
+}
+.hud-lantern__art { position: relative; width: 100%; height: 100%; }
+.hud-lantern__svg {
+  display: block; width: 100%; height: 100%; overflow: visible;
+  filter: drop-shadow(0 3px 0 rgba(28, 20, 34, 0.45));
+}
+.hud-lantern .l-glass { fill-opacity: calc(0.12 + var(--glow) * 0.6); transition: fill-opacity 0.9s var(--ease-out); }
+/* The flame grows around the wick with Hope (--flame) and flickers inside that. */
+.hud-lantern .l-size {
+  transform-origin: 32px 66px; transform: scale(var(--flame)); transition: transform 0.8s var(--ease-out);
+}
+.hud-lantern .l-flicker { transform-origin: 32px 66px; animation: hud-flicker 2.1s ease-in-out infinite; }
+.hud-lantern .l-flame-outer { fill: #ff9f3d; transition: fill 0.9s linear; }
+.hud-lantern .l-flame-inner { fill: #fff2c2; transition: fill 0.9s linear; }
+.hud-lantern.is-low .l-flame-outer { fill: #e8673a; }
+.hud-lantern.is-low .l-flame-inner { fill: #ffc27a; }
+.hud-lantern.is-low .l-flicker { animation-duration: 1.15s; }
+.hud-lantern.is-empty .l-flicker { animation: none; }
+
+/* A soft, irregular flicker; nothing flashes (GDD 2.15). */
+@keyframes hud-flicker {
+  0%, 100% { transform: scale(1, 1) rotate(0deg); } 18% { transform: scale(0.96, 1.05) rotate(-2deg); }
+  37% { transform: scale(1.03, 0.95) rotate(1.5deg); } 55% { transform: scale(0.98, 1.06) rotate(-1deg); }
+  74% { transform: scale(1.02, 0.97) rotate(2.5deg); }
+}
+
+/* Hope rises: a happy bounce and a brighter halo. Hope falls: a little shiver. (Individual transform
+   properties, so they stack on the transforms above.) */
+.hud-lantern__body.pulse-a { animation: hud-pulse-a 0.75s var(--ease-bounce); }
+.hud-lantern__body.pulse-b { animation: hud-pulse-b 0.75s var(--ease-bounce); }
+.hud-lantern__body.pulse-a .hud-lantern__halo { animation: hud-halo-a 1s var(--ease-out); }
+.hud-lantern__body.pulse-b .hud-lantern__halo { animation: hud-halo-b 1s var(--ease-out); }
+.hud-lantern__body.shiver-a .hud-lantern__art { animation: hud-shiver-a 0.6s linear; }
+.hud-lantern__body.shiver-b .hud-lantern__art { animation: hud-shiver-b 0.6s linear; }
+
+@keyframes hud-pulse-a { 0%, 100% { scale: 1; } 35% { scale: 1.16; } }
+@keyframes hud-pulse-b { 0%, 100% { scale: 1; } 35% { scale: 1.16; } }
+@keyframes hud-halo-a { 0%, 100% { scale: 1; } 30% { scale: 1.35; } }
+@keyframes hud-halo-b { 0%, 100% { scale: 1; } 30% { scale: 1.35; } }
+@keyframes hud-shiver-a {
+  0%, 100% { translate: 0 0; rotate: 0deg; } 15% { translate: -3px 0; rotate: -5deg; }
+  32% { translate: 3px 0; rotate: 4deg; } 50% { translate: -2px 0; rotate: -3deg; }
+  68% { translate: 2px 0; rotate: 2deg; } 84% { translate: -1px 0; rotate: -1deg; }
+}
+@keyframes hud-shiver-b {
+  0%, 100% { translate: 0 0; rotate: 0deg; } 15% { translate: -3px 0; rotate: -5deg; }
+  32% { translate: 3px 0; rotate: 4deg; } 50% { translate: -2px 0; rotate: -3deg; }
+  68% { translate: 2px 0; rotate: 2deg; } 84% { translate: -1px 0; rotate: -1deg; }
+}
+
+.hud-hearts {
+  display: flex; flex-wrap: wrap; gap: 4px; max-width: max(150px, calc(100vw - 340px)); padding: 4px 8px;
+  border-radius: 999px; background: rgba(43, 34, 53, 0.5);
+}
+.hud-heart { display: inline-block; width: calc(var(--fs-body) * 1.35); height: calc(var(--fs-body) * 1.3); }
+.hud-heart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.hud-heart .h-back { fill: rgba(28, 20, 34, 0.55); }
+.hud-heart .h-full, .hud-heart .h-half { fill: #ec4f5a; display: none; }
+.hud-heart .h-edge { fill: none; stroke: #fff8ea; stroke-width: 2.2; stroke-linejoin: round; }
+.hud-heart[data-state="full"] .h-full { display: inline; }
+.hud-heart[data-state="half"] .h-half { display: inline; }
+.hud-heart[data-state="empty"] .h-edge { stroke-dasharray: 3 2.4; } /* empty reads by shape, not only colour */
+.hud-heart.lost-a { animation: hud-heart-lost-a 0.5s var(--ease-out); }
+.hud-heart.lost-b { animation: hud-heart-lost-b 0.5s var(--ease-out); }
+.hud-heart.gain-a { animation: hud-heart-gain-a 0.5s var(--ease-bounce); }
+.hud-heart.gain-b { animation: hud-heart-gain-b 0.5s var(--ease-bounce); }
+@keyframes hud-heart-lost-a { 0% { scale: 1.3; rotate: -12deg; } 100% { scale: 1; rotate: 0deg; } }
+@keyframes hud-heart-lost-b { 0% { scale: 1.3; rotate: -12deg; } 100% { scale: 1; rotate: 0deg; } }
+@keyframes hud-heart-gain-a { 0% { scale: 0.6; } 100% { scale: 1; } }
+@keyframes hud-heart-gain-b { 0% { scale: 0.6; } 100% { scale: 1; } }
+
+/* ---------------------------------------------------------------- interaction bubble (world space) */
+
+.hud-bubble {
+  position: absolute; left: 0; top: 0; opacity: 0; visibility: hidden; will-change: transform;
+  transition: opacity 0.12s linear, visibility 0s linear 0.12s;
+}
+.hud-bubble.is-on { opacity: 1; visibility: visible; transition: opacity 0.12s linear; }
+.hud-bubble__inner {
+  position: relative; display: flex; align-items: center; gap: 0.45em; padding: 0.28em 0.95em 0.28em 0.3em;
+  border-radius: 999px; box-shadow: 0 4px 0 var(--shadow-solid), 0 8px 18px var(--shadow);
+  font-size: var(--fs-body); line-height: 1.1; white-space: nowrap; transform-origin: 50% 120%;
+}
+.hud-bubble__inner.pop-a { animation: hud-bubble-pop-a 0.32s var(--ease-bounce) both; }
+.hud-bubble__inner.pop-b { animation: hud-bubble-pop-b 0.32s var(--ease-bounce) both; }
+.hud-bubble__inner.press-a { animation: hud-bubble-press-a 0.28s var(--ease-out); }
+.hud-bubble__inner.press-b { animation: hud-bubble-press-b 0.28s var(--ease-out); }
+@keyframes hud-bubble-pop-a { from { transform: scale(0.6); } to { transform: none; } }
+@keyframes hud-bubble-pop-b { from { transform: scale(0.6); } to { transform: none; } }
+@keyframes hud-bubble-press-a { 0%, 100% { transform: none; } 40% { transform: scale(1.12, 0.88); } }
+@keyframes hud-bubble-press-b { 0%, 100% { transform: none; } 40% { transform: scale(1.12, 0.88); } }
+
+/* The tail's `left` is set by hud-bubble.ts so it points at the object even when the box is clamped. */
+.hud-bubble__tail {
+  position: absolute; bottom: -9px; left: 50%; width: 16px; height: 16px; margin-left: -8px;
+  background: var(--panel); border-right: 3px solid var(--panel-edge); border-bottom: 3px solid var(--panel-edge);
+  border-bottom-right-radius: 4px; transform: rotate(45deg);
+}
+.hud-bubble__key {
+  position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  min-width: 2.1em; height: 2.1em;
+}
+.hud-bubble__glyph { display: inline-flex; align-items: center; justify-content: center; }
+/* Touch: the USE / JUMP icon in a dark disc, like the round button it stands for. */
+.hud-bubble[data-device="touch"] .hud-bubble__key {
+  width: 2.1em; border-radius: 50%; background: rgba(28, 20, 34, 0.82); color: #fff8ea;
+}
+.hud-bubble[data-device="touch"] .hud-bubble__glyph svg { width: 1.3em; height: 1.3em; }
+.hud-bubble__ring {
+  position: absolute; inset: -0.3em; width: calc(100% + 0.6em); height: calc(100% + 0.6em);
+  transform: rotate(-90deg); overflow: visible; display: none;
+}
+.hud-bubble.is-hold .hud-bubble__ring { display: block; }
+.hud-bubble__ring circle { fill: none; stroke-width: 4.5; stroke-linecap: round; }
+.hud-bubble__ring .r-track { stroke: rgba(110, 84, 66, 0.25); }
+.hud-bubble__ring .r-fill {
+  stroke: var(--accent); stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset 0.08s linear;
+}
+.hud-bubble.is-full .hud-bubble__ring .r-fill { stroke: var(--leaf); }
+
+/* ---------------------------------------------------------------- chapter card (centre) */
+
+.hud-card {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: center;
+  padding: calc(var(--gap) + var(--safe-top)) calc(var(--gap) + var(--safe-right))
+    calc(var(--gap) + var(--safe-bottom)) calc(var(--gap) + var(--safe-left));
+  text-align: center; font-family: var(--font-title); color: var(--ink-inverse);
+  background: radial-gradient(70% 46% at 50% 50%, rgba(28, 20, 34, 0.58), rgba(28, 20, 34, 0.22) 60%,
+    rgba(28, 20, 34, 0) 100%);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 0 18px rgba(0, 0, 0, 0.5); opacity: 0; visibility: hidden;
+}
+.hud-card__number {
+  font-size: var(--fs-large);
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  margin-right: -0.42em; /* keep the tracked text optically centred */
+  color: var(--accent-light);
+}
+.hud-card__rule {
+  width: min(340px, 56vw); height: 3px; margin: 0.5em 0 0.55em; border-radius: 2px;
+  background: linear-gradient(90deg, rgba(242, 179, 61, 0), var(--accent) 22%, var(--accent-light) 50%,
+    var(--accent) 78%, rgba(242, 179, 61, 0));
+}
+.hud-card__title {
+  max-width: min(1000px, 92vw); font-size: min(var(--fs-huge), 7.2vw, 11vh); font-weight: 700; line-height: 1.1;
+  letter-spacing: 0.04em; text-wrap: balance; overflow-wrap: anywhere;
+}
+/* Tamil: no wide tracking (it would pull vowel signs away from their letters). */
+body.lang-ta .hud-card__number { letter-spacing: 0.06em; margin-right: 0; }
+body.lang-ta .hud-card__title { letter-spacing: 0; line-height: 1.35; }
+
+.hud-card.is-in-a { animation: hud-card-in-a 0.9s ease-out both; }
+.hud-card.is-in-b { animation: hud-card-in-b 0.9s ease-out both; }
+.hud-card.is-in-a .hud-card__number, .hud-card.is-in-b .hud-card__number {
+  animation: hud-card-number 1.6s var(--ease-out) both;
+}
+.hud-card.is-in-a .hud-card__rule, .hud-card.is-in-b .hud-card__rule {
+  animation: hud-card-rule 1.3s var(--ease-out) 0.15s both;
+}
+.hud-card.is-in-a .hud-card__title, .hud-card.is-in-b .hud-card__title {
+  animation: hud-card-title 1.2s var(--ease-out) 0.25s both;
+}
+body.lang-ta .hud-card.is-in-a .hud-card__number, body.lang-ta .hud-card.is-in-b .hud-card__number {
+  animation: hud-card-title 1.2s var(--ease-out) both;
+}
+/* After the entrance rules so it wins: the whole card fades out together. */
+.hud-card.is-out { animation: hud-card-out 0.8s ease-in both; }
+
+@keyframes hud-card-in-a { from { opacity: 0; visibility: visible; } to { opacity: 1; visibility: visible; } }
+@keyframes hud-card-in-b { from { opacity: 0; visibility: visible; } to { opacity: 1; visibility: visible; } }
+@keyframes hud-card-out { from { opacity: 1; visibility: visible; } to { opacity: 0; visibility: hidden; } }
+@keyframes hud-card-number {
+  from { opacity: 0; letter-spacing: 0.22em; margin-right: -0.22em; }
+  to { opacity: 1; letter-spacing: 0.42em; margin-right: -0.42em; }
+}
+@keyframes hud-card-rule { from { opacity: 0; transform: scaleX(0.1); } to { opacity: 1; transform: none; } }
+@keyframes hud-card-title { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* ---------------------------------------------------------------- short screens (phones in landscape) */
+
+@media (max-height: 480px) {
+  .hud-objective { font-size: var(--fs-body); }
+  .hud-lantern__body { width: calc(var(--fs-body) * 3.3); }
+}

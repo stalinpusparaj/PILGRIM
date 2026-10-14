@@ -3,6 +3,7 @@
  * programs low). Chapters never dispose these. Every material reads vertex colours; lit ones are flat-shaded.
  */
 import * as THREE from 'three';
+import { patchWorldFx } from './fx/WorldFX';
 
 export type MaterialKind =
   'lambert' | 'toon' | 'glow' | 'skinned' | 'path' | 'unlit' | 'unlitTransparent' | 'decal';
@@ -65,6 +66,8 @@ export function mat(kind: MaterialKind): THREE.Material {
   if (!m) {
     m = create(kind);
     m.name = `shared:${kind}`;
+    // Low-Hope look and the Ch IX lantern (fx/WorldFX.ts). Glows keep their warmth; decals are only shadow.
+    if (kind !== 'glow' && kind !== 'decal') patchWorldFx(m);
     cache.set(kind, m);
   }
   return m;

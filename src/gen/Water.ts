@@ -14,6 +14,7 @@
  */
 import * as THREE from 'three';
 import { boxGrid, circleGrid, smooth01 } from './fx/waterGrid';
+import { WORLD_FX_PARS, fxUniforms } from './fx/WorldFX';
 import { colorOf, lowSphere, paint } from './geom';
 import { mat } from './materials';
 import { PALETTES, mix, type Palette } from './palette';
@@ -103,6 +104,7 @@ uniform float uAlphaDeep;
 varying vec3 vWorld;
 varying float vDepth;
 #include <fog_pars_fragment>
+${WORLD_FX_PARS}
 const float RECIP_PI = 0.3183098862;
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 void main() {
@@ -129,6 +131,7 @@ void main() {
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
   #include <fog_fragment>
+  gl_FragColor.rgb = worldFx(gl_FragColor.rgb, vWorld); // low-Hope look + Ch IX lantern (fx/WorldFX.ts)
 }
 `;
 
@@ -191,6 +194,7 @@ export function createWater(o: WaterOptions): WaterBody {
     name: `water:${o.kind}`,
     uniforms: {
       ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),
+      ...fxUniforms, // shared references (not cloned)
       uTime,
       uAmp: { value: s.amp },
       uFreq: { value: s.freq },

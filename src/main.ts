@@ -26,6 +26,7 @@ import { h, uiRoot } from './ui/dom';
 import { startMode, type ModeKind, type ModeRunner } from './modes';
 import type { LabProbe } from './gen/lab-probe';
 import type { TestWorld } from './world/TestWorld';
+import type { PlaySession } from './world/PlaySession';
 
 // ------------------------------------------------------------------------------------------- runtime mode
 
@@ -88,6 +89,8 @@ export interface PilgrimHandle {
   readonly lab: LabProbe | null;
   /** `?chapter=test`: the test world (build time, progress log, rebuild). */
   readonly testWorld: TestWorld | null;
+  /** The running play session (Christian, camera, gameplay systems): `?chapter=test` today. */
+  readonly play: PlaySession | null;
   /** Disposes the current mode and starts it again (leak checks). Resolves when it is back on screen. */
   restartMode(): Promise<void>;
 }
@@ -131,6 +134,9 @@ Object.defineProperty(window, '__pilgrim', {
     },
     get testWorld() {
       return state.runner?.testWorld ?? null;
+    },
+    get play() {
+      return state.runner?.play ?? null;
     },
     restartMode: () => (state.restart ? state.restart() : Promise.reject(new Error('[main] not booted'))),
     services,

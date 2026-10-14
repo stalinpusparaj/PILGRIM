@@ -5,7 +5,8 @@
  *
  * - `dev`: the Phase 0 test scene (DevScene), the default until the title screen exists (Phase 3).
  * - `lab`: the Character Lab (`?lab=1`, dev builds or `?debug=1` only, like every URL param).
- * - `testWorld`: `?chapter=test`, the procedural-toolkit test world.
+ * - `testWorld`: `?chapter=test`, the test world, played (Phase 2): a PlaySession on content/levels/test.json
+ *   with the Phase 1 fly cameras kept on top (TestWorld; keys 1-3 / F1).
  *
  * The Lab and the test world are loaded as their own chunks (dynamic import), so the default mode does not ship
  * the Lab code.
@@ -17,6 +18,7 @@ import { settings } from './core/Settings';
 import { DevScene } from './world/dev/DevScene';
 import type { LabProbe } from './gen/lab-probe';
 import type { TestWorld } from './world/TestWorld';
+import type { PlaySession } from './world/PlaySession';
 
 export type ModeKind = 'dev' | 'lab' | 'testWorld';
 
@@ -30,6 +32,8 @@ export interface ModeRunner {
   readonly lab: LabProbe | null;
   /** `?chapter=test` only. */
   readonly testWorld: TestWorld | null;
+  /** The running play session (Christian, camera, systems), null while loading or in a non-play mode. */
+  readonly play: PlaySession | null;
   setFov(fov: number): void;
   dispose(): void;
 }
@@ -74,6 +78,7 @@ function devRunner(engine: Engine): ModeRunner {
     },
     lab: null,
     testWorld: null,
+    play: null,
     setFov: (fov) => scene.setFov(fov),
     dispose: () => {
       if (st.disposed) return;
@@ -109,6 +114,7 @@ function labRunner(engine: Engine): ModeRunner {
       return st.disposed ? null : probe;
     },
     testWorld: null,
+    play: null,
     setFov: () => {}, // the Lab camera keeps its own lens
     dispose: () => {
       if (st.disposed) return;
@@ -138,7 +144,10 @@ function testWorldRunner(engine: Engine): ModeRunner {
     get testWorld() {
       return st.disposed ? null : world;
     },
-    setFov: () => {}, // TestWorld follows settings:changed itself
+    get play() {
+      return st.disposed ? null : (world?.play ?? null);
+    },
+    setFov: () => {}, // the play session follows settings:changed itself
     dispose: () => {
       if (st.disposed) return;
       st.disposed = true;

@@ -128,6 +128,11 @@ export function isControl(target: EventTarget | null): boolean {
   return target instanceof Element && target.closest('button, a[href], [role="button"]') !== null;
 }
 
+/** Space or Enter on a focused control: its own activation. Every other key (Tab too) belongs to the game. */
+export function activatesControl(e: KeyboardEvent): boolean {
+  return (e.code === 'Space' || e.code === 'Enter' || e.code === 'NumpadEnter') && isControl(e.target);
+}
+
 /** Append `child` to `parent`; the returned function removes it again. */
 export function mount(parent: Node, child: Element): () => void {
   parent.appendChild(child);

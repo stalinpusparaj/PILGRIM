@@ -22,11 +22,18 @@ import type { Palette } from './palette';
 import { Rng } from './rng';
 
 export type { ParticlePreset } from './fx/particlePresets';
+export { ParticleEmitter } from './fx/ParticleEmitter';
 
 export interface EmitOptions {
   dir?: THREE.Vector3;
   color?: string;
   spread?: number;
+  /** How far velocities scatter from `dir`: 0 = straight along it, 1 = any way (default: the preset's). */
+  cone?: number;
+  /** Added to every particle's start velocity (m/s): puffs from someone walking keep up with them for a moment. */
+  vel?: THREE.Vector3;
+  /** Orbiting presets ('stars'): a live centre the ring follows while the caller keeps it updated (a head). */
+  follow?: THREE.Vector3;
 }
 
 const TAU = Math.PI * 2;
@@ -59,6 +66,8 @@ export class Particles {
   private readonly rot: Float32Array;
   private readonly spin: Float32Array;
   private readonly seed: Float32Array;
+  /** Live orbit centres (EmitOptions.follow), null when a ring stays where it was emitted. */
+  private readonly follow: Array<THREE.Vector3 | null>;
   private readonly depth: Float32Array;
   private readonly kind: Uint8Array;
   private readonly inList: Uint8Array;
@@ -85,6 +94,7 @@ export class Particles {
     this.rot = new Float32Array(n);
     this.spin = new Float32Array(n);
     this.seed = new Float32Array(n);
+    this.follow = new Array<THREE.Vector3 | null>(n).fill(null);
     this.depth = new Float32Array(n);
     this.kind = new Uint8Array(n);
     this.inList = new Uint8Array(n);
@@ -141,13 +151,15 @@ export class Particles {
   }
 
   /** Spawn a burst. `count` defaults per preset; `spread` is the spawn radius (orbit radius for 'stars',
-   *  field radius for 'rain'); `dir` steers the velocity; `color` replaces the preset colours. */
+   *  field radius for 'rain'); `dir` steers the velocity (`cone` how tightly); `color` replaces the preset colours. */
   emit(preset: ParticlePreset, pos: THREE.Vector3, count?: number, opts?: EmitOptions): void {
     if (this.disposed) return;
     const k = PRESET_INDEX[preset];
     const d = PRESET_DEFS[k]!;
     const total = Math.max(0, Math.min(this.max, Math.floor(count ?? d.count)));
     const spread = opts?.spread ?? d.spread;
+    const cone = Math.min(1, Math.max(0, opts?.cone ?? d.cone));
+    const carry = opts?.vel;
     const dir = tmpDir.fromArray(d.dir);
     if (opts?.dir && opts.dir.lengthSq() > 1e-8) dir.copy(opts.dir);
     dir.normalize();
@@ -179,6 +191,7 @@ export class Particles {
       this.col1[i3] = end ? end.r * lr : this.col0[i3]!;
       this.col1[i3 + 1] = end ? end.g * lg : this.col0[i3 + 1]!;
       this.col1[i3 + 2] = end ? end.b * lb : this.col0[i3 + 2]!;
+      this.follow[i] = d.orbit ? (opts?.follow ?? null) : null;
       if (d.orbit) {
         this.pos[i3] = pos.x;
         this.pos[i3 + 1] = pos.y;
@@ -197,17 +210,17 @@ export class Particles {
       const z = r.range(-1, 1);
       const t = r.range(0, TAU);
       const s = Math.sqrt(1 - z * z);
-      let vx = dir.x * (1 - d.cone) + s * Math.cos(t) * d.cone;
-      let vy = dir.y * (1 - d.cone) + z * d.cone;
-      let vz = dir.z * (1 - d.cone) + s * Math.sin(t) * d.cone;
+      let vx = dir.x * (1 - cone) + s * Math.cos(t) * cone;
+      let vy = dir.y * (1 - cone) + z * cone;
+      let vz = dir.z * (1 - cone) + s * Math.sin(t) * cone;
       const len = Math.hypot(vx, vy, vz) || 1;
       const speed = r.range(d.speed[0], d.speed[1]) / len;
       vx *= speed;
       vy *= speed * (1 - d.flat);
       vz *= speed;
-      this.vel[i3] = vx;
-      this.vel[i3 + 1] = vy + d.up;
-      this.vel[i3 + 2] = vz;
+      this.vel[i3] = vx + (carry?.x ?? 0);
+      this.vel[i3 + 1] = vy + d.up + (carry?.y ?? 0);
+      this.vel[i3 + 2] = vz + (carry?.z ?? 0);
     }
   }
 
@@ -240,6 +253,7 @@ export class Particles {
       if (age >= this.life[i]!) {
         this.inList[i] = 0;
         this.life[i] = 0;
+        this.follow[i] = null;
         this.free[this.freeLen++] = i;
         continue;
       }
@@ -305,9 +319,10 @@ export class Particles {
     if (d.orbit) {
       const ang = this.vel[i3]! + this.vel[i3 + 1]! * age;
       const rad = this.vel[i3 + 2]!;
-      o[k4] = this.pos[i3]! + Math.cos(ang) * rad;
-      o[k4 + 1] = this.pos[i3 + 1]! + Math.sin(ang * 2 + seed * TAU) * 0.06;
-      o[k4 + 2] = this.pos[i3 + 2]! + Math.sin(ang) * rad;
+      const f = this.follow[i];
+      o[k4] = (f ? f.x : this.pos[i3]!) + Math.cos(ang) * rad;
+      o[k4 + 1] = (f ? f.y : this.pos[i3 + 1]!) + Math.sin(ang * 2 + seed * TAU) * 0.06;
+      o[k4 + 2] = (f ? f.z : this.pos[i3 + 2]!) + Math.sin(ang) * rad;
       v[k4] = v[k4 + 1] = v[k4 + 2] = v[k4 + 3] = 0;
     } else {
       o[k4] = this.pos[i3]!;
@@ -356,6 +371,7 @@ export class Particles {
       const i = this.order[k]!;
       this.inList[i] = 0;
       this.life[i] = 0;
+      this.follow[i] = null;
       this.free[this.freeLen++] = i;
     }
     this.orderLen = 0;
@@ -370,26 +386,5 @@ export class Particles {
     this.object.dispose();
     this.geometry.dispose();
     this.material.dispose();
-  }
-}
-
-/** Continuous emission (a chimney, a campfire, a rain field around the camera): `rate` particles per second
- *  with the fractional remainder carried between frames. */
-export class ParticleEmitter {
-  private carry = 0;
-
-  constructor(
-    private readonly particles: Particles,
-    public preset: ParticlePreset,
-    public rate: number,
-    public opts?: EmitOptions,
-  ) {}
-
-  update(dt: number, pos: THREE.Vector3): void {
-    this.carry += Math.max(0, this.rate) * Math.min(Math.max(dt, 0), 0.25);
-    const n = Math.floor(this.carry);
-    if (n <= 0) return;
-    this.carry -= n;
-    this.particles.emit(this.preset, pos, n, this.opts);
   }
 }

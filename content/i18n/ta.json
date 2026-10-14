@@ -37,6 +37,7 @@
   "ui.loading.line.6": "ஆடுகளை எண்ணுகிறோம், ஆனால் தூங்க மாட்டோம்...",
   "ui.loading.line.7": "சின்னச் சின்ன மரங்களை நடுகிறோம்...",
   "ui.loading.line.8": "பறவைகளுக்குப் புதிய பாட்டுச் சொல்லித் தருகிறோம்...",
+  "ui.loading.failed": "அச்சச்சோ, உலகத்தைக் கட்ட முடியவில்லை. பக்கத்தை மீண்டும் திறந்து பாருங்கள்.",
 
   "ui.hud.objective.followLight": "மின்னும் ஒளியைப் பின்தொடர்",
   "ui.hud.objective.findSteps": "படிக்கற்களைக் கண்டுபிடி",
@@ -50,6 +51,7 @@
   "ui.hud.objective.crossRiver": "ஆற்றைக் கடந்து போ",
   "ui.hud.hope": "நம்பிக்கை",
   "ui.hud.hearts": "இதயங்கள்",
+  "ui.hud.heartsCount": "இதயங்கள்: {max}-இல் {n}",
 
   "ui.verb.talk": "பேசு",
   "ui.verb.read": "படி",

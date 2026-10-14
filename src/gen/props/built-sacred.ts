@@ -237,6 +237,8 @@ export function buildCross(rng: Rng, pal: Palette, p: PropParams): PropResult {
     );
   }
   P.cylCol(0, 0, 0.28, H + y0);
+  // The crossbeam too, so the follow camera's spring arm and the Cross's cameras keep out of it (y0 = its bottom).
+  P.boxCol(0, 0.01, 2.0, 0.28, 0.28, 0, y0 + H - 1.15 - 0.14);
   return P.done();
 }
 
