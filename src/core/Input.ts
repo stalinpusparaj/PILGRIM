@@ -63,6 +63,8 @@ export class Input {
   private readonly actions = new ActionTable();
   private readonly capture: KeyCapture;
   private readonly lock: PointerLockGate;
+  /** Pointer-lock fallback: a mouse button is held on the canvas, so movement turns the camera. */
+  private dragLook = false;
   private readonly pad: GamepadReader;
   private readonly offs: Array<() => void> = [];
   private bindings = cloneBindings(DEFAULT_BINDINGS);
@@ -362,17 +364,22 @@ export class Input {
   private readonly onCanvasMouseDown = (e: MouseEvent): void => {
     if (performance.now() - this.lastTouchAt < TOUCH_MOUSE_GUARD_MS) return;
     if (e.button === 1) e.preventDefault(); // no middle-click autoscroll
-    if (this.gameplay && this.lock.supported && !this.lock.locked) {
+    if (this.gameplay && this.lock.supported && !this.lock.locked && !this.lock.fallback) {
       this.lock.request(); // this click only grabs the mouse
       return;
     }
+    if (this.lock.fallback && this.gameplay) this.dragLook = true; // no lock: holding a button and moving looks
     this.setCode(`Mouse${e.button}`, true);
   };
 
-  private readonly onMouseUp = (e: MouseEvent): void => this.setCode(`Mouse${e.button}`, false);
+  private readonly onMouseUp = (e: MouseEvent): void => {
+    if (e.buttons === 0) this.dragLook = false;
+    this.setCode(`Mouse${e.button}`, false);
+  };
 
   private readonly onMouseMove = (e: MouseEvent): void => {
-    if (!this.lock.locked || (e.movementX === 0 && e.movementY === 0)) return;
+    const looking = this.lock.locked || (this.dragLook && this.gameplay && e.buttons !== 0);
+    if (!looking || (e.movementX === 0 && e.movementY === 0)) return;
     const dx = clampMousePx(e.movementX);
     const dy = clampMousePx(e.movementY);
     this.mouseDelta.x += dx;

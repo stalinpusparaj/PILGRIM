@@ -130,6 +130,10 @@ export class ClickToPlay {
 export class PointerLockGate {
   /** False on touch-only devices and browsers without the Pointer Lock API. */
   readonly supported: boolean;
+  /** True once the browser refused the lock twice (or never answered): no overlay, drag-to-look instead. */
+  get fallback(): boolean {
+    return this.useFallback;
+  }
 
   private readonly canvas: HTMLCanvasElement;
   private readonly uiRoot: HTMLElement;
@@ -142,6 +146,9 @@ export class PointerLockGate {
   private gameplay = false;
   private device: InputDevice = 'kbm';
   private disposed = false;
+  private failures = 0;
+  private useFallback = false;
+  private pendingTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** `onUnlock(unexpected)` runs when the lock is lost; unexpected = mid-gameplay via Esc or alt-tab. */
   constructor(canvas: HTMLCanvasElement, uiRoot: HTMLElement, onUnlock: (unexpected: boolean) => void) {
@@ -176,7 +183,12 @@ export class PointerLockGate {
   /** Needs a user gesture; a refused request leaves the overlay up and the next click retries. */
   request(): void {
     if (this.disposed || !this.supported || this.isLocked || this.pending || this.device === 'touch') return;
+    if (this.useFallback) return;
     this.pending = true;
+    // Some browsers (WebViews, embedded frames, Safari in places) neither grant nor fire an error.
+    this.pendingTimer = setTimeout(() => {
+      if (this.pending) this.onError();
+    }, PENDING_TIMEOUT_MS);
     try {
       const request: unknown = this.canvas.requestPointerLock();
       if (request instanceof Promise) request.catch(this.onError);
@@ -200,7 +212,13 @@ export class PointerLockGate {
     this.release();
     this.overlay?.dispose();
     this.overlay = null;
+    this.clearPendingTimer();
     if (!this.pending) this.detach();
+  }
+
+  private clearPendingTimer(): void {
+    if (this.pendingTimer !== null) clearTimeout(this.pendingTimer);
+    this.pendingTimer = null;
   }
 
   private detach(): void {
@@ -209,7 +227,8 @@ export class PointerLockGate {
 
   private refresh(): void {
     if (this.disposed) return;
-    const show = this.gameplay && this.supported && !this.isLocked && !this.pending && this.device === 'kbm';
+    const show =
+      this.gameplay && this.supported && !this.useFallback && !this.isLocked && !this.pending && this.device === 'kbm';
     if (show) {
       this.overlay ??= new ClickToPlay(this.uiRoot, () => this.request());
       this.overlay.show('kbm');
@@ -220,7 +239,9 @@ export class PointerLockGate {
 
   private readonly onChange = (): void => {
     this.pending = false;
+    this.clearPendingTimer();
     const locked = document.pointerLockElement === this.canvas;
+    if (locked) this.failures = 0;
     if (this.disposed) {
       // A request made before dispose() settled: give the mouse back and stop listening.
       if (locked) document.exitPointerLock();
@@ -240,10 +261,32 @@ export class PointerLockGate {
   };
 
   private readonly onError = (): void => {
+    if (!this.pending) return;
     this.pending = false;
-    if (this.disposed) this.detach();
-    else this.refresh();
+    this.clearPendingTimer();
+    if (this.disposed) {
+      this.detach();
+      return;
+    }
+    // Refused twice in a row: the browser will not give us the mouse (WebView, iframe, policy). Play without it.
+    if (++this.failures >= MAX_FAILURES && !this.useFallback) {
+      this.useFallback = true;
+      events.emit('input:lockFallback');
+    }
+    this.refresh();
   };
+}
+
+/** Pointer lock requests that get no answer in this time count as refused. */
+const PENDING_TIMEOUT_MS = 1500;
+/** Refusals in a row before giving up on the lock (the first can be the browser's "too soon after Esc"). */
+const MAX_FAILURES = 2;
+
+declare module '../core/Events' {
+  interface EventMap {
+    /** The browser refused pointer lock for good; mouse look now works by dragging on the canvas. */
+    'input:lockFallback': void;
+  }
 }
 
 function media(query: string): boolean {

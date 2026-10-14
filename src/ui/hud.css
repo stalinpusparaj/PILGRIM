@@ -46,13 +46,15 @@
 
 .hud-objective {
   position: absolute; top: calc(var(--gap) + var(--safe-top)); left: calc(var(--gap) + var(--safe-left));
-  max-width: min(440px, 28vw); display: flex; align-items: center; gap: 0.45em;
+  /* 28vw on a wide screen, never narrower than ~260px (or the screen) so words never break per letter. */
+  max-width: clamp(min(260px, 100vw - 32px), 28vw, 440px); display: flex; align-items: center; gap: 0.45em;
   padding: 0.4em 0.95em 0.45em 0.45em; border-radius: var(--radius); font-size: var(--fs-large); line-height: 1.18;
   text-wrap: balance; overflow-wrap: anywhere; opacity: 0; visibility: hidden;
 }
 .hud.is-touch .hud-objective {
   top: calc(var(--hud-touch-top) + var(--safe-top)); left: calc(14px + var(--safe-left));
-  max-width: min(440px, 46vw);
+  /* It sits below the corner icons, so on a phone it may use nearly the full width (no per-letter wrapping). */
+  max-width: min(440px, calc(100vw - 28px - var(--safe-left) - var(--safe-right)));
 }
 .hud-objective__icon { width: 1.6em; height: 1.6em; }
 .hud-objective__icon svg { width: 66%; height: 66%; }
