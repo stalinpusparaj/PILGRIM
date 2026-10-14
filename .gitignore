@@ -16,3 +16,6 @@ public/manifest.webmanifest
 public/.generated-icons.json
 # Left behind only if the smoke test is killed mid-run.
 public/__probe.png
+
+# Local Netlify folder
+.netlify

@@ -1,0 +1,108 @@
+package com.pilgrim.narrowway
+
+import android.annotation.SuppressLint
+import android.graphics.Color
+import android.os.Bundle
+import android.view.KeyEvent
+import android.view.View
+import android.view.WindowManager
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.webkit.WebViewAssetLoader
+
+/**
+ * PILGRIM: THE NARROW WAY, Android shell. The built web game (dist/, copied into assets at build time) is
+ * served to one full-screen WebView from https://appassets.androidplatform.net/ so it runs on a secure
+ * origin (IndexedDB saves, Web Audio) with no network and no data leaving the device.
+ */
+class MainActivity : ComponentActivity() {
+    private lateinit var webView: WebView
+
+    @SuppressLint("SetJavaScriptEnabled")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        webView = WebView(this).apply {
+            setBackgroundColor(Color.parseColor("#2B2235"))
+            setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                databaseEnabled = true
+                mediaPlaybackRequiresUserGesture = false
+                allowFileAccess = false
+                allowContentAccess = false
+                setSupportZoom(false)
+                builtInZoomControls = false
+                displayZoomControls = false
+                useWideViewPort = true
+                loadWithOverviewMode = true
+                textZoom = 100
+            }
+            isHorizontalScrollBarEnabled = false
+            isVerticalScrollBarEnabled = false
+            overScrollMode = View.OVER_SCROLL_NEVER
+        }
+        val loader = WebViewAssetLoader.Builder()
+            .addPathHandler("/", WebViewAssetLoader.AssetsPathHandler(this))
+            .build()
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
+                loader.shouldInterceptRequest(request.url)
+
+            // Nothing in the game leaves the device; any other navigation is dropped.
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
+                request.url.host != APP_HOST
+        }
+        if (BuildConfig.DEBUG) WebView.setWebContentsDebuggingEnabled(true)
+        setContentView(webView)
+        hideSystemBars()
+
+        if (savedInstanceState == null) webView.loadUrl("https://$APP_HOST/index.html")
+        else webView.restoreState(savedInstanceState)
+
+        // Back = the game's Pause (Esc). The game owns the flow; the app only closes from its own menus.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                webView.evaluateJavascript(
+                    "document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}));" +
+                        "document.dispatchEvent(new KeyboardEvent('keyup',{key:'Escape',code:'Escape',bubbles:true}));",
+                    null,
+                )
+            }
+        })
+    }
+
+    private fun hideSystemBars() {
+        WindowInsetsControllerCompat(window, webView).apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideSystemBars()
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean =
+        if (keyCode == KeyEvent.KEYCODE_BACK) { onBackPressedDispatcher.onBackPressed(); true } else super.onKeyDown(keyCode, event)
+
+    override fun onResume() { super.onResume(); webView.onResume(); webView.resumeTimers() }
+    override fun onPause() { webView.pauseTimers(); webView.onPause(); super.onPause() }
+    override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); webView.saveState(outState) }
+    override fun onDestroy() { webView.destroy(); super.onDestroy() }
+
+    private companion object {
+        const val APP_HOST = "appassets.androidplatform.net"
+    }
+}
