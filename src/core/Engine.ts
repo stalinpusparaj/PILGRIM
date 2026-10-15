@@ -204,6 +204,10 @@ export class Engine {
 
   // ---------------------------------------------------------------- frame
 
+  private adaptiveScale = 1;
+  private adaptiveTime = 0;
+  private adaptiveFrames = 0;
+
   private renderFrame(frameDt: number): void {
     if (this.disposed) return;
     if (this.sizeDirty || window.devicePixelRatio !== this.devicePixelRatioSeen) this.applySize();
@@ -215,11 +219,33 @@ export class Engine {
 
     this.renderer.render(this.scene, this.camera);
     this.updateStats(frameDt);
+    this.adaptMobileResolution(frameDt);
 
     if (!this.readyEmitted) {
       this.readyEmitted = true;
       events.emit('engine:ready');
     }
+  }
+
+  /** Slow windows avoid oscillation. Only auto-quality mobile play changes resolution. */
+  private adaptMobileResolution(dt: number): void {
+    if (!this.coarse || this.loop.paused || services.tryGet('quality')?.setting !== 'auto') {
+      this.adaptiveTime = 0;
+      this.adaptiveFrames = 0;
+      if (this.adaptiveScale !== 1) { this.adaptiveScale = 1; this.sizeDirty = true; }
+      return;
+    }
+    if (dt <= 0 || dt > 0.1) return;
+    this.adaptiveTime += dt;
+    this.adaptiveFrames++;
+    if (this.adaptiveTime < 5) return;
+    const fps = this.adaptiveFrames / this.adaptiveTime;
+    const target = this.loop.frameCap;
+    const next = fps < target * 0.78 ? Math.max(0.65, this.adaptiveScale - 0.1)
+      : fps > target * 0.96 ? Math.min(1, this.adaptiveScale + 0.05) : this.adaptiveScale;
+    if (next !== this.adaptiveScale) { this.adaptiveScale = next; this.sizeDirty = true; }
+    this.adaptiveTime = 0;
+    this.adaptiveFrames = 0;
   }
 
   private updateStats(frameDt: number): void {
@@ -256,7 +282,7 @@ export class Engine {
   private targetPixelRatio(): number {
     const device = window.devicePixelRatio > 0 ? window.devicePixelRatio : 1;
     const cap = Math.min(this.coarse ? DPR_CAP_MOBILE : DPR_CAP_DESKTOP, this.quality.pixelRatioCap);
-    return Math.min(device, cap) * this.resolutionScale;
+    return Math.min(device, cap) * this.resolutionScale * this.adaptiveScale;
   }
 
   /** Matches the drawing buffer to the canvas CSS size × capped pixel ratio. Emits 'resize' on CSS size change. */

@@ -16,6 +16,7 @@
  *   loop.add({ update: (dt) => hud.update(dt), render: () => hud.render(engine.camera) });
  */
 import './hud.css';
+import { Journey } from './Journey';
 import type * as THREE from 'three';
 import { events } from '../core/Events';
 import { services } from '../core/Services';
@@ -54,6 +55,7 @@ export class HUD {
   private readonly toasts = new ToastQueue();
   private readonly objective = new ObjectiveLine();
   private readonly card = new ChapterCard();
+  private readonly journey = new Journey();
   private readonly layout: HudLayout;
   private readonly offs: Array<() => void> = [];
   private shown = true;
@@ -70,6 +72,7 @@ export class HUD {
       this.lantern.el,
       this.bubble.el,
       this.guide.el,
+      this.journey.el,
     );
     this.root = h('div', { className: 'hud ui-passive' }, this.main, this.card.el);
     parent.appendChild(this.root);
@@ -107,6 +110,7 @@ export class HUD {
     this.toasts.update(dt, this.shown);
     this.objective.update(dt, this.shown && !this.card.active);
     this.bubble.update(dt);
+    this.journey.update(dt, this.shown && !this.card.active);
   }
 
   /** Every rendered frame: projects the interaction bubble with the camera that draws the scene. */
@@ -132,6 +136,7 @@ export class HUD {
     if (this.disposed) return;
     this.disposed = true;
     for (const off of this.offs.splice(0)) off();
+    this.journey.dispose();
     this.toasts.clear();
     this.card.clear();
     this.root.remove();

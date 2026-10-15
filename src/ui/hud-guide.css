@@ -30,3 +30,10 @@
   0%, 100% { transform: translateY(-3px) scale(1); }
   50% { transform: translateY(3px) scale(1.08); }
 }
+
+body.reduce-motion .hud-guide svg { animation:none; }
+@media(prefers-reduced-motion:reduce) { .hud-guide svg { animation:none; } }
+
+/* A solid backing keeps the turn arrow readable over terrain and sky. */
+.hud-guide__arrow { background:rgba(33,40,37,.9); border:2px solid #ffdc8d; border-radius:50%; box-sizing:border-box; }
+.hud-guide__arrow svg { width:36px; height:36px; margin:8px; filter:drop-shadow(0 2px 1px #0006); }

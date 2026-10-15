@@ -4,7 +4,7 @@
  * drew (GDD 2.3). Projection math as hud-bubble.ts. Rules (so it helps without nagging):
  *   - a chapter goal (custom): always shown until within ARRIVE_M;
  *   - the default "Way ahead": the edge arrow whenever the Way ahead is off screen (facing the wrong way), the
- *     chevron only when the player has stood still for IDLE_HINT_S or has wandered off the Way.
+ *     chevron stays visible while moving so the route remains readable.
  */
 import type * as THREE from 'three';
 import * as THREE_ from 'three';
@@ -14,7 +14,7 @@ import type { AvoidRects } from './hud-layout';
 
 const NEAR = 0.05;
 const ARRIVE_M = 2.5;
-const IDLE_HINT_S = 5;
+
 const EDGE = 18;
 const CHEVRON_LIFT = 1.9; // m above the target's ground point
 
@@ -50,13 +50,19 @@ export class GuideMarker {
     camera.updateMatrixWorld();
     this.view.copy(camera.matrixWorld).invert();
     const p = this.p.set(t.x, t.y + CHEVRON_LIFT, t.z).applyMatrix4(this.view);
+    // Reserve room for the objective, coaching panel and touch buttons.
+    const minX = avoid.left + EDGE + 28;
+    const maxX = Math.max(minX, vw - avoid.right - EDGE - 28);
+    const minY = Math.min(vh * 0.4, avoid.top + (avoid.touch ? 170 : 110));
+    const maxY = Math.max(minY, vh - avoid.bottom - (avoid.touch ? 230 : 140));
     const behind = p.z > -NEAR;
     if (!behind) p.applyMatrix4(camera.projectionMatrix);
-    const onScreen = !behind && p.x > -0.92 && p.x < 0.92 && p.y > -0.85 && p.y < 0.85;
+    const screenX = (p.x * 0.5 + 0.5) * vw;
+    const screenY = (-p.y * 0.5 + 0.5) * vh;
+    const onScreen = !behind && screenX >= minX && screenX <= maxX && screenY >= minY && screenY <= maxY;
 
     if (onScreen) {
-      const wanted = s.custom || s.offWay || s.idle >= IDLE_HINT_S;
-      if (!wanted) return this.show('none');
+      // Keep the route readable while moving.
       this.show('chevron');
       const x = (p.x * 0.5 + 0.5) * vw;
       const y = (-p.y * 0.5 + 0.5) * vh;
@@ -64,29 +70,16 @@ export class GuideMarker {
       return;
     }
 
-    // Off screen: direction in screen space. In view space +x is right and +y is up; screen y points down, so
-    // dy = -y. Behind the camera the projection mirrors the picture, so the arrow flips both axes: after a turn
-    // round, the goal sits on the side the arrow points to.
-    let dx: number;
-    let dy: number;
-    if (behind) {
-      dx = -p.x;
-      dy = p.y;
-      if (Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3) dy = 1;
-    } else {
-      dx = p.x;
-      dy = -p.y;
-    }
+    // Work in screen pixels, not normalized coordinates (which distort direction on wide screens).
+    // Behind-camera targets are still in view space: keep left/right intact and point down to turn back.
+    let dx = behind ? p.x * camera.projectionMatrix.elements[0] * vw : p.x * vw;
+    let dy = behind ? Math.max(Math.abs(p.z), NEAR) * camera.projectionMatrix.elements[5] * vh : -p.y * vh;
     const len = Math.hypot(dx, dy) || 1;
     dx /= len;
     dy /= len;
     // Slide the arrow to the edge of the safe rectangle along that direction, from the screen centre.
-    const cx = vw * 0.5;
-    const cy = vh * 0.5;
-    const minX = avoid.left + EDGE + 28;
-    const maxX = vw - avoid.right - EDGE - 28;
-    const minY = avoid.top + EDGE + 28;
-    const maxY = vh - avoid.bottom - EDGE - 28;
+    const cx = Math.min(maxX, Math.max(minX, vw * 0.5));
+    const cy = Math.min(maxY, Math.max(minY, vh * 0.5));
     const tx = dx > 0 ? (maxX - cx) / dx : dx < 0 ? (minX - cx) / dx : Infinity;
     const ty = dy > 0 ? (maxY - cy) / dy : dy < 0 ? (minY - cy) / dy : Infinity;
     const k = Math.max(0, Math.min(tx, ty));

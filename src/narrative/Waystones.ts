@@ -169,11 +169,11 @@ export class Waystones {
 
     this.state.setWaystone(id);
     if (this.state.hope < HOPE_WAYSTONE_FLOOR) this.state.setHope(HOPE_WAYSTONE_FLOOR);
+    events.emit('waystone:read', { id }); // Include discovery rewards in this checkpoint snapshot.
     this.save?.write('auto', this.state.snapshot()).catch((err: unknown) => {
       console.warn('[waystones] autosave failed', err);
     });
     events.emit('hud:toast', { key: 'ui.toast.rollUpdated' });
-    events.emit('waystone:read', { id });
   }
 
   update(dt: number): void {

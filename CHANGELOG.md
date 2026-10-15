@@ -2,6 +2,15 @@
 
 All notable changes to PILGRIM: THE NARROW WAY. Dates are release dates.
 
+## 0.1.2 — 2026-10-15 — Guided journey (versionCode 3)
+
+- Persistent objectives, always-visible route guidance, contextual control coaching, and a discoverable mobile joystick.
+- Journey points for Promises, friends, checkpoints, and chapter completion, with saved duplicate prevention and animated rewards.
+- Correct behind-camera arrow direction, aspect-ratio-aware angles, improved contrast, and HUD-safe placement.
+- Adaptive rendering resolution for mobile Auto quality and reduced-motion support for guide and reward animations.
+- English and Tamil guidance; checkpoint saves include discovery rewards.
+- Browser regression coverage for rewards, objectives, mobile controls, and arrow direction.
+
 ## 0.1.1 — 2026-10-14 — Guide (versionCode 2)
 
 - **Guide.** The HUD now points to the next goal: a bobbing golden chevron over it when on screen, an arrow on the screen edge when not. Chapters aim it at the Book, Christiana, the town gate, Evangelist, Help, Mr. Worldly Wiseman and the Wicket Gate; otherwise it points along the Way and stays quiet while you are moving on it. Detours are never pointed at.

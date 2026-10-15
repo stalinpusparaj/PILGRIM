@@ -82,7 +82,7 @@ export class ObjectiveLine {
     if (!allowed) {
       if (this.shown) {
         this.hide();
-        this.pending = this.remaining > 0;
+        this.pending = this.key !== null;
       }
       return;
     }
@@ -92,8 +92,7 @@ export class ObjectiveLine {
       this.showNow();
     }
     if (!this.shown) return;
-    this.remaining -= dt;
-    if (this.remaining <= 0) this.hide();
+    // Keep the current task visible until it changes; menus and chapter cards still hide it.
   }
 
   /** Alternates two identical entrance animations, so the entrance replays even with no frame in between. */
