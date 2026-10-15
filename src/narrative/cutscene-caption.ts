@@ -15,7 +15,7 @@ import type { Character } from '../gen/CharacterFactory';
 import { DEFAULT_CPS, revealTimes } from '../audio/babblePlan';
 import type { Mood } from '../audio/types';
 import { h } from '../ui/dom';
-import { babbleBurst } from '../ui/typewriter';
+import { DEFAULT_VOICE } from './dialogue-voice';
 import type { SayHandle } from './cutscene-types';
 import { textCps } from './dialogue-voice';
 
@@ -35,7 +35,7 @@ interface Line {
   holdEnd: number;
   elapsed: number;
   shown: number;
-  babble: { stop(): void } | null;
+  babble: { stop(): void; done: Promise<void> } | null;
 }
 
 export class Captions {
@@ -85,12 +85,21 @@ export class Captions {
       const audio = services.tryGet('audio');
       if (audio) {
         const p = speaker.root.position;
-        line.babble = audio.babble.speak(speaker.recipe.voice, cps > 0 ? text : babbleBurst(text), {
-          mood: opts.mood ?? 'neutral',
-          cps: cps > 0 ? cps : DEFAULT_CPS,
-          at: [p.x, p.y + speaker.height * 0.9, p.z],
-        });
+        line.babble =
+          audio.spoken.speak(text, speaker.recipe.voice, 1) ??
+          audio.babble.speak(speaker.recipe.voice, text, {
+            mood: opts.mood ?? 'neutral',
+            cps: cps > 0 ? cps : DEFAULT_CPS,
+            at: [p.x, p.y + speaker.height * 0.9, p.z],
+          });
       }
+    }
+    if (!speaker) line.babble = services.tryGet('audio')?.spoken.speak(text, DEFAULT_VOICE, 1) ?? null;
+    if (line.babble) {
+      line.holdEnd = Infinity;
+      void line.babble.done.then(() => {
+        line.holdEnd = Math.max(line.revealEnd + HOLD_MIN, line.elapsed + HOLD_MIN);
+      });
     }
     if (!this.ducked) {
       this.ducked = true;

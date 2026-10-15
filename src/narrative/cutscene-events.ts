@@ -68,7 +68,18 @@ function bubbleSay(): SayFn | null {
   const bubbles = services.tryGet('bubbles');
   if (!bubbles) return null;
   return (actor: Character, key: string, opts: { mood?: Mood; params?: Record<string, string | number> }) => {
-    const handle = bubbles.speak(actor, key, { mood: opts.mood, params: opts.params });
+    const handle = bubbles.speak(actor, key, {
+      mood: opts.mood,
+      params: opts.params,
+      speak: (text, cps, at) => {
+        const audio = services.tryGet('audio');
+        return (
+          audio?.spoken.speak(text, actor.recipe.voice, 1) ??
+          audio?.babble.speak(actor.recipe.voice, text, { mood: opts.mood, cps, at }) ??
+          null
+        );
+      },
+    });
     return { close: () => handle.dismiss() };
   };
 }

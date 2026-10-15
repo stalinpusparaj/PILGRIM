@@ -286,11 +286,20 @@ export class SpeechBubbles {
   private onRevealed(b: Bubble): void {
     if (b.leaving || b.revealed) return;
     b.revealed = true;
-    if (b.opts.talk !== false) b.character.setTalking(false);
+    if (b.opts.talk !== false)
+      void (b.tw?.voiceDone ?? Promise.resolve()).then(() => {
+        if (!b.leaving) b.character.setTalking(false);
+      });
     b.opts.onRevealed?.();
     const hold = b.opts.durationSec ?? BARK_HOLD_SEC;
-    if (Number.isFinite(hold))
-      b.timer = window.setTimeout(() => this.dismiss(b, LEAVE_MS), Math.max(0, hold) * 1000);
+    if (Number.isFinite(hold)) {
+      const schedule = (): void => {
+        if (!b.leaving)
+          b.timer = window.setTimeout(() => this.dismiss(b, LEAVE_MS), Math.max(0, hold) * 1000);
+      };
+      if (b.opts.durationSec === undefined) void (b.tw?.voiceDone ?? Promise.resolve()).then(schedule);
+      else schedule();
+    }
   }
 
   private dismiss(b: Bubble, ms: number): void {

@@ -196,7 +196,25 @@ export function gameplayRows(): RowSpec[] {
 
 export function audioRows(): RowSpec[] {
   const keys: VolumeKey[] = ['volMaster', 'volMusic', 'volVoices', 'volEffects', 'volAmbience'];
-  return keys.map((key) => slider(key, SETTINGS_RANGES.volume, 0.05, percent));
+  return [
+    choice(
+      'voiceMode',
+      (['spoken', 'classic', 'off'] as const).map(
+        (v) => [v, t(`ui.settings.option.voiceMode.${v}`)] as const,
+      ),
+    ),
+    choice('voiceGuidance', [
+      [true, t('ui.settings.option.on')],
+      [false, t('ui.settings.option.off')],
+    ]),
+    {
+      kind: 'note',
+      id: 'voiceInfo',
+      label: t('ui.settings.label.voiceMode'),
+      text: () => t('ui.settings.voiceInfo'),
+    },
+    ...keys.map((key) => slider(key, SETTINGS_RANGES.volume, 0.05, percent)),
+  ];
 }
 
 export function textRows(): RowSpec[] {

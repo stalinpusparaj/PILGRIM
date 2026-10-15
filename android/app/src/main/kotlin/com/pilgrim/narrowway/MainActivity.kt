@@ -24,6 +24,7 @@ import androidx.webkit.WebViewAssetLoader
  */
 class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
+    private lateinit var voice: OfflineVoice
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +53,8 @@ class MainActivity : ComponentActivity() {
             isVerticalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
         }
+        voice = OfflineVoice(this, webView)
+        webView.addJavascriptInterface(voice, "PilgrimVoice")
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
@@ -61,7 +64,7 @@ class MainActivity : ComponentActivity() {
 
             // Nothing in the game leaves the device; any other navigation is dropped.
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
-                request.url.host != APP_HOST
+                request.url.scheme != "https" || request.url.host != APP_HOST
         }
         if (BuildConfig.DEBUG) WebView.setWebContentsDebuggingEnabled(true)
         setContentView(webView)
@@ -98,9 +101,9 @@ class MainActivity : ComponentActivity() {
         if (keyCode == KeyEvent.KEYCODE_BACK) { onBackPressedDispatcher.onBackPressed(); true } else super.onKeyDown(keyCode, event)
 
     override fun onResume() { super.onResume(); webView.onResume(); webView.resumeTimers() }
-    override fun onPause() { webView.pauseTimers(); webView.onPause(); super.onPause() }
+    override fun onPause() { voice.pause(); webView.pauseTimers(); webView.onPause(); super.onPause() }
     override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); webView.saveState(outState) }
-    override fun onDestroy() { webView.destroy(); super.onDestroy() }
+    override fun onDestroy() { voice.shutdown(); webView.removeJavascriptInterface("PilgrimVoice"); webView.destroy(); super.onDestroy() }
 
     private companion object {
         const val APP_HOST = "appassets.androidplatform.net"

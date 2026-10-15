@@ -1,0 +1,1 @@
+Spoken character dialogue, story narration and optional objective guidance using installed offline device voices. Choose Spoken, Classic or Off in Audio settings. Includes improved camera follow, navigation, movement speed settings and saved journey progress.

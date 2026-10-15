@@ -85,9 +85,12 @@ export function exprFor(expr: Expression | undefined, mood: Mood | undefined): E
 export function speakLine(line: DialogueLine, text: string, at?: Vec3): SpeechHandle | null {
   const audio = services.tryGet('audio');
   if (!audio) return null;
-  return audio.babble.speak(line.voice, text, {
-    mood: line.mood,
-    cps: line.cps > 0 ? line.cps : DEFAULT_CPS,
-    at,
-  });
+  return (
+    audio.spoken.speak(text, line.voice, 1) ??
+    audio.babble.speak(line.voice, text, {
+      mood: line.mood,
+      cps: line.cps > 0 ? line.cps : DEFAULT_CPS,
+      at,
+    })
+  );
 }

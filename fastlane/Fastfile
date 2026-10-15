@@ -1,0 +1,68 @@
+default_platform(:android)
+opt_out_usage
+skip_docs
+
+PROJECT_ROOT = File.expand_path("..", __dir__)
+ANDROID_ROOT = File.join(PROJECT_ROOT, "android")
+BUNDLE_PATH = File.join(ANDROID_ROOT, "app/build/outputs/bundle/release/app-release.aab")
+
+# Never embed credentials in this file or copy them into the repository.
+def play_release_key
+  value = ENV["SUPPLY_JSON_KEY"].to_s.strip
+  value = ENV["GOOGLE_APPLICATION_CREDENTIALS"].to_s.strip if value.empty?
+  local_key = File.join(PROJECT_ROOT, "secrets", "play-service-account.json")
+  value = local_key if value.empty? && File.file?(local_key)
+  UI.user_error!("Set SUPPLY_JSON_KEY to the local path of your Google Play service-account JSON key.") if value.empty?
+  key = File.expand_path(value)
+  UI.user_error!("The Google Play credential file does not exist.") unless File.file?(key)
+  key
+end
+
+platform :android do
+  before_all do
+    ENV["FASTLANE_SKIP_UPDATE_CHECK"] = "1"
+    bundled_jdk = "/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+    ENV["JAVA_HOME"] = bundled_jdk if ENV["JAVA_HOME"].to_s.empty? && File.directory?(bundled_jdk)
+  end
+
+  desc "Build the signed Android App Bundle, including the latest web game"
+  lane :build do
+    gradle(task: ":app:bundleRelease", project_dir: ANDROID_ROOT, gradle_path: "./gradlew")
+    UI.user_error!("Signed App Bundle was not produced.") unless File.file?(BUNDLE_PATH)
+    UI.success("Signed App Bundle: #{BUNDLE_PATH}")
+  end
+
+  desc "Check Google Play production access without uploading a release"
+  lane :status do
+    codes = google_play_track_version_codes(
+      package_name: "com.pilgrim.narrowway", track: "production", json_key: play_release_key
+    )
+    UI.success("Production version codes: #{codes.join(', ')}")
+  end
+
+  desc "Build and submit the latest game to Google Play production (or track:internal/alpha/beta)"
+  lane :release do |options|
+    key = play_release_key
+    target = (options[:track] || "production").to_s
+    UI.user_error!("Unsupported release track.") unless %w[production internal alpha beta].include?(target)
+    # Verify authentication before spending time building or attempting an upload.
+    google_play_track_version_codes(package_name: "com.pilgrim.narrowway", track: target, json_key: key)
+    build
+    upload_to_play_store(
+      package_name: "com.pilgrim.narrowway",
+      json_key: key,
+      aab: BUNDLE_PATH,
+      skip_upload_apk: true,
+      track: target,
+      release_status: "completed",
+      metadata_path: File.join(PROJECT_ROOT, "fastlane/metadata/android"),
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: false,
+      changes_not_sent_for_review: false,
+      rescue_changes_not_sent_for_review: false
+    )
+    UI.success("Release submitted to Google Play. Availability depends on Google's review and publishing status.")
+  end
+end

@@ -686,5 +686,11 @@
   "ui.settings.hint.movementPace": "Choose your walking and running pace. Applies immediately and is remembered.",
   "ui.settings.label.saveStatus": "Progress saving",
   "ui.settings.hint.saveStatus": "Autosaves safe gameplay every 5 seconds and when you pause or leave. Choose Continue next time.",
-  "ui.settings.hint.saveTemporary": "Storage is unavailable. Progress may only last for this session."
+  "ui.settings.hint.saveTemporary": "Storage is unavailable. Progress may only last for this session.",
+  "ui.settings.label.voiceMode": "Character voices",
+  "ui.settings.label.voiceGuidance": "Spoken objectives",
+  "ui.settings.option.voiceMode.spoken": "Spoken",
+  "ui.settings.option.voiceMode.classic": "Classic",
+  "ui.settings.option.voiceMode.off": "Off",
+  "ui.settings.voiceInfo": "Uses installed offline device voices. If a voice is unavailable for your language, classic sounds play. Captions stay visible. These are synthesized voices."
 }

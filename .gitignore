@@ -23,3 +23,13 @@ public/__probe.png
 # Android build artifacts
 release/*.aab
 release/*.apk
+
+# Fastlane generated files and local publisher credentials
+fastlane/report.xml
+fastlane/README.generated.md
+fastlane/.env*
+fastlane/*credentials*.json
+fastlane/*service-account*.json
+
+# Local credentials supplied for publishing
+secrets/

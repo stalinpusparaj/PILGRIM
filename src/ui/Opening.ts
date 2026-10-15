@@ -67,6 +67,8 @@ export class Opening {
   private lines: HTMLParagraphElement[] = [];
   private schedule: number[] = [];
   private shownLines = 0;
+  private voicePending = false;
+  private narrationVoice: { stop(): void; done: Promise<void> } | null = null;
   private narrationEnd = 0;
   private time = 0;
   private lastFrame = 0;
@@ -156,6 +158,7 @@ export class Opening {
   }
 
   dispose(): void {
+    this.narrationVoice?.stop();
     if (this.disposed) return;
     this.disposed = true;
     cancelAnimationFrame(this.raf);
@@ -188,17 +191,41 @@ export class Opening {
     this.time += dt;
     this.pollPad();
     while (this.shownLines < this.lines.length && this.time >= this.schedule[this.shownLines]!) {
+      if (this.voicePending) break;
       this.lines[this.shownLines]!.classList.add('is-in');
       this.reveal(this.lines[this.shownLines]!);
+      this.narrationVoice?.stop();
+      this.narrationVoice =
+        services
+          .tryGet('audio')
+          ?.spoken.speak(
+            this.lines[this.shownLines]!.textContent ?? '',
+            { pitch: 1, speed: 1, wave: 'triangle', vowel: 0.5 },
+            1,
+          ) ?? null;
+      const narration = this.narrationVoice;
+      if (narration) {
+        this.voicePending = true;
+        void narration.done.then(() => {
+          if (this.narrationVoice === narration) this.voicePending = false;
+        });
+      }
       this.shownLines++;
     }
-    if (this.state === 'narration' && this.time >= this.narrationEnd)
+    if (
+      this.state === 'narration' &&
+      this.time >= this.narrationEnd &&
+      this.shownLines === this.lines.length &&
+      !this.voicePending
+    )
       this.setPhase(this.isReady ? 'prompt' : 'waiting');
     this.drawHold(now);
   };
 
   private revealAll(): void {
     for (const line of this.lines) line.classList.add('is-in', 'is-instant');
+    this.narrationVoice?.stop();
+    this.voicePending = false;
     this.shownLines = this.lines.length;
     this.time = Math.max(this.time, this.narrationEnd);
   }

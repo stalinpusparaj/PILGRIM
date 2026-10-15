@@ -32,6 +32,8 @@ export interface SettingsData {
   volMaster: number;
   volMusic: number;
   volVoices: number;
+  voiceMode: 'spoken' | 'classic' | 'off';
+  voiceGuidance: boolean;
   volEffects: number;
   volAmbience: number;
   textSize: 'M' | 'L' | 'XL';
@@ -72,6 +74,8 @@ export const DEFAULT_SETTINGS: SettingsData = deepFreeze({
   volMaster: 1,
   volMusic: 0.8,
   volVoices: 0.8,
+  voiceMode: 'spoken',
+  voiceGuidance: true,
   volEffects: 0.8,
   volAmbience: 0.8,
   textSize: 'M',
@@ -158,6 +162,8 @@ const VALIDATORS: { [K in keyof SettingsData]: Validator<SettingsData[K]> } = {
   volMaster: VOLUME,
   volMusic: VOLUME,
   volVoices: VOLUME,
+  voiceMode: oneOf({ spoken: true, classic: true, off: true }),
+  voiceGuidance: bool,
   volEffects: VOLUME,
   volAmbience: VOLUME,
   textSize: oneOf({ M: true, L: true, XL: true }),

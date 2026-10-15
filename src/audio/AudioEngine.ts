@@ -19,6 +19,7 @@
 import type { Camera } from 'three';
 import { SONGS } from '../../content/music/themes';
 import { events } from '../core/Events';
+import { SpokenVoice } from './SpokenVoice';
 import { services } from '../core/Services';
 import { hashString } from '../gen/rng';
 import { Ambience } from './Ambience';
@@ -95,6 +96,7 @@ const LISTEN_OPTS: AddEventListenerOptions = { capture: true, passive: true };
 const RESOLVED: Promise<void> = Promise.resolve();
 
 export class AudioEngine {
+  readonly spoken = new SpokenVoice();
   readonly music: MusicControl;
   readonly ambience: AmbienceControl;
   private readonly ambProxy: AmbienceProxy;
@@ -136,7 +138,8 @@ export class AudioEngine {
     // Not ready (before the unlock, no Web Audio, Babble failed): silent, but `done` still takes the line's length.
     this.babble = {
       speak: (voice, text, o) =>
-        this.isReady && this.voices ? this.voices.speak(voice, text, o) : silentLine(voice, text, o),
+        this.spoken.speak(text, voice) ??
+        (this.isReady && this.voices ? this.voices.speak(voice, text, o) : silentLine(voice, text, o)),
     };
     this.subscribe();
     if (typeof window !== 'undefined' && opts.autoUnlock !== false) {
@@ -214,6 +217,7 @@ export class AudioEngine {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.spoken.dispose();
     for (const off of this.offs) off();
     this.offs.length = 0;
     if (typeof window !== 'undefined') {

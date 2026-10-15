@@ -2,6 +2,26 @@
 
 All notable changes to PILGRIM: THE NARROW WAY. Dates are release dates.
 
+## 0.1.4 — 2026-10-15 — Spoken journey (versionCode 5)
+
+- Offline spoken dialogue, story narration and optional objective guidance, with persistent voice settings.
+- Native Android speech support and English/Tamil offline voice selection with classic dialogue fallback.
+
+## 0.1.3 — 2026-10-15 — Follow, explore and resume (versionCode 4)
+
+- Higher follow camera, automatic recentering on every device, and subtle cinematic travel and turn motion.
+- North-up minimap with current position, facing, movement, route, checkpoints and goal; corrected navigation arrows.
+- Remembered Slow, Normal and Fast movement settings, with Normal as the gentler default.
+- Safe-position autosaves every five seconds and on pause/exit, a synchronous storage backup, and chapter state restoration for Continue.
+- Fastlane build and Google Play release lanes; release credentials remain outside the repository.
+
+### Offline spoken voices
+
+- Added installed device speech for character dialogue, story captions, opening narration, and optional objective announcements. English and Tamil select only offline voices, with classic character sounds as the dialogue fallback.
+- Added persistent Spoken / Classic / Off voice settings and a spoken-objectives toggle. Voices respect volume, skip, pause, language changes and backgrounding; dialogue takes priority over ambient chatter.
+- Android uses its native offline TTS engine; no audio downloads or network permission. Voice quality and language availability depend on installed device voices.
+- Verified the web build, voice/navigation regressions and Android debug compilation. Listening and voice availability still need verification on physical devices.
+
 ## 0.1.2 — 2026-10-15 — Guided journey (versionCode 3)
 
 - Persistent objectives, always-visible route guidance, contextual control coaching, and a discoverable mobile joystick.

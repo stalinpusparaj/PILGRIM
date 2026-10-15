@@ -52,7 +52,7 @@ export interface TypewriterOptions {
    * Plays the voice for `text` at `cps` instead of the built-in babble (e.g. the runner's speakLine()). Return
    * null for silence. `text` is the line, or the short burst at instant speed.
    */
-  speak?: (text: string, cps: number, at?: Vec3) => { stop(): void } | null;
+  speak?: (text: string, cps: number, at?: Vec3) => { stop(): void; done?: Promise<void> } | null;
   /** Language for grapheme segmentation (default: the document language). */
   lang?: string;
   /** Called whenever more text shows: code units shown, total code units. */
@@ -66,6 +66,7 @@ export interface TypewriterController {
   cancel(): void;
   /** Resolves when the whole line is shown (naturally, skipped or cancelled). Never rejects. */
   readonly done: Promise<void>;
+  readonly voiceDone: Promise<void>;
   /** True once the whole line is shown. */
   readonly finished: boolean;
   /** Seconds the full reveal takes at this speed (0 for instant). */
@@ -140,7 +141,11 @@ export function babbleBurst(text: string, letters = INSTANT_BURST_LETTERS): stri
 
 // ------------------------------------------------------------------------------------------ typewriter
 
-function startVoice(text: string, cps: number, opts: TypewriterOptions): { stop(): void } | null {
+function startVoice(
+  text: string,
+  cps: number,
+  opts: TypewriterOptions,
+): { stop(): void; done?: Promise<void> } | null {
   if (!text) return null;
   if (opts.speak) return opts.speak(text, cps, opts.at);
   const voice = opts.voice ?? null;
@@ -182,7 +187,11 @@ export function typewrite(el: HTMLElement, text: string, opts: TypewriterOptions
   let cluster = 0; // clusters shown
   let shownUnits = -1;
 
-  const handle = startVoice(cps === null ? babbleBurst(text) : text, cps ?? DEFAULT_CPS, opts);
+  const handle = startVoice(
+    cps === null && services.tryGet('settings')?.get('voiceMode') === 'classic' ? babbleBurst(text) : text,
+    cps ?? DEFAULT_CPS,
+    opts,
+  );
 
   const render = (units: number): void => {
     if (units === shownUnits) return;
@@ -238,6 +247,7 @@ export function typewrite(el: HTMLElement, text: string, opts: TypewriterOptions
       finish();
     },
     done,
+    voiceDone: handle?.done ?? Promise.resolve(),
     get finished(): boolean {
       return finished;
     },
