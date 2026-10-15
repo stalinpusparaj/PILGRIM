@@ -1,13 +1,13 @@
 /**
  * GDD 2.5 follow camera; implements CameraRig and registers itself as the 'cameraRig' service.
  *
- * - Third person, 4.5 m behind and 2.2 m above the feet, looking slightly down at chest height (toy diorama).
+ * - Third person, 5.8 m behind and 3.6 m above the feet, looking slightly down at chest height (toy diorama).
  * - Orbit from Input.look (mouse, right stick, right-half touch drag; Settings cameraSpeed and invertY are
  *   applied inside Input), pitch clamped. Spring arm against terrain and colliders (camera-arm.ts).
- * - Auto-camera (Settings autoCamera: 'default' = on for touch and keyboard-only players, else 'on'/'off'): while
- *   walking, gently swings behind the heading; never while the player is looking around (resumes 1.5 s after),
- *   and not while walking towards the camera (that would spin the view with camera-relative steering).
- * - Burdened: 0.2 m lower, a slow sway, heavy-step thuds, and an over-the-shoulder offset so Christian's head
+ * - Auto-camera (Settings autoCamera: 'default' follows on every device, with explicit 'on'/'off'): gently
+ *   recenters behind the heading, even after stopping; never while the player is looking around (resumes 0.9 s after),
+ *   and pauses re-centering while reverse movement is held (that would spin the view with camera-relative steering).
+ * - Burdened: a small shoulder offset, a slow sway, heavy-step thuds, and an over-the-shoulder offset so Christian's head
  *   peeks out beside the huge sack (camera-config.ts). Reduce camera motion removes sway, thuds and FOV kick.
  * - Fixed-step update(dt) moves the rig's parameters; render(alpha) rebuilds the camera around the player's
  *   interpolated renderPosition from interpolated parameters, so it is jitter-free at any refresh rate.
@@ -30,7 +30,7 @@ import { CameraBlend } from './camera-blend';
 import { CAMERA, CAMERA_TUNE } from './camera-config';
 import { installCameraDebug } from './camera-debug';
 import { CameraFeel } from './camera-feel';
-import { CamParams, clamp, damp, dampAngle, smoothstep, wrapAngle } from './camera-math';
+import { CamParams, clamp, damp, smoothstep, wrapAngle } from './camera-math';
 import type { CameraCollision, CameraTarget } from './camera-types';
 
 export type { CameraCollision, CameraTarget } from './camera-types';
@@ -186,6 +186,7 @@ export class FollowCamera implements CameraRig {
       this.keepLineClear(pivot, cam.position);
       keepAboveGround(this.col, cam.position);
     }
+    cam.rotateZ(v.roll);
     if (Math.abs(cam.fov - fov) > 1e-3) {
       cam.fov = fov;
       cam.updateProjectionMatrix();
@@ -232,15 +233,17 @@ export class FollowCamera implements CameraRig {
     const a = CAMERA.auto;
     if (autoCameraOn() && this.lookIdle >= a.idle) {
       const p = this.player;
-      const v = p.controller.velocity;
       const f = p.forward;
-      const speed = Math.hypot(v.x, v.z);
-      const go = smoothstep(a.minSpeed, a.fullSpeed, speed);
-      if (go > 0 && f.x * f.x + f.z * f.z > 1e-6) {
+      // Do not rotate the camera under held reverse input: with camera-relative steering that
+      // would continually rotate the player's desired heading. Recenter as soon as it is released.
+      const reversing = (input?.move.y ?? 0) < -0.2;
+      if (!looking && !reversing && f.x * f.x + f.z * f.z > 1e-6) {
         const heading = Math.atan2(f.x, f.z);
-        const k = go * headingWeight(Math.abs(wrapAngle(heading - this.yawAngle)));
-        if (k > 0) this.yawAngle = dampAngle(this.yawAngle, heading, a.yawRate * k, dt);
-        this.pitchOff = damp(this.pitchOff, 0, a.pitchRate * go, dt);
+        const diff = wrapAngle(heading - this.yawAngle);
+        const step = diff * (1 - Math.exp(-a.yawRate * dt));
+        const cap = a.maxYawRate * dt;
+        this.yawAngle = wrapAngle(this.yawAngle + clamp(step, -cap, cap));
+        this.pitchOff = damp(this.pitchOff, 0, a.pitchRate, dt);
       }
     }
     const p0 = this.basePitch();
@@ -249,12 +252,12 @@ export class FollowCamera implements CameraRig {
 
   /** Camera height above the feet for the current burden (GDD 2.5: 0.2 m lower burdened), minus the pivot. */
   private armRise(): number {
-    return CAMERA.height - CAMERA.burdenDrop * this.feel.burden01 - CAMERA.pivotHeight;
+    return CAMERA.height + this.feel.travelLift - CAMERA.burdenDrop * this.feel.burden01 - CAMERA.pivotHeight;
   }
 
   /** Arm elevation of the GDD framing (no player pitch input). */
   private basePitch(): number {
-    return Math.atan2(this.armRise(), CAMERA.back);
+    return Math.atan2(this.armRise(), CAMERA.back + this.feel.pullBack);
   }
 
   /** Spring arm + collision at the simulated player position; writes `cur`. dt 0 = settle at once. */
@@ -279,8 +282,9 @@ export class FollowCamera implements CameraRig {
     this.pivot.z += rz * shoulder;
 
     const rise = this.armRise();
-    const arm = Math.hypot(CAMERA.back, rise);
-    const pitch = clamp(Math.atan2(rise, CAMERA.back) + this.pitchOff, CAMERA.pitchMin, CAMERA.pitchMax);
+    const back = CAMERA.back + feel.pullBack;
+    const arm = Math.hypot(back, rise);
+    const pitch = clamp(Math.atan2(rise, back) + this.pitchOff, CAMERA.pitchMin, CAMERA.pitchMax);
     const cp = Math.cos(pitch);
     this.armVec.set(
       -sinY * cp * arm + rx * feel.sway,
@@ -302,7 +306,8 @@ export class FollowCamera implements CameraRig {
     c.arm = arm;
     c.armFrac = frac;
     c.lift = lift;
-    c.ahead = CAMERA.ahead * close;
+    c.ahead = CAMERA.lookAhead + feel.travelAhead + CAMERA.ahead * close;
+    c.roll = feel.roll * (1 - close);
     c.shoulder = shoulder;
     c.lookH = CAMERA_TUNE.lookFree + (CAMERA_TUNE.lookBurdened - CAMERA_TUNE.lookFree) * b;
     c.sway = feel.sway;
@@ -310,15 +315,6 @@ export class FollowCamera implements CameraRig {
     c.lag = feel.smoothY - pos.y;
     c.fovKick = feel.fovKick;
   }
-}
-
-/** Auto-camera strength by how far the heading is from the view: full ahead, weak sideways, none towards us. */
-function headingWeight(diff: number): number {
-  const a = CAMERA.auto;
-  if (diff <= a.full) return 1;
-  if (diff <= a.weak) return 1 + (a.weakScale - 1) * ((diff - a.full) / (a.weak - a.full));
-  if (diff >= a.none) return 0;
-  return a.weakScale * (1 - (diff - a.weak) / (a.none - a.weak));
 }
 
 function readFov(): number {
@@ -333,13 +329,11 @@ function reduceMotion(): boolean {
 }
 
 /**
- * GDD 2.5: 'default' = on for touch players, off for gamepad and mouse players. Keyboard-only players (GDD 2.15) have
- * no look keys, so it stays on for keyboard/mouse until the mouse has really turned the camera.
+ * Default follows on every input device. Explicit Off preserves fully manual camera control.
  */
 function autoCameraOn(): boolean {
   const mode = services.tryGet('settings')?.data.autoCamera ?? 'default';
   if (mode === 'on') return true;
   if (mode === 'off') return false;
-  const input = services.tryGet('input');
-  return input?.device === 'touch' || (input?.device === 'kbm' && !input.mouseLooks);
+  return true; // Default follows on mouse, touch and gamepad; manual look temporarily takes priority.
 }

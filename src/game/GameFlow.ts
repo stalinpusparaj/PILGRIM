@@ -1,6 +1,6 @@
 /**
  * The top-level flow of the game (service 'flow'): boot → title → (START) a new game and the opening → Chapter I;
- * CONTINUE → the latest save at its chapter and waystone; CHAPTERS → any chapter reached; pause during play;
+ * CONTINUE → the latest save at its chapter and recent safe position (or waystone); CHAPTERS → any chapter reached; pause during play;
  * after Chapter IV the demo end (VITE_DEMO builds); after Chapter XIII "THE END OF THE DREAM", the Epilogue,
  * the sequel card "CHRISTIANA'S JOURNEY - coming soon" (GDD 2.10), then the credits and back to the title.
  *
@@ -205,7 +205,7 @@ export class GameFlow {
     this.overlay = { id: 'opening', dispose: () => opening.dispose() };
   }
 
-  /** CONTINUE: the latest save, at its chapter and waystone. */
+  /** CONTINUE: load the latest save; ChapterManager restores its safe position or checkpoint. */
   async continueGame(latest?: SaveData | null): Promise<void> {
     const gen = this.gen;
     const data = latest ?? (await services.get('save').latest());
@@ -266,7 +266,7 @@ export class GameFlow {
     this.pauser.resume();
   }
 
-  /** Pause > TITLE SCREEN (confirmed): the chapter goes; the next CONTINUE starts from the last waystone save. */
+  /** Pause > TITLE SCREEN (confirmed): the chapter goes; the next CONTINUE restores the latest safe autosave. */
   quitToTitle(): void {
     this.showTitle();
   }

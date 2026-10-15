@@ -2,10 +2,10 @@
  * The Slough of Despond (GDD 2.10 Ch II, 2.7.5): sinking in the mud and the hidden stepping stones.
  *
  * Sinking, inside any zone of type 'slough' (Zones) and not on a risen stone:
- * - walking sinks Christian slowly, running (or trying to: holding run while the Burden forbids it) sinks him
+ * - walking sinks Christian slowly, running (or trying to: holding the fast-walk control) sinks him
  *   faster, standing still keeps him where he is; a hop pulls him up a little. At most 0.55 m (SINK_MAX). Out
  *   of the mud or on the stones he rises back out.
- * - he moves at half speed (`player.speedScale` 0.5, eased in and out); risen stones give full speed back.
+ * - he moves at 65% speed (`player.speedScale` 0.65, eased in and out); risen stones give full speed back.
  * - the sink is drawn by lowering the character's root bone (never animated, so this does not depend on system
  *   order), eased per rendered frame; footfalls throw mud splashes, each deeper step gives a 'mud_slurp' and
  *   so does pulling free.
@@ -56,7 +56,7 @@ const SINK = {
   still: 0.25,
   runSpeed: 2.3,
   /** Player speed multiplier in the mud and how fast it eases (per second). */
-  speedScale: 0.5,
+  speedScale: 0.65,
   speedEase: 2.5,
   /** A 'mud_slurp' each time the sink passes another band this deep (m), at most every `slurpGap` s. */
   slurpBand: 0.15,
@@ -204,7 +204,7 @@ export class Slough {
     if (this.sinkable) {
       if (!grounded) this.depthM = Math.max(0, this.depthM - SINK.air * dt);
       else if (speed > SINK.still) {
-        // Running sinks faster; so does trying to (holding run while the Burden forbids it).
+        // Running sinks faster; so does trying to (holding the fast-walk control).
         const input = this.player.mode === 'play' ? services.tryGet('input') : undefined;
         const running = speed > SINK.runSpeed || (input?.runHeld() ?? false);
         const rate = running ? SINK.run : SINK.walk;
@@ -333,7 +333,7 @@ export class Slough {
     }
   }
 
-  /** Eases `player.speedScale` to 0.5 in the mud and back to 1; writes it only while the Slough owns it. */
+  /** Eases `player.speedScale` to 0.65 in the mud and back to 1; writes it only while the Slough owns it. */
   private applySpeed(dt: number): void {
     const target = this.sinkable ? SINK.speedScale : 1;
     if (!this.sinkable && !this.ownsSpeed) return;

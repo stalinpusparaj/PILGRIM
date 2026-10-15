@@ -73,7 +73,6 @@ export class HudLayout {
   }
 
   update(dt: number): void {
-    if (!this.avoid.touch) return;
     this.scanIn -= dt;
     if (this.scanIn <= 0) this.dirty = true;
   }
@@ -96,8 +95,8 @@ export class HudLayout {
     const { buttons, corners } = this.avoid;
     let nb = 0;
     let nc = 0;
+    this.scanIn = TOUCH_SCAN_SECONDS;
     if (this.avoid.touch) {
-      this.scanIn = TOUCH_SCAN_SECONDS;
       const origin = this.root.getBoundingClientRect();
       for (const el of document.querySelectorAll<HTMLElement>('.pg-touch-btn')) {
         const r = el.getBoundingClientRect();
@@ -116,6 +115,14 @@ export class HudLayout {
         slot.w = r.width;
         slot.h = r.height;
       }
+    }
+    const minimap = this.root.querySelector<HTMLElement>('.hud-minimap');
+    if (minimap && !minimap.hidden && nc < CORNER_SLOTS) {
+      const origin = this.root.getBoundingClientRect();
+      const r = minimap.getBoundingClientRect();
+      const slot = corners[nc++]!;
+      slot.x = r.left - origin.left; slot.y = r.top - origin.top;
+      slot.w = r.width; slot.h = r.height;
     }
     for (let i = nb; i < BUTTON_SLOTS; i++) buttons[i]!.w = 0;
     for (let i = nc; i < CORNER_SLOTS; i++) corners[i]!.w = 0;

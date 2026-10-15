@@ -29,6 +29,7 @@ export class GuideMarker {
   private readonly arrow: HTMLDivElement;
   private readonly view = new THREE_.Matrix4();
   private readonly p = new THREE_.Vector3();
+  private readonly forward = new THREE_.Vector3();
   private mode: 'none' | 'chevron' | 'arrow' = 'none';
 
   constructor() {
@@ -70,10 +71,17 @@ export class GuideMarker {
       return;
     }
 
-    // Work in screen pixels, not normalized coordinates (which distort direction on wide screens).
-    // Behind-camera targets are still in view space: keep left/right intact and point down to turn back.
-    let dx = behind ? p.x * camera.projectionMatrix.elements[0] * vw : p.x * vw;
-    let dy = behind ? Math.max(Math.abs(p.z), NEAR) * camera.projectionMatrix.elements[5] * vh : -p.y * vh;
+    // A navigation arrow expresses the ground bearing, independent of pitch or target elevation.
+    // Match camera-relative movement: right = (-forward.z, forward.x), ahead = screen up.
+    camera.getWorldDirection(this.forward);
+    let fx = this.forward.x, fz = this.forward.z;
+    const horizontal = Math.hypot(fx, fz);
+    if (horizontal > 1e-5) { fx /= horizontal; fz /= horizontal; }
+    else { fx = 0; fz = -1; }
+    const wx = t.x - s.player.x, wz = t.z - s.player.z;
+    let dx = -fz * wx + fx * wz;
+    let dy = -(fx * wx + fz * wz);
+    if (Math.abs(dx) + Math.abs(dy) < 1e-5) dy = -1;
     const len = Math.hypot(dx, dy) || 1;
     dx /= len;
     dy /= len;
@@ -83,8 +91,18 @@ export class GuideMarker {
     const tx = dx > 0 ? (maxX - cx) / dx : dx < 0 ? (minX - cx) / dx : Infinity;
     const ty = dy > 0 ? (maxY - cy) / dy : dy < 0 ? (minY - cy) / dy : Infinity;
     const k = Math.max(0, Math.min(tx, ty));
-    const x = cx + dx * k;
-    const y = cy + dy * k;
+    let x = cx + dx * k;
+    let y = cy + dy * k;
+    // Keep the arrow clear of cached map/control rectangles without per-frame layout reads.
+    for (let i = 0; i < avoid.corners.length + avoid.buttons.length; i++) {
+      const rect = i < avoid.corners.length ? avoid.corners[i]! : avoid.buttons[i - avoid.corners.length]!;
+      if (rect.w <= 0 || rect.h <= 0) continue;
+      if (x + 36 > rect.x && x - 36 < rect.x + rect.w && y + 36 > rect.y && y - 36 < rect.y + rect.h) {
+        const left = rect.x - 40, above = rect.y - 40;
+        if (left >= minX) x = Math.min(maxX, left);
+        else if (above >= minY) y = Math.min(maxY, above);
+      }
+    }
     const deg = (Math.atan2(dy, dx) * 180) / Math.PI + 90;
     this.show('arrow');
     this.arrow.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${deg.toFixed(1)}deg)`;

@@ -61,6 +61,11 @@ export class HelpBeats {
   /** The [E] Take his hand interactable on Help (he does not move, but the position follows him anyway). */
   install(): void {
     const ctx = this.ctx;
+    this.helped = ctx.state.flag('ch02.handTaken') === true;
+    if (this.helped) {
+      ctx.onTalk('help', 'ch02_help_again');
+      return;
+    }
     const help = ctx.npc('help');
     if (!help) {
       console.error('[ch02] there is no "help" NPC in the level');

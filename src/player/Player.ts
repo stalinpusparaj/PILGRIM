@@ -1,7 +1,7 @@
 /**
  * The player (GDD 2.6, 2.7, 2.15): owns Christian's Character and the kinematic controller; the 'player' service.
  *
- * - Fixed 60 Hz update(): camera-relative movement from Input (walk, run only when free, jump), ledge climbs, facing
+ * - Fixed 60 Hz update(): camera-relative movement from Input (walk, fast walk while burdened, run when free, jump), ledge climbs, facing
  *   with a smooth turn, animation choice (player-anim.ts), bonks and safe spots (Bonk.ts).
  * - render(alpha): places the character between the last two fixed positions (interpolation) and animates it with
  *   the simulated time since the last frame, then polls footsteps (Footsteps.ts).
@@ -21,6 +21,7 @@
  *   player.dispose();
  */
 import * as THREE from 'three';
+import { movementPaceScale } from '../core/MovementPace';
 import '../audio/events';
 import { events } from '../core/Events';
 import { services } from '../core/Services';
@@ -333,7 +334,11 @@ export class Player {
 
   private resolveParams(): MoveParams {
     const src = this.burdenSys?.params() ?? (this.state.burden ? BURDENED_FALLBACK : FREE_FALLBACK);
-    return scaledParams(src, this.speedScale, this.params);
+    return scaledParams(
+      src,
+      this.speedScale * movementPaceScale(services.tryGet('settings')?.data.movementPace),
+      this.params,
+    );
   }
 
   /** Animation choice for this step (one reused input object: no allocation). */

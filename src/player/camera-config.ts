@@ -2,7 +2,7 @@
  * Follow camera tuning (GDD 2.5). Metres, radians and "per second" rates. The few values worth tuning live in
  * `CAMERA_TUNE` (mutable, the F1 panel has sliders for them); everything else is fixed.
  *
- * Framing: the camera sits 4.5 m behind the player's feet and 2.2 m above them (2.0 m burdened) and looks at a
+ * Framing: the camera sits 5.8 m behind the player's feet and 3.6 m above them and looks at a
  * point at chest height, so the view tips slightly down (toy-diorama feel). It orbits round a pivot at head
  * height, so turning the view keeps Christian's head where it is on screen.
  *
@@ -17,20 +17,20 @@
 /** Live-tunable values (F1 > Camera). */
 export const CAMERA_TUNE = {
   /** Sideways offset (m, to the camera's right) per unit of Burden size (capped at CAMERA.shoulderMax). */
-  shoulder: 1.0,
+  shoulder: 0.45,
   /** Look-at height above the feet when burdened (m). */
-  lookBurdened: 1.4,
+  lookBurdened: 1.25,
   /** Look-at height above the feet when free (m). */
   lookFree: 1.05,
 };
 
 export const CAMERA = {
-  /** GDD 2.5: 4.5 m behind and 2.2 m above the feet; 0.2 m lower when burdened. */
-  back: 4.5,
-  height: 2.2,
-  burdenDrop: 0.2,
+  /** Raised follow view keeps the sack low in frame and exposes the path ahead. */
+  back: 5.8,
+  height: 3.6,
+  burdenDrop: 0,
   /** Largest burdened shoulder offset (m), for the grown sack of Ch III. */
-  shoulderMax: 1.35,
+  shoulderMax: 0.7,
   /** Narrow screens get a smaller offset so Christian stays near the middle, clear of the touch joystick:
    *  × clamp((aspect / shoulderAspect)², shoulderAspectMin, 1). A portrait phone (0.45) keeps ~0.08 m: there the
    *  sack is read from behind (GDD 2.7.1 "comic and readable from behind"); 4:3 keeps ~0.7 m. */
@@ -57,6 +57,7 @@ export const CAMERA = {
    *  ceilings). `closeRate` smooths the close-up factor that feeds back into the shoulder. */
   lift: 0.7,
   ahead: 1.0,
+  lookAhead: 0.8,
   closeShoulder: 0.85,
   closeRate: 6,
   liftFrom: 0.75,
@@ -64,19 +65,13 @@ export const CAMERA = {
   /** Height kept above the ground under the camera. */
   floorClear: 0.35,
 
-  /** Auto-camera: swings behind the heading while walking, after this long without manual look input. */
+  /** Auto-camera: recenters behind the player after manual look input pauses. */
   auto: {
-    idle: 1.5,
-    yawRate: 1.0,
-    pitchRate: 0.8,
-    /** Below this speed (m/s) the camera stays put; full strength from fullSpeed. */
-    minSpeed: 0.4,
-    fullSpeed: 2.0,
-    /** Heading difference (rad): full strength below `full`, none beyond `none` (walking at the camera). */
-    full: Math.PI * 0.25,
-    weak: Math.PI * 0.55,
-    weakScale: 0.3,
-    none: Math.PI * 0.83,
+    idle: 0.9,
+    yawRate: 3.2,
+    maxYawRate: 1.8,
+    pitchRate: 1.6,
+
   },
 
   /** Vertical follow: stiff on the ground (step-ups, facets), loose in the air (hops do not yank the view). */
@@ -89,7 +84,9 @@ export const CAMERA = {
   /** Heavy steps and landings: a soft vertical spring (not a shake). Off with Reduce camera motion. */
   thud: { k: 130, c: 15, step: 0.4, land: 0.1, landMin: 3.5, landMax: 0.6, maxDip: 0.12 },
   /** A little wider view when running free (degrees). Off with Reduce camera motion. */
-  fovKick: { deg: 4, from: 3.8, to: 6, rate: 3 },
+  fovKick: { deg: 4, from: 2.8, to: 6, rate: 3 },
+  /** Restrained travel dolly and turn bank. No extra render effects; disabled with reduced motion. */
+  cinema: { pullBack: 0.65, lift: 0.18, ahead: 0.65, bank: 0.008, maxRoll: 0.02, rate: 3 },
 
   /** Burden framing follows the sack size at this rate (the "boing" never reaches the camera). */
   burdenRate: 2.5,

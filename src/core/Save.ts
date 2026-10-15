@@ -1,6 +1,6 @@
 /**
- * Save games (GDD 2.15 "Save format"): 3 manual slots plus the autosave written at waystones, kept in
- * IndexedDB through `idb.ts` (which falls back to memory when IndexedDB is unavailable).
+ * Save games (GDD 2.15 "Save format"): 3 manual slots plus autosaves at waystones and safe gameplay intervals, kept in
+ * IndexedDB with a synchronous localStorage backup through `idb.ts` (which falls back to memory when IndexedDB is unavailable).
  *
  * Everything read back goes through `migrate()`, which knows every save version we ever shipped, upgrades old
  * ones step by step, validates every field and returns null for anything it cannot trust.
@@ -92,15 +92,37 @@ export function migrate(raw: unknown): SaveData | null {
   }
 }
 
+const BACKUP_PREFIX = 'pilgrim.save.backup.';
+let backupWorks = false;
+function readBackup(slot: SlotId): SaveData | null {
+  try {
+    const data = migrate(JSON.parse(localStorage.getItem(BACKUP_PREFIX + slot) ?? 'null'));
+    if (data) backupWorks = true;
+    return data;
+  } catch {
+    return null;
+  }
+}
+function writeBackup(slot: SlotId, data: SaveData): void {
+  try {
+    localStorage.setItem(BACKUP_PREFIX + slot, JSON.stringify(data));
+    backupWorks = true;
+  } catch {
+    /* IndexedDB remains the primary store. */
+  }
+}
+
 export class Save {
   /** The slot's save, migrated and validated; null when empty, unreadable or from a newer build. */
   async load(slot: SlotId): Promise<SaveData | null> {
     assertSlot(slot);
+    const backup = readBackup(slot);
     try {
-      return migrate(await idb.get(slot));
-    } catch (err) {
-      console.warn(`[save] could not load ${slot}`, err);
-      return null;
+      const stored = migrate(await idb.get(slot));
+      if (backup && (!stored || backup.savedAt > stored.savedAt)) return backup;
+      return stored;
+    } catch {
+      return backup;
     }
   }
 
@@ -110,12 +132,18 @@ export class Save {
     const record = migrate({ ...data, savedAt: Date.now() });
     if (!record) throw new Error(`[save] refusing to write invalid save data to ${slot}`);
     if (import.meta.env.DEV) warnCorrected(slot, data, record);
+    writeBackup(slot, record);
     await idb.put(slot, record);
     events.emit('save:written', { slot });
   }
 
   async remove(slot: SlotId): Promise<void> {
     assertSlot(slot);
+    try {
+      localStorage.removeItem(BACKUP_PREFIX + slot);
+    } catch {
+      /* Storage unavailable. */
+    }
     await idb.del(slot);
   }
 
@@ -136,7 +164,7 @@ export class Save {
 
   /** False when saves are only kept in memory this session (private mode); the UI may say so. */
   get persistent(): boolean {
-    return idb.isPersistent();
+    return idb.isPersistent() || backupWorks;
   }
 }
 

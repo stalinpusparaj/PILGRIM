@@ -22,7 +22,6 @@ import { GateDoor } from './ch04-door';
 import { VolleyDirector } from './ch04-volleys';
 import type { ChapterContext, ChapterScript } from './types';
 
-
 const KEY = {
   reachGate: 'ui.hud.objective.reachGate',
   knockGate: 'ui.hud.objective.knockGate',
@@ -82,7 +81,9 @@ class WicketGate {
     const lees = this.coverLees();
     const castle = ctx.landmark(ID.castle) ?? this.fallbackCastle();
     this.director = new VolleyDirector(ctx, this.arrows, lees, castle, rng, ID.zone);
-    lees.forEach((_, i) => ctx.onTrigger(`lee_${i + 1}`, () => this.director.setLastRock(i), { once: false }));
+    lees.forEach((_, i) =>
+      ctx.onTrigger(`lee_${i + 1}`, () => this.director.setLastRock(i), { once: false }),
+    );
 
     this.gate = ctx.landmark(ID.gate);
     if (this.gate) {
@@ -98,7 +99,8 @@ class WicketGate {
         height: 1.8,
         verb: KEY.knock,
         enabled: true,
-        onUse: () => void this.knock().catch((err: unknown) => console.error('[ch04] the gate scene failed', err)),
+        onUse: () =>
+          void this.knock().catch((err: unknown) => console.error('[ch04] the gate scene failed', err)),
       });
     } else console.error(`[ch04] the level has no "${ID.gate}" landmark`);
 
@@ -121,6 +123,23 @@ class WicketGate {
       if (!this.knocked) ctx.objective(KEY.knockGate);
     });
     ctx.onTrigger(ID.end, () => ctx.complete());
+    if (ctx.state.flag(FLAG_INSIDE) === true) {
+      this.knocked = true;
+      this.director.enabled = false;
+      this.removeKnock?.();
+      this.removeKnock = null;
+      this.door?.setOpen();
+      ctx.objective(KEY.followStraight);
+      ctx.guide(null);
+      const keeper = ctx.npc(ID.keeper);
+      if (keeper && this.gate)
+        keeper.teleport(
+          this.gate
+            .clone()
+            .addScaledVector(this.front, -GATE.keeperBack)
+            .addScaledVector(this.right, GATE.keeperSide),
+        );
+    }
   }
 
   update(dt: number): void {
@@ -188,7 +207,10 @@ class WicketGate {
     const doorLook = gate.clone();
     doorLook.y += 1.3;
     const inside = gate.clone().addScaledVector(front, -GATE.insideDist);
-    const keeperAt = gate.clone().addScaledVector(front, -GATE.keeperBack).addScaledVector(right, GATE.keeperSide);
+    const keeperAt = gate
+      .clone()
+      .addScaledVector(front, -GATE.keeperBack)
+      .addScaledVector(right, GATE.keeperSide);
     const keeperYaw = Math.atan2(front.x, front.z);
     const knockAt: [number, number, number] = [gate.x, gate.y + 1.2, gate.z];
     const actors: ActorTrack[] = [
@@ -224,8 +246,15 @@ class WicketGate {
         { at: 0.5, sfx: { id: 'knock', at: knockAt } },
         { at: 0.85, sfx: { id: 'knock', at: knockAt } },
         { at: GATE.doorOpens, run: () => this.door?.swingOpen(GATE.doorSwing) },
-        { at: GATE.volley.at, run: () => void this.director.fireAt(spot, GATE.volley.count, GATE.volley.flight) },
-        { at: GATE.volley.at + GATE.volley.flight + 0.1, essential: true, run: () => this.ctx.state.setFlag(FLAG_INSIDE, true) },
+        {
+          at: GATE.volley.at,
+          run: () => void this.director.fireAt(spot, GATE.volley.count, GATE.volley.flight),
+        },
+        {
+          at: GATE.volley.at + GATE.volley.flight + 0.1,
+          essential: true,
+          run: () => this.ctx.state.setFlag(FLAG_INSIDE, true),
+        },
       ],
     };
   }

@@ -34,7 +34,14 @@ const PLIABLE_BARKS: BarkSet = {
 };
 
 class ChapterOne {
-  stage: Stage = 'book';
+  private stageValue: Stage = 'book';
+  get stage(): Stage {
+    return this.stageValue;
+  }
+  set stage(value: Stage) {
+    this.stageValue = value;
+    this.ctx.state.setFlag('ch01.stage', value);
+  }
   private readonly town: TownLife;
   private removeBook: (() => void) | null = null;
 
@@ -44,10 +51,46 @@ class ChapterOne {
 
   start(): void {
     const ctx = this.ctx;
-    ctx.objective('ch01.objective.readBook');
-    ctx.guide({ landmark: 'book' });
-    this.hookBook();
-    ctx.onTalk('christiana', () => this.dayTalk(), { once: true });
+    const saved = ctx.state.flag('ch01.stage');
+    const known: readonly Stage[] = ['book', 'day', 'town', 'homeward', 'evening', 'gate', 'way'];
+    const restored = typeof saved === 'string' && known.includes(saved as Stage) ? (saved as Stage) : null;
+    this.stage =
+      restored === 'evening'
+        ? 'homeward'
+        : (restored ??
+          (ctx.state.flag('ch01.pliableJoins')
+            ? 'way'
+            : ctx.state.flag('ch01.eveningTalk')
+              ? 'gate'
+              : ctx.state.flag('ch01.dayTalk')
+                ? 'town'
+                : ctx.state.flag('ch01.readBook')
+                  ? 'day'
+                  : 'book'));
+    const objectives: Record<Stage, string | null> = {
+      book: 'ch01.objective.readBook',
+      day: 'ch01.objective.talkFamily',
+      town: 'ch01.objective.walkTown',
+      homeward: 'ch01.objective.goHome',
+      evening: 'ch01.objective.goHome',
+      gate: 'ch01.objective.toGate',
+      way: 'ui.hud.objective.followLight',
+      done: null,
+    };
+    ctx.objective(objectives[this.stage]);
+    if (this.stage === 'book') {
+      ctx.guide({ landmark: 'book' });
+      this.hookBook();
+    } else if (this.stage === 'day' || this.stage === 'homeward') ctx.guide({ npc: 'christiana' });
+    else if (this.stage === 'gate') ctx.guide({ landmark: 'town_gate' });
+    else ctx.guide(null);
+    if (this.stage === 'way') {
+      if (ctx.npc('pliable')) ctx.addCompanion('pliable', PLIABLE_BARKS);
+      const obstinate = ctx.npc('obstinate');
+      if (obstinate) obstinate.character.root.visible = false;
+    }
+    if (this.stage === 'book' || this.stage === 'day')
+      ctx.onTalk('christiana', () => this.dayTalk(), { once: true });
     ctx.onTrigger('ch01_square', () => this.townSquare(), { once: false });
     ctx.onTrigger('ch01_home', () => void this.eveningTalk(), { once: false });
     ctx.onTrigger('ch01_gate_out', () => void this.outsideTheGate());

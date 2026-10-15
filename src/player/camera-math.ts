@@ -61,6 +61,8 @@ export class CamParams {
   lag = 0;
   /** Extra field of view (degrees). */
   fovKick = 0;
+  /** Small cinematic bank about the view axis (radians). */
+  roll = 0;
 
   copy(o: CamParams): this {
     this.yaw = o.yaw;
@@ -75,6 +77,7 @@ export class CamParams {
     this.bob = o.bob;
     this.lag = o.lag;
     this.fovKick = o.fovKick;
+    this.roll = o.roll;
     return this;
   }
 
@@ -92,6 +95,7 @@ export class CamParams {
     this.bob = a.bob + (b.bob - a.bob) * t;
     this.lag = a.lag + (b.lag - a.lag) * t;
     this.fovKick = a.fovKick + (b.fovKick - a.fovKick) * t;
+    this.roll = a.roll + (b.roll - a.roll) * t;
     return this;
   }
 }

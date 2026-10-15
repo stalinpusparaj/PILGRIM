@@ -12,6 +12,7 @@ import { events } from './Events';
 import { services } from './Services';
 import type { Action } from './Input';
 import type { QualitySetting } from './Quality';
+import type { MovementPace } from './MovementPace';
 
 export interface SettingsData {
   quality: QualitySetting;
@@ -19,7 +20,8 @@ export interface SettingsData {
   shadows: boolean;
   frameCap: 30 | 60;
   difficulty: 'easy' | 'normal';
-  /** 'default' = on for touch, off for keyboard/mouse and gamepad (GDD 2.5). */
+  movementPace: MovementPace;
+  /** 'default' follows on all input devices, with a grace period after manual look. */
   autoCamera: 'default' | 'on' | 'off';
   cameraSpeed: number;
   invertY: boolean;
@@ -59,6 +61,7 @@ export const DEFAULT_SETTINGS: SettingsData = deepFreeze({
   shadows: true,
   frameCap: 60,
   difficulty: 'easy',
+  movementPace: 'normal',
   autoCamera: 'default',
   cameraSpeed: 1,
   invertY: false,
@@ -144,6 +147,7 @@ const VALIDATORS: { [K in keyof SettingsData]: Validator<SettingsData[K]> } = {
   shadows: bool,
   frameCap,
   difficulty: oneOf({ easy: true, normal: true }),
+  movementPace: oneOf({ slow: true, normal: true, fast: true }),
   autoCamera: oneOf({ default: true, on: true, off: true }),
   cameraSpeed: range(SETTINGS_RANGES.cameraSpeed.min, SETTINGS_RANGES.cameraSpeed.max),
   invertY: bool,

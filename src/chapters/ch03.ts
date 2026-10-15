@@ -57,7 +57,9 @@ class WrongHill {
 
   start(): void {
     const { ctx } = this;
-    ctx.objective('ch03.objective.followWay');
+    const savedPhase = ctx.state.flag('ch03.phase');
+    const savedRejoined = ctx.state.flag('ch03.rejoined') === true;
+    ctx.objective(this.wisemanTold ? 'ch03.objective.goToVillage' : 'ch03.objective.followWay');
     this.setPhase('start');
     const evangelist = ctx.npc('evangelist');
     if (evangelist) evangelist.character.root.visible = false; // appears on the road later
@@ -72,6 +74,28 @@ class WrongHill {
     });
     ctx.onTrigger('ch03_rejoin', () => this.rejoin(), { once: false });
     ctx.onTrigger('ch03_end', () => void this.ending(), { once: false });
+    if (savedRejoined) {
+      this.detourTaken = true;
+      this.rejoined = true;
+      this.setPhase('done');
+      this.door.freeze();
+      ctx.objective('ch03.objective.followWay');
+      ctx.guide(null);
+    } else if (savedPhase === 'detour' || savedPhase === 'mountain' || savedPhase === 'leading') {
+      this.detourTaken = true;
+      this.door.active = true;
+      this.setPhase(savedPhase);
+      ctx.objective(savedPhase === 'leading' ? 'ui.hud.objective.backToWay' : 'ch03.objective.goToVillage');
+      if (savedPhase !== 'detour') this.fx.begin();
+      if (savedPhase === 'leading' && evangelist) {
+        const road = ctx.session.world.wayById(DETOUR);
+        this.door.freeze();
+        evangelist.character.root.visible = true;
+        const p = ctx.session.player.controller.position;
+        evangelist.teleport(p.clone().addScaledVector(ctx.session.player.forward, 3));
+        if (road) void this.leadBack(evangelist, road);
+      }
+    }
   }
 
   update(dt: number): void {
@@ -226,7 +250,8 @@ class WrongHill {
     const main = world.ways.main;
     const t0 = main.closest(fork.x, fork.z).t;
     const dm = LEAD.step / main.length;
-    for (let t = t0 + dm; t <= t0 + LEAD.wayAhead / main.length + 1e-6 && t <= 1; t += dm) pts.push(ground(main.sample(t)));
+    for (let t = t0 + dm; t <= t0 + LEAD.wayAhead / main.length + 1e-6 && t <= 1; t += dm)
+      pts.push(ground(main.sample(t)));
     if (pts.length === 0) pts.push(ground(fork));
     return pts;
   }
@@ -237,7 +262,8 @@ class WrongHill {
     let called = false;
     for (;;) {
       const p = player.controller.position;
-      if (p.distanceTo(ev.position) <= LEAD.catchUp || p.distanceTo(goal) <= ev.position.distanceTo(goal)) return;
+      if (p.distanceTo(ev.position) <= LEAD.catchUp || p.distanceTo(goal) <= ev.position.distanceTo(goal))
+        return;
       if (!called) {
         called = true;
         this.say(ev.character, 'ch03.evangelist.thisWay', 'excited');
@@ -289,7 +315,9 @@ class WrongHill {
           ease: 'sineInOut',
         },
       ],
-      actors: [{ actor: 'christian', actions: [{ at: 0.8, do: 'say', key: 'ch03.christian.end', mood: 'excited' }] }],
+      actors: [
+        { actor: 'christian', actions: [{ at: 0.8, do: 'say', key: 'ch03.christian.end', mood: 'excited' }] },
+      ],
     });
     ctx.complete();
   }

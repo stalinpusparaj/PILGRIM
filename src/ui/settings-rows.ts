@@ -57,7 +57,13 @@ export interface SliderSpec {
   readonly volume?: VolumeKey;
 }
 
-export type RowSpec = ChoiceSpec | SliderSpec;
+export interface NoteSpec {
+  readonly kind: 'note';
+  readonly id: string;
+  readonly label: string;
+  text(): string;
+}
+export type RowSpec = ChoiceSpec | SliderSpec | NoteSpec;
 
 function choice<K extends ChoiceKey>(
   key: K,
@@ -152,6 +158,24 @@ export function graphicsRows(): RowSpec[] {
 
 export function gameplayRows(): RowSpec[] {
   return [
+    choice(
+      'movementPace',
+      (['slow', 'normal', 'fast'] as const).map(
+        (pace) => [pace, t(`ui.settings.option.movementPace.${pace}`)] as const,
+      ),
+      () => t('ui.settings.hint.movementPace'),
+    ),
+    {
+      kind: 'note',
+      id: 'saveStatus',
+      label: t('ui.settings.label.saveStatus'),
+      text: () =>
+        t(
+          services.tryGet('save')?.persistent === false
+            ? 'ui.settings.hint.saveTemporary'
+            : 'ui.settings.hint.saveStatus',
+        ),
+    },
     choice('difficulty', [
       ['easy', t('ui.settings.option.difficulty.easy')],
       ['normal', t('ui.settings.option.difficulty.normal')],

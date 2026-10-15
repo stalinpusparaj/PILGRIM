@@ -359,6 +359,7 @@ export class PlaySession {
   private show(): void {
     this.engine.setView(this.world.scene, this.view);
     this.hud = new HUD();
+    this.hud.setNavigation(this.world, this.player);
     this.disposers.push(() => {
       this.hud?.dispose();
       this.hud = null;

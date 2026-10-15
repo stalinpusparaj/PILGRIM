@@ -134,7 +134,7 @@ test('the Slough slows and sinks Christian; standing still raises stepping stone
   const sunk = await slough();
   expect(sunk.sinking).toBe(true);
   expect(sunk.depth).toBeGreaterThan(0.1);
-  expect(sunk.scale).toBeLessThan(0.7); // half speed in the mud
+  expect(sunk.scale).toBeLessThan(0.7); // 65% speed in the mud
   // GDD 2.7.5: standing still for 2 s reveals the steps.
   await expect.poll(() => logged(page, 'slough:steps'), { timeout: 8000 }).toHaveLength(1);
   await waitSim(page, 1.6);

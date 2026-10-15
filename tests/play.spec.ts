@@ -22,7 +22,7 @@ import {
 /**
  * Phase 2 controls in the test world (`?chapter=test`, a PlaySession on content/levels/test.json): keyboard,
  * touch and gamepad can each move, jump and use a waystone, and the interaction bubble shows the button of the
- * device in use; burdened walking is ~2.0 m/s with no running, and after the debug Cross drop the free walk is
+ * device in use; Normal pace: burdened walking is ~2.4 m/s with a ~3.36 m/s fast walk, and after the debug Cross drop the free walk is
  * ~3.4 m/s, the run ~6 m/s and the first three jumps are joy jumps; a hop in the Cross's slow-down never leaves him
  * kneeling in the air, and its camera swings round him gently with someone always in view. A keyboard player's Tab
  * never takes focus off "Click to play". Every test runs with a clean console. Saves Phase 2 report screenshots to
@@ -231,7 +231,7 @@ test('gamepad: left stick moves, A jumps, X uses a waystone', async ({ page }) =
   expect(problems, problems.join('\n')).toEqual([]);
 });
 
-test('burdened ~2.0 m/s; after the debug Cross drop free walk ~3.4, run ~6 and three joy jumps', async ({
+test('Normal pace: burdened walk ~2.4 and fast walk ~3.36 m/s; after the debug Cross drop free walk ~2.72, run ~4.8 and three joy jumps', async ({
   page,
 }) => {
   test.setTimeout(150_000);
@@ -240,13 +240,13 @@ test('burdened ~2.0 m/s; after the debug Cross drop free walk ~3.4, run ~6 and t
   await toWayStart(page);
   const w = keys(page, ['KeyW']);
   const burdened = await measureSpeed(page, w.down, w.up);
-  // Running is not allowed while burdened.
+  // Full input offers a faster stride while retaining the burdened animation.
   await toWayStart(page);
   const sw = keys(page, ['ShiftLeft', 'KeyW']);
   const burdenedRun = await measureSpeed(page, sw.down, sw.up);
   console.log(`burdened walk ${burdened.toFixed(2)} m/s, with run held ${burdenedRun.toFixed(2)} m/s`);
   expect(Math.abs(burdened - SPEED.burdened)).toBeLessThan(SPEED.tolerance);
-  expect(Math.abs(burdenedRun - SPEED.burdened)).toBeLessThan(SPEED.tolerance);
+  expect(Math.abs(burdenedRun - SPEED.burdenedRun)).toBeLessThan(SPEED.tolerance);
 
   // The whole GDD 2.7.1 sequence at the level's cross, with a few report frames along the way.
   await page.evaluate(() => (window as unknown as PlayWindow).__pilgrim.play!.goToCross());

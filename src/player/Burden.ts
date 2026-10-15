@@ -1,11 +1,11 @@
 /**
  * The Burden (GDD 2.7.1): the big lumpy sack on Christian's back and everything it does to moving.
  *
- * - Burdened: walk 2.0 m/s, no running, a 0.3 m hop, slow to get going and floaty in nothing. The lean and the heavy
+ * - Burdened: walk 3.0 m/s, fast walk 4.2 m/s, a 0.3 m hop, responsive acceleration and limited air control. The lean and the heavy
  *   stride live in the `burdenedWalk` clip, the sack's bounce in the Character's springs; this system adds the
  *   "huff" puff of breath on the clip's cue, an occasional creak, and a heavy little landing.
  * - It grows (Ch I reading the Book, Ch III the Wrong Hill) with a cartoon "boing": a bigger sack is slower (down to
- *   1.6 m/s at size 1.6) and from size 1.1 the feet drag dusty ruts. The size is kept in the save's flags.
+ *   2.6 m/s at size 1.6) and from size 1.1 the feet drag dusty ruts. The size is kept in the save's flags.
  * - Free (after the Cross): walk 3.4, run 6, jump 1.1 m, and the first three jumps are joy jumps (sparkles and rising
  *   notes; `consumeJoyJump()` from the Player's jump, or detected here as a fallback).
  *
@@ -48,19 +48,19 @@ export const FREE_MOVE: Readonly<MoveParams> = {
   slopeLimit: 40,
   stepUp: 0.3,
 };
-/** Burdened at size 1: slow to start, no running, a stubby quick hop. */
+/** Burdened at size 1: responsive walking and a faster heavy stride, with a stubby hop. */
 export const BURDENED_MOVE: Readonly<MoveParams> = {
-  walkSpeed: 2.0,
-  runSpeed: 2.0,
+  walkSpeed: 3.0,
+  runSpeed: 4.2,
   jumpHeight: 0.3,
   gravity: 28,
-  accel: 7,
+  accel: 14,
   airControl: 0.3,
   slopeLimit: 40,
   stepUp: 0.3,
 };
 /** Walk speed at the biggest sack. */
-const BIG_WALK = 1.6;
+const BIG_WALK = 2.6;
 /** From this size the feet drag ruts. */
 const RUT_FROM = 1.1;
 /** Seconds between creaks while walking burdened (random in range). */
@@ -149,7 +149,7 @@ export class BurdenSystem {
     Object.assign(m, BURDENED_MOVE);
     const k = clamp((this.sizeNow - 1) / (BURDEN_MAX - 1), 0, 1);
     m.walkSpeed = BURDENED_MOVE.walkSpeed + (BIG_WALK - BURDENED_MOVE.walkSpeed) * k;
-    m.runSpeed = m.walkSpeed; // no running while burdened
+    m.runSpeed = BURDENED_MOVE.runSpeed * (m.walkSpeed / BURDENED_MOVE.walkSpeed);
     m.accel = BURDENED_MOVE.accel * (1 - 0.2 * k);
     return m;
   }

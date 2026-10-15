@@ -3,7 +3,7 @@
  * strings content/i18n/fragments/ch02.*.json.
  *
  * Beats: Pliable follows from the start, chattering about crowns (ch02-pliable.ts) → the Way enters a wide
- * bog under drizzle (the engine's Slough: sinking, half speed, stepping stones that rise when Christian stands
+ * bog under drizzle (the engine's Slough: sinking, reduced speed, stepping stones that rise when Christian stands
  * still 2 s or reads a Promise; `autoReveal` on) → at the edge both sink, the mud takes Pliable's boot with a
  * slurp (the laugh), he climbs out on the home side, a 2-choice talk, he stomps home → alone (flag `alone`: the
  * lantern dims faster) → Help waits on the far bank: "[E] Take his hand" from the mud, he pulls Christian up and
@@ -47,8 +47,16 @@ class Chapter2 {
     ctx.objective(this.alone ? OBJECTIVE.steps : OBJECTIVE.follow);
     this.rain = new ParticleEmitter(ctx.session.world.particles, 'rain', RAIN.rate, { spread: RAIN.spread });
     this.help.install();
+    if (this.alone) {
+      const pliable = ctx.npc('pliable');
+      if (pliable) pliable.character.root.visible = false;
+    }
+    if (this.help.done) this.onHelped();
+    else if (this.alone) ctx.guide({ npc: 'help' });
     if (!this.alone) void this.pliable.start();
-    ctx.onTrigger('bog_enter', () => void this.pliable.bogEnter());
+    ctx.onTrigger('bog_enter', () => {
+      if (!this.alone) void this.pliable.bogEnter();
+    });
     ctx.onTrigger('help_near', () => {
       if (this.alone && !this.help.done) this.help.callOut();
     });

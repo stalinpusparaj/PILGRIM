@@ -15,6 +15,8 @@
  * context (talks, cutscenes, NPC wrappers, companions, interactables, listeners, `own()`), triggers, loop
  * systems, the session (World, GPU memory). `restart()` disposes and builds the running chapter again (leak checks).
  */
+import { ProgressAutosave } from '../core/ProgressAutosave';
+import { captureResume, restoreResume, clearResume } from './resume-progress';
 import type { Engine } from '../core/Engine';
 import { events } from '../core/Events';
 import type { GameState } from '../core/GameState';
@@ -71,6 +73,7 @@ interface Launch {
 class ActiveChapter {
   private readonly offs: Array<() => void> = [];
   private disposed = false;
+  private readonly autosave: ProgressAutosave | null;
 
   constructor(
     readonly key: string,
@@ -82,6 +85,9 @@ class ActiveChapter {
     engine: Engine,
     onLastWaystone: () => void,
   ) {
+    this.autosave = ['1', '2', '3', '4'].includes(key)
+      ? new ProgressAutosave(() => captureResume(session, ctx.talking))
+      : null;
     const lastWaystone = session.world.level.waystones.at(-1)?.id ?? null;
     this.offs.push(
       engine.loop.add(
@@ -90,6 +96,7 @@ class ActiveChapter {
             triggers.update();
             ctx.update(dt);
             script.update?.(dt, ctx);
+            this.autosave?.update(dt);
           },
           render: (alpha, frameDt) => ctx.render(alpha, frameDt),
         },
@@ -104,6 +111,7 @@ class ActiveChapter {
 
   dispose(): void {
     if (this.disposed) return;
+    this.autosave?.dispose();
     this.disposed = true;
     for (const off of this.offs.splice(0)) off();
     try {
@@ -264,6 +272,7 @@ export class ChapterManager {
     let ctx: ChapterRuntime | null = null;
     let triggers: Triggers | null = null;
     try {
+      restoreResume(session);
       ctx = new ChapterRuntime(l.chapter, this.engine, session);
       triggers = new Triggers(session.world.level, session.player);
       const next = nextChapterKey(l.chapter);
@@ -274,6 +283,9 @@ export class ChapterManager {
       const run = ctx;
       Promise.resolve()
         .then(() => (run.isDisposed ? undefined : script.start(run)))
+        .then(() => {
+          if (!run.isDisposed) clearResume(session);
+        })
         .catch((err: unknown) => console.error(`[chapters] chapter "${key}" start failed`, err));
       return active;
     } catch (err) {

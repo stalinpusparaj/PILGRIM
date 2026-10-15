@@ -28,6 +28,18 @@ export interface WidgetHost {
 let uid = 0;
 
 export function buildWidget(spec: RowSpec, host: WidgetHost): Widget {
+  if (spec.kind === 'note') {
+    const text = h('p', { className: 'pg-set-row__hint', role: 'status' });
+    const el = h(
+      'div',
+      { className: 'pg-set-row' },
+      h('p', { className: 'pg-set-row__label' }, spec.label),
+      text,
+    );
+    const sync = (): void => setText(text, spec.text());
+    sync();
+    return { el, sync };
+  }
   return spec.kind === 'choice' ? choiceWidget(spec) : sliderWidget(spec, host);
 }
 

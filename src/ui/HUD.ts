@@ -17,6 +17,8 @@
  */
 import './hud.css';
 import { Journey } from './Journey';
+import { Minimap, type MapPlayer } from './Minimap';
+import type { World } from '../world/World';
 import type * as THREE from 'three';
 import { events } from '../core/Events';
 import { services } from '../core/Services';
@@ -56,6 +58,7 @@ export class HUD {
   private readonly objective = new ObjectiveLine();
   private readonly card = new ChapterCard();
   private readonly journey = new Journey();
+  private readonly minimap = new Minimap();
   private readonly layout: HudLayout;
   private readonly offs: Array<() => void> = [];
   private shown = true;
@@ -73,6 +76,7 @@ export class HUD {
       this.bubble.el,
       this.guide.el,
       this.journey.el,
+      this.minimap.el,
     );
     this.root = h('div', { className: 'hud ui-passive' }, this.main, this.card.el);
     parent.appendChild(this.root);
@@ -111,6 +115,7 @@ export class HUD {
     this.objective.update(dt, this.shown && !this.card.active);
     this.bubble.update(dt);
     this.journey.update(dt, this.shown && !this.card.active);
+    this.minimap.update(dt, this.shown && !this.card.active);
   }
 
   /** Every rendered frame: projects the interaction bubble with the camera that draws the scene. */
@@ -132,11 +137,16 @@ export class HUD {
     this.lantern.setHope(v, v - this.lantern.value);
   }
 
+  setNavigation(world: World, player: MapPlayer): void {
+    this.minimap.setSource(world, player);
+  }
+
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
     for (const off of this.offs.splice(0)) off();
     this.journey.dispose();
+    this.minimap.dispose();
     this.toasts.clear();
     this.card.clear();
     this.root.remove();

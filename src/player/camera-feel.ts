@@ -8,7 +8,7 @@
  * "Reduce camera motion" fades sway, thud and the FOV kick to nothing.
  */
 import { CAMERA } from './camera-config';
-import { clamp, damp, smoothstep } from './camera-math';
+import { clamp, damp, smoothstep, wrapAngle } from './camera-math';
 import type { CameraTarget } from './camera-types';
 
 type CameraCharacter = CameraTarget['character'];
@@ -23,6 +23,11 @@ export class CameraFeel {
   /** Smoothed feet height (m). */
   smoothY = 0;
   fovKick = 0;
+  pullBack = 0;
+  travelLift = 0;
+  travelAhead = 0;
+  roll = 0;
+  private lastHeading = 0;
 
   private time = 0;
   private swayAmp = 0;
@@ -47,6 +52,8 @@ export class CameraFeel {
     this.bobV = 0;
     this.smoothY = ctl.position.y;
     this.fovKick = 0;
+    this.pullBack = this.travelLift = this.travelAhead = this.roll = 0;
+    this.lastHeading = Math.atan2(p.forward.x, p.forward.z);
     this.lastChar = p.character;
     this.lastSteps = p.character.animator.steps;
     this.wasGrounded = ctl.grounded;
@@ -91,6 +98,22 @@ export class CameraFeel {
     const speed = Math.hypot(v.x, v.z);
     const kick = reduce ? 0 : CAMERA.fovKick.deg * smoothstep(CAMERA.fovKick.from, CAMERA.fovKick.to, speed);
     this.fovKick = damp(this.fovKick, kick, CAMERA.fovKick.rate, dt);
+
+    const cinema = CAMERA.cinema;
+    const travel = reduce ? 0 : smoothstep(CAMERA.fovKick.from, CAMERA.fovKick.to, speed);
+    const heading = Math.atan2(p.forward.x, p.forward.z);
+    const turn = dt > 0 ? wrapAngle(heading - this.lastHeading) / dt : 0;
+    this.lastHeading = heading;
+    if (reduce) {
+      this.pullBack = this.travelLift = this.travelAhead = this.roll = 0;
+      this.fovKick = 0;
+    } else {
+      this.pullBack = damp(this.pullBack, cinema.pullBack * travel, cinema.rate, dt);
+      this.travelLift = damp(this.travelLift, cinema.lift * travel, cinema.rate, dt);
+      this.travelAhead = damp(this.travelAhead, cinema.ahead * travel, cinema.rate, dt);
+      const bank = speed > 0.4 ? clamp(-turn * cinema.bank, -cinema.maxRoll, cinema.maxRoll) : 0;
+      this.roll = damp(this.roll, bank, cinema.rate, dt);
+    }
 
     // Camera height: stiff on the ground, loose in the air, never far from the player.
     const y = ctl.position.y;

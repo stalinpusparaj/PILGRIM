@@ -12,7 +12,7 @@ import { frames, waitForMode, type PilgrimHandle } from './support';
 export const SHOT_DIR_PLAY = 'test-results/phase2';
 
 /** GDD 2.7.1 speeds (m/s) and how close the measured ones must be. */
-export const SPEED = { burdened: 2.0, walk: 3.4, run: 6.0, tolerance: 0.3 };
+export const SPEED = { burdened: 2.4, burdenedRun: 3.36, walk: 2.72, run: 4.8, tolerance: 0.3 };
 
 export interface V3 {
   x: number;

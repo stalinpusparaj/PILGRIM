@@ -10,7 +10,7 @@ test('guide preserves behind-camera direction and fits portrait and landscape HU
     const camera = new THREE.PerspectiveCamera(60, 1280 / 720, 0.1, 100);
     const target = new THREE.Vector3(10, -1.9, 10);
     const previous = services.tryGet('guide');
-    services.register('guide', { sample: () => ({target, custom:true, distance:20}) });
+    services.register('guide', { sample: () => ({target, player:new THREE.Vector3(), custom:true, distance:20}) });
     const marker = new GuideMarker();
     document.body.appendChild(marker.el);
     const avoid = { top:0, bottom:0, left:0, right:0, touch:false, buttons:[], corners:[] };
