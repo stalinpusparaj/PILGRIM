@@ -1,0 +1,22 @@
+[
+  {
+    "id": "ch08_apollyon_claim",
+    "nodes": [
+      { "id": "n1", "speaker": "apollyon", "text": "ch08.apollyon.claim", "expr": "angry", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch08.christian.no1",
+        "choices": [
+          { "text": "ch08.choice.brave", "next": "n3" },
+          { "text": "ch08.choice.polite", "next": "n3" },
+          { "text": "ch08.choice.funny", "next": "n3" }
+        ]
+      },
+      { "id": "n3", "speaker": "apollyon", "text": "ch08.apollyon.fight", "expr": "angry" }
+    ]
+  },
+  {
+    "id": "ch08_apollyon_defeat",
+    "nodes": [
+      { "id": "n1", "speaker": "apollyon", "text": "ch08.apollyon.flee", "expr": "scared" }
+    ]
+  }
+]

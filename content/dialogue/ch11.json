@@ -1,0 +1,35 @@
+[
+  {
+    "id": "ch11_by_ends",
+    "nodes": [
+      { "id": "n1", "speaker": "by_ends", "text": "ch11.byends.1", "next": "n2" },
+      { "id": "n2", "speaker": "by_ends", "text": "ch11.byends.2" }
+    ]
+  },
+  {
+    "id": "ch11_demas",
+    "nodes": [
+      { "id": "n1", "speaker": "demas", "text": "ch11.demas.1", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch11.christian.no", "effects": { "hope": 5 } }
+    ]
+  },
+  {
+    "id": "ch11_giant_stomp",
+    "nodes": [
+      { "id": "n1", "speaker": "giant_despair", "text": "ch11.giant.stomp", "expr": "angry" }
+    ]
+  },
+  {
+    "id": "ch11_hopeful_encourage",
+    "nodes": [
+      { "id": "n1", "speaker": "hopeful", "text": "ch11.hopeful.1", "expr": "determined", "next": "n2" },
+      { "id": "n2", "speaker": "hopeful", "text": "ch11.hopeful.2", "expr": "happy" }
+    ]
+  },
+  {
+    "id": "ch11_key_hint",
+    "nodes": [
+      { "id": "n1", "speaker": "hopeful", "text": "ch11.hopeful.key_hint", "bubble": true }
+    ]
+  }
+]

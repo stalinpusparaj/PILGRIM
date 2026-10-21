@@ -1,0 +1,68 @@
+{
+  "id": "ch08",
+  "seed": 8808,
+  "palette": "humiliation",
+  "size": 300,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.015, "height": 2, "octaves": 3 },
+    "stamps": [
+      { "type": "valley", "x": 0, "z": 0, "r": 90, "depth": 3 },
+      { "type": "hill", "x": -120, "z": -20, "r": 40, "height": 8 },
+      { "type": "hill", "x": 120, "z": 30, "r": 38, "height": 7 },
+      { "type": "hill", "x": -80, "z": 60, "r": 30, "height": 5 }
+    ]
+  },
+  "way": [
+    [-130, 0, -10],
+    [-100, 0, -6],
+    [-70, 0, -2],
+    [-40, 0, 0],
+    [-10, 0, 2],
+    [20, 0, 2],
+    [50, 0, 0],
+    [80, 0, -2],
+    [110, 0, -4],
+    [136, 0, -6]
+  ],
+  "detours": [],
+  "zones": [
+    { "id": "arena", "type": "arena", "shape": "box", "x": 20, "z": 0, "size": [40, 18] },
+    { "id": "valley_calm", "type": "meadow", "shape": "circle", "x": -60, "z": 0, "r": 50 }
+  ],
+  "scatter": [
+    { "type": "grass", "density": 1.6, "minDist": 0.9 },
+    { "type": "flower", "zone": "valley_calm", "density": 0.5, "minDist": 1.1 },
+    { "type": "rock", "zone": "arena", "density": 0.12, "minDist": 4 },
+    { "type": "bush", "density": 0.14, "minDist": 3 },
+    { "type": "tree_round", "density": 0.04, "minDist": 9, "keepClear": 4 }
+  ],
+  "landmarks": [
+    { "type": "rock", "id": "arena_cover_1", "at": [10, 0, 6], "params": { "height": 2.5 } },
+    { "type": "rock", "id": "arena_cover_2", "at": [30, 0, -8], "params": { "height": 2.2 } },
+    { "type": "rock", "id": "arena_cover_3", "at": [0, 0, -6], "params": { "height": 2.0 } },
+    { "type": "waystone", "id": "ch08_ws1_stone", "at": [-80, 0, -2] }
+  ],
+  "npcs": [
+    { "id": "apollyon", "recipe": "apollyon", "role": "story", "at": [60, 0, 0], "rotY": 3.14 },
+    { "id": "discretion", "recipe": "discretion", "role": "story", "at": [-100, 0, -6] },
+    { "id": "prudence", "recipe": "prudence", "role": "story", "at": [-96, 0, -2] },
+    { "id": "piety", "recipe": "piety", "role": "story", "at": [-104, 0, -4] },
+    { "id": "charity", "recipe": "charity", "role": "story", "at": [-100, 0, 4] }
+  ],
+  "triggers": [
+    { "id": "sisters_farewell", "shape": "circle", "at": [-80, 0, -2], "r": 8, "script": "sistersFarewell", "once": true },
+    { "id": "apollyon_approach", "shape": "circle", "at": [40, 0, 0], "r": 12, "script": "apollyonApproach", "once": true },
+    { "id": "fight_phase1", "shape": "circle", "at": [20, 0, 0], "r": 8, "script": "fightPhase1", "once": true },
+    { "id": "fight_finale", "shape": "circle", "at": [0, 0, 0], "r": 6, "script": "fightFinale", "once": true },
+    { "id": "ch08_end", "shape": "circle", "at": [126, 0, -6], "r": 8, "script": "chapterEnd", "once": false }
+  ],
+  "waystones": [
+    { "id": "ch08_w1", "at": [-80, 0, -2] }
+  ],
+  "promises": [
+    { "id": "p14", "at": [-30, 0.8, 14] }
+  ],
+  "ambience": "wind",
+  "music": "apollyon"
+}

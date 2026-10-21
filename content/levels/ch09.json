@@ -1,0 +1,66 @@
+{
+  "id": "ch09",
+  "seed": 9909,
+  "palette": "shadow",
+  "size": 300,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.01, "height": 0.8, "octaves": 2 },
+    "stamps": [
+      { "type": "valley", "x": 0, "z": 0, "r": 120, "depth": 4 },
+      { "type": "basin", "x": -10, "z": -30, "r": 8, "depth": 3 },
+      { "type": "basin", "x": 20, "z": 10, "r": 10, "depth": 3 }
+    ]
+  },
+  "way": [
+    [-136, 0, 0],
+    [-100, 0, -4],
+    [-60, 0, -2],
+    [-20, 0, 0],
+    [20, 0, 2],
+    [60, 0, 0],
+    [100, 0, -2],
+    [136, 0, 0]
+  ],
+  "detours": [],
+  "zones": [
+    { "id": "shadow_valley", "type": "shadowValley", "shape": "way", "from": 0.1, "to": 0.9, "hopeDrain": 2.5 },
+    { "id": "ditch_right", "type": "ditch", "shape": "way", "from": 0.1, "to": 0.85, "hopeDrain": 1.8 },
+    { "id": "bog_left", "type": "bogHole", "shape": "way", "from": 0.1, "to": 0.85, "hopeDrain": 1.8 },
+    { "id": "ember_pit", "type": "hazard", "shape": "circle", "x": 10, "z": 0, "r": 10, "hopeDrain": 3.0 },
+    { "id": "dawn_zone", "type": "meadow", "shape": "circle", "x": 100, "z": 0, "r": 30 }
+  ],
+  "scatter": [
+    { "type": "rock", "density": 0.08, "minDist": 4 },
+    { "type": "tree_dead", "density": 0.08, "minDist": 7, "keepClear": 4 },
+    { "type": "reeds", "zone": "bog_left", "density": 1.5, "minDist": 1 },
+    { "type": "grass", "density": 0.6, "minDist": 1.2 }
+  ],
+  "landmarks": [
+    { "type": "sign", "id": "ch09_warning_sign", "at": [-90, 0, 0], "rotY": 0.2 },
+    { "type": "rock", "id": "pit_rock_l", "at": [6, 0, 8] },
+    { "type": "rock", "id": "pit_rock_r", "at": [14, 0, -8] },
+    { "type": "waystone", "id": "ch09_ws1_stone", "at": [-60, 0, 0] }
+  ],
+  "npcs": [
+    { "id": "two_men_a", "recipe": "timorous", "role": "story", "at": [-70, 0, 2], "rotY": 3.14 },
+    { "id": "two_men_b", "recipe": "mistrust", "role": "story", "at": [-66, 0, -2], "rotY": 3.14 }
+  ],
+  "triggers": [
+    { "id": "valley_enter", "shape": "circle", "at": [-90, 0, 0], "r": 8, "script": "valleyEnter", "once": true },
+    { "id": "two_men_warn", "shape": "circle", "at": [-70, 0, 0], "r": 8, "script": "twoMenWarn", "once": true },
+    { "id": "whisper1", "shape": "circle", "at": [-40, 0, 0], "r": 6, "script": "whisper1", "once": true },
+    { "id": "ember_pit_near", "shape": "circle", "at": [0, 0, 0], "r": 14, "script": "emberPitNear", "once": true },
+    { "id": "dawn_breaks", "shape": "circle", "at": [80, 0, 0], "r": 10, "script": "dawnBreaks", "once": true },
+    { "id": "ch09_end", "shape": "circle", "at": [128, 0, 0], "r": 8, "script": "chapterEnd", "once": false }
+  ],
+  "waystones": [
+    { "id": "ch09_w1", "at": [-60, 0, 0] }
+  ],
+  "promises": [
+    { "id": "p15", "at": [4, 0.8, 12] },
+    { "id": "p16", "at": [16, 0.8, -12] }
+  ],
+  "ambience": "valley",
+  "music": "valley"
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "epilogue_christiana_misses",
+    "nodes": [
+      { "id": "n1", "speaker": "christiana", "text": "epilogue.christiana.misses", "expr": "sad", "next": "n2" },
+      { "id": "n2", "speaker": "christiana", "text": "epilogue.christiana.sorry", "expr": "sad" }
+    ]
+  },
+  {
+    "id": "epilogue_secret_letter",
+    "nodes": [
+      { "id": "n1", "speaker": "secret", "text": "epilogue.secret.letter", "anim": "wave", "next": "n2" },
+      { "id": "n2", "speaker": "christiana", "text": "epilogue.christiana.reads", "expr": "surprised", "next": "n3" },
+      { "id": "n3", "speaker": "christiana", "text": "epilogue.christiana.smile", "expr": "happy" }
+    ]
+  }
+]

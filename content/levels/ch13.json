@@ -1,0 +1,74 @@
+{
+  "id": "ch13",
+  "seed": 13013,
+  "palette": "river",
+  "size": 300,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.014, "height": 1.5, "octaves": 2 },
+    "stamps": [
+      { "type": "valley", "x": 20, "z": 0, "r": 30, "depth": 2 },
+      { "type": "hill", "x": 90, "z": -10, "r": 50, "height": 10 },
+      { "type": "plateau", "x": -80, "z": 10, "r": 50, "height": 0.5 }
+    ]
+  },
+  "way": [
+    [-130, 0, 12],
+    [-100, 0, 8],
+    [-70, 0, 4],
+    [-40, 0, 2],
+    [-10, 0, 0],
+    [20, 0, -2],
+    [50, 0, -4],
+    [80, 0, -6],
+    [110, 0, -4],
+    [136, 0, -2]
+  ],
+  "detours": [],
+  "zones": [
+    { "id": "beulah", "type": "meadow", "shape": "circle", "x": -80, "z": 10, "r": 55 },
+    { "id": "river_zone", "type": "river", "shape": "circle", "x": 20, "z": 0, "r": 20 },
+    { "id": "city_hill", "type": "meadow", "shape": "circle", "x": 90, "z": -8, "r": 45 }
+  ],
+  "scatter": [
+    { "type": "grass", "density": 1.8, "minDist": 0.8 },
+    { "type": "flower", "zone": "beulah", "density": 0.8, "minDist": 1.0 },
+    { "type": "flower", "zone": "city_hill", "density": 0.6, "minDist": 1.1 },
+    { "type": "lily", "zone": "river_zone", "density": 0.4, "minDist": 1.5 },
+    { "type": "tree_round", "density": 0.06, "minDist": 6, "keepClear": 3 },
+    { "type": "tree_fruit", "zone": "beulah", "density": 0.1, "minDist": 7 },
+    { "type": "bush", "density": 0.12, "minDist": 3 }
+  ],
+  "landmarks": [
+    { "type": "gate", "id": "celestial_gate", "at": [120, 0, -4], "params": { "clear": 12 } },
+    { "type": "sign", "id": "beulah_sign", "at": [-90, 0, 12] },
+    { "type": "waystone", "id": "ch13_ws1_stone", "at": [-70, 0, 4] },
+    { "type": "waystone", "id": "ch13_ws2_stone", "at": [70, 0, -4] }
+  ],
+  "npcs": [
+    { "id": "hopeful", "recipe": "hopeful", "role": "companion", "at": [-130, 0, 12] },
+    { "id": "shining_one_a", "recipe": "shining_one", "role": "story", "at": [46, 0, 8] },
+    { "id": "shining_one_b", "recipe": "shining_one", "role": "story", "at": [46, 0, -10] }
+  ],
+  "triggers": [
+    { "id": "beulah_walk", "shape": "circle", "at": [-80, 0, 10], "r": 10, "script": "beulahWalk", "once": true },
+    { "id": "river_reach", "shape": "circle", "at": [10, 0, 0], "r": 10, "script": "riverReach", "once": true },
+    { "id": "river_wade", "shape": "circle", "at": [22, 0, 0], "r": 8, "script": "riverWade", "once": true },
+    { "id": "far_bank", "shape": "circle", "at": [44, 0, -4], "r": 8, "script": "farBank", "once": true },
+    { "id": "gate_near", "shape": "circle", "at": [108, 0, -4], "r": 10, "script": "gateNear", "once": true },
+    { "id": "ch13_end", "shape": "circle", "at": [130, 0, -2], "r": 7, "script": "chapterEnd", "once": false }
+  ],
+  "waystones": [
+    { "id": "ch13_w1", "at": [-70, 0, 4] },
+    { "id": "ch13_w2", "at": [70, 0, -4] }
+  ],
+  "promises": [
+    { "id": "p23", "at": [-60, 0.8, 16] },
+    { "id": "p24", "at": [-30, 0.8, -8] }
+  ],
+  "water": [
+    { "kind": "water", "shape": "circle", "x": 20, "z": 0, "r": 20, "level": -0.5 }
+  ],
+  "ambience": "river",
+  "music": "celestial"
+}

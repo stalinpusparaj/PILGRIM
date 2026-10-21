@@ -1,0 +1,43 @@
+[
+  {
+    "id": "ch10_faithful_join",
+    "nodes": [
+      { "id": "n1", "speaker": "faithful", "text": "ch10.faithful.hello", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch10.christian.hello", "expr": "happy" }
+    ]
+  },
+  {
+    "id": "ch10_talkative",
+    "nodes": [
+      { "id": "n1", "speaker": "talkative", "text": "ch10.talkative.1", "next": "n2" },
+      { "id": "n2", "speaker": "talkative", "text": "ch10.talkative.2", "next": "n3" },
+      { "id": "n3", "speaker": "christian", "text": "ch10.christian.question",
+        "choices": [
+          { "text": "ch10.choice.ask1", "next": "n4" },
+          { "text": "ch10.choice.ask2", "next": "n4" }
+        ]
+      },
+      { "id": "n4", "speaker": "talkative", "text": "ch10.talkative.3", "next": "n5" },
+      { "id": "n5", "speaker": "talkative", "text": "ch10.talkative.leaves" }
+    ]
+  },
+  {
+    "id": "ch10_evangelist_warn",
+    "nodes": [
+      { "id": "n1", "speaker": "evangelist_brief", "text": "ch10.evangelist.warn", "anim": "point", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch10.christian.ready", "expr": "determined" }
+    ]
+  },
+  {
+    "id": "ch10_truth_answer",
+    "nodes": [
+      { "id": "n1", "speaker": "christian", "text": "ch10.christian.truth", "bubble": true }
+    ]
+  },
+  {
+    "id": "ch10_hopeful_join",
+    "nodes": [
+      { "id": "n1", "speaker": "hopeful", "text": "ch10.hopeful.join", "expr": "happy", "effects": { "hope": 10 } }
+    ]
+  }
+]

@@ -1,0 +1,21 @@
+[
+  {
+    "id": "ch13_shining_ones",
+    "nodes": [
+      { "id": "n1", "speaker": "shining_one_a", "text": "ch13.shining.depth", "next": "n2" },
+      { "id": "n2", "speaker": "shining_one_b", "text": "ch13.shining.courage" }
+    ]
+  },
+  {
+    "id": "ch13_hopeful_river",
+    "nodes": [
+      { "id": "n1", "speaker": "hopeful", "text": "ch13.hopeful.bottom", "bubble": true, "effects": { "hope": 10 } }
+    ]
+  },
+  {
+    "id": "ch13_gate",
+    "nodes": [
+      { "id": "n1", "speaker": "christian", "text": "ch13.christian.show_roll", "bubble": true }
+    ]
+  }
+]

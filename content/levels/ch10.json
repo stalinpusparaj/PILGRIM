@@ -1,0 +1,82 @@
+{
+  "id": "ch10",
+  "seed": 10101,
+  "palette": "vanity",
+  "size": 300,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.016, "height": 2, "octaves": 3 },
+    "stamps": [
+      { "type": "plateau", "x": 30, "z": 0, "r": 50, "height": 0.5 },
+      { "type": "hill", "x": -110, "z": 30, "r": 40, "height": 6 },
+      { "type": "hill", "x": 120, "z": -20, "r": 38, "height": 5 }
+    ]
+  },
+  "way": [
+    [-130, 0, 10],
+    [-100, 0, 6],
+    [-70, 0, 2],
+    [-40, 0, 0],
+    [-10, 0, 0],
+    [20, 0, 2],
+    [50, 0, 4],
+    [80, 0, 2],
+    [110, 0, -2],
+    [136, 0, -4]
+  ],
+  "detours": [],
+  "zones": [
+    { "id": "fair_town", "type": "fairground", "shape": "box", "x": 30, "z": 2, "size": [70, 40] },
+    { "id": "open_road", "type": "meadow", "shape": "circle", "x": -80, "z": 6, "r": 40 },
+    { "id": "night_section", "type": "night", "shape": "circle", "x": 96, "z": 0, "r": 26, "hopeDrain": 0 }
+  ],
+  "scatter": [
+    { "type": "grass", "density": 1.4, "minDist": 0.9 },
+    { "type": "flower", "zone": "open_road", "density": 0.6, "minDist": 1.1 },
+    { "type": "tree_round", "zone": "open_road", "density": 0.1, "minDist": 7, "keepClear": 3 },
+    { "type": "bush", "density": 0.14, "minDist": 3 },
+    { "type": "rock", "density": 0.04, "minDist": 5 }
+  ],
+  "landmarks": [
+    { "type": "stall", "id": "stall_1", "at": [16, 0, 14], "rotY": 1.5 },
+    { "type": "stall", "id": "stall_2", "at": [24, 0, 14], "rotY": 1.5 },
+    { "type": "stall", "id": "stall_3", "at": [32, 0, 14], "rotY": 1.5 },
+    { "type": "stall", "id": "stall_4", "at": [40, 0, 14], "rotY": 1.5 },
+    { "type": "stall", "id": "stall_5", "at": [16, 0, -12], "rotY": -1.5 },
+    { "type": "stall", "id": "stall_6", "at": [30, 0, -12], "rotY": -1.5 },
+    { "type": "cage", "id": "fair_cage", "at": [50, 0, 4] },
+    { "type": "gate", "id": "fair_gate_in", "at": [0, 0, 2] },
+    { "type": "gate", "id": "fair_gate_out", "at": [70, 0, 0] },
+    { "type": "sign", "id": "vanity_sign", "at": [-4, 0, 6] },
+    { "type": "waystone", "id": "ch10_ws1_stone", "at": [-80, 0, 6] },
+    { "type": "waystone", "id": "ch10_ws2_stone", "at": [118, 0, -4] }
+  ],
+  "npcs": [
+    { "id": "faithful", "recipe": "faithful", "role": "companion", "at": [-80, 0, 6] },
+    { "id": "talkative", "recipe": "talkative", "role": "story", "at": [-50, 0, 4] },
+    { "id": "evangelist_brief", "recipe": "evangelist", "role": "story", "at": [0, 0, 6] },
+    { "id": "lord_hate_good", "recipe": "hate_good", "role": "story", "at": [52, 0, 4] },
+    { "id": "hopeful", "recipe": "hopeful", "role": "story", "at": [100, 0, -2] }
+  ],
+  "triggers": [
+    { "id": "faithful_joins", "shape": "circle", "at": [-80, 0, 6], "r": 8, "script": "faithfulJoins", "once": true },
+    { "id": "talkative_meets", "shape": "circle", "at": [-50, 0, 4], "r": 8, "script": "talkativeMeets", "once": true },
+    { "id": "evangelist_warns", "shape": "circle", "at": [0, 0, 4], "r": 8, "script": "evangelistWarns", "once": true },
+    { "id": "fair_enter", "shape": "circle", "at": [10, 0, 2], "r": 8, "script": "fairEnter", "once": true },
+    { "id": "arrest_trigger", "shape": "circle", "at": [50, 0, 4], "r": 8, "script": "arrestTrigger", "once": true },
+    { "id": "faithful_departs", "shape": "circle", "at": [52, 0, 4], "r": 4, "script": "faithfulDeparts", "once": true },
+    { "id": "sneaking_start", "shape": "circle", "at": [70, 0, 2], "r": 6, "script": "sneakingStart", "once": true },
+    { "id": "hopeful_joins", "shape": "circle", "at": [100, 0, -2], "r": 8, "script": "hopefulJoins", "once": true },
+    { "id": "ch10_end", "shape": "circle", "at": [128, 0, -4], "r": 8, "script": "chapterEnd", "once": false }
+  ],
+  "waystones": [
+    { "id": "ch10_w1", "at": [-80, 0, 6] },
+    { "id": "ch10_w2", "at": [118, 0, -4] }
+  ],
+  "promises": [
+    { "id": "p17", "at": [22, 0.8, -18] },
+    { "id": "p18", "at": [44, 0.8, 18] }
+  ],
+  "ambience": "town",
+  "music": "vanity"
+}

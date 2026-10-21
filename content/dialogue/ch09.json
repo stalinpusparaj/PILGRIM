@@ -1,0 +1,15 @@
+[
+  {
+    "id": "ch09_two_men",
+    "nodes": [
+      { "id": "n1", "speaker": "two_men_a", "text": "ch09.men.warning", "expr": "scared", "next": "n2" },
+      { "id": "n2", "speaker": "two_men_b", "text": "ch09.men.warning2", "expr": "scared" }
+    ]
+  },
+  {
+    "id": "ch09_voice_ahead",
+    "nodes": [
+      { "id": "n1", "speaker": "christian", "text": "ch09.christian.psalm", "bubble": true }
+    ]
+  }
+]

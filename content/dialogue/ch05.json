@@ -1,0 +1,46 @@
+[
+  {
+    "id": "ch05_interpreter_welcome",
+    "nodes": [
+      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.welcome", "anim": "wave", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch05.christian.ready", "next": "n3" },
+      { "id": "n3", "speaker": "interpreter", "text": "ch05.interpreter.enter", "anim": "point" }
+    ]
+  },
+  {
+    "id": "ch05_room1",
+    "nodes": [
+      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room1", "anim": "point" }
+    ]
+  },
+  {
+    "id": "ch05_room2",
+    "nodes": [
+      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room2" }
+    ]
+  },
+  {
+    "id": "ch05_room3",
+    "nodes": [
+      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room3" }
+    ]
+  },
+  {
+    "id": "ch05_room4",
+    "nodes": [
+      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room4" }
+    ]
+  },
+  {
+    "id": "ch05_room5",
+    "nodes": [
+      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room5" }
+    ]
+  },
+  {
+    "id": "ch05_room6",
+    "nodes": [
+      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room6", "expr": "sad" }
+    ]
+  }
+]

@@ -1,0 +1,78 @@
+{
+  "id": "ch06",
+  "seed": 6606,
+  "palette": "cross",
+  "size": 300,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.018, "height": 2.5, "octaves": 3 },
+    "stamps": [
+      { "type": "hill", "x": 20, "z": -20, "r": 70, "height": 18 },
+      { "type": "valley", "x": 20, "z": 30, "r": 40, "depth": 3 },
+      { "type": "plateau", "x": 90, "z": 10, "r": 55, "height": 1 }
+    ]
+  },
+  "way": [
+    [-130, 0, 20],
+    [-100, 0, 10],
+    [-70, 0, 0],
+    [-40, 0, -8],
+    [-10, 0, -12],
+    [20, 0, -14],
+    [50, 0, -6],
+    [80, 0, 4],
+    [110, 0, 8],
+    [136, 0, 12]
+  ],
+  "detours": [],
+  "zones": [
+    { "id": "hill_path", "type": "hillPath", "shape": "way", "from": 0.3, "to": 0.6 },
+    { "id": "meadow_joy", "type": "meadow", "shape": "circle", "x": 70, "z": 8, "r": 50 }
+  ],
+  "scatter": [
+    { "type": "grass", "density": 1.8, "minDist": 0.8 },
+    { "type": "flower", "zone": "meadow_joy", "density": 0.8, "minDist": 1.0 },
+    { "type": "flower", "density": 0.15, "minDist": 1.3 },
+    { "type": "tree_round", "zone": "meadow_joy", "density": 0.12, "minDist": 6, "keepClear": 3 },
+    { "type": "tree_cone", "density": 0.05, "minDist": 8, "keepClear": 3 },
+    { "type": "bush", "density": 0.18, "minDist": 3 },
+    { "type": "rock", "density": 0.04, "minDist": 5 }
+  ],
+  "landmarks": [
+    { "type": "cross", "id": "the_cross", "at": [20, 0, -12], "params": { "clear": 6 } },
+    { "type": "tomb", "id": "the_tomb", "at": [22, 0, -2], "params": { "clear": 4 } },
+    { "type": "wall", "id": "ch06_wall_l", "path": "way", "from": 0.3, "to": 0.58, "params": { "offset": 2.4 } },
+    { "type": "wall", "id": "ch06_wall_r", "path": "way", "from": 0.3, "to": 0.58, "params": { "offset": -2.4 } },
+    { "type": "log", "id": "ch06_log1", "at": [60, 0, 14] },
+    { "type": "rock", "id": "ch06_rock1", "at": [90, 0, -4] },
+    { "type": "waystone", "id": "ch06_ws1_stone", "at": [-80, 0, 2] },
+    { "type": "waystone", "id": "ch06_ws2_stone", "at": [118, 0, 10] }
+  ],
+  "npcs": [
+    { "id": "shining_one_a", "recipe": "shining_one", "role": "story", "at": [18, 0, -18], "rotY": 0 },
+    { "id": "shining_one_b", "recipe": "shining_one", "role": "story", "at": [22, 0, -18], "rotY": 0 },
+    { "id": "shining_one_c", "recipe": "shining_one", "role": "story", "at": [26, 0, -18], "rotY": 0 },
+    { "id": "simple", "recipe": "simple", "role": "story", "at": [52, 0, 4], "rotY": 1.5 },
+    { "id": "sloth", "recipe": "sloth", "role": "story", "at": [58, 0, 2], "rotY": 1.2 },
+    { "id": "presumption", "recipe": "presumption", "role": "story", "at": [56, 0, 8], "rotY": 0.8 },
+    { "id": "formalist", "recipe": "formalist", "role": "story", "at": [72, 0, 12], "rotY": -0.4 },
+    { "id": "hypocrisy", "recipe": "hypocrisy", "role": "story", "at": [78, 0, 8], "rotY": -0.4 }
+  ],
+  "triggers": [
+    { "id": "hill_base", "shape": "circle", "at": [-20, 0, -10], "r": 8, "script": "hillBase", "once": true },
+    { "id": "cross_near", "shape": "circle", "at": [20, 0, -12], "r": 7, "script": "crossNear", "once": true },
+    { "id": "after_cross", "shape": "circle", "at": [44, 0, -2], "r": 8, "script": "afterCross", "once": true },
+    { "id": "sleepers_near", "shape": "circle", "at": [56, 0, 6], "r": 10, "script": "sleepersNear", "once": true },
+    { "id": "ch06_end", "shape": "circle", "at": [128, 0, 14], "r": 8, "script": "chapterEnd", "once": false }
+  ],
+  "waystones": [
+    { "id": "ch06_w1", "at": [-80, 0, 2] },
+    { "id": "ch06_w2", "at": [118, 0, 10] }
+  ],
+  "promises": [
+    { "id": "p09", "at": [72, 0.8, 20] },
+    { "id": "p10", "at": [88, 0.8, -8] }
+  ],
+  "ambience": "birdsong",
+  "music": "burden"
+}

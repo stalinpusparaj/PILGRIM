@@ -1,0 +1,16 @@
+[
+  {
+    "id": "ch06_shining_ones",
+    "nodes": [
+      { "id": "n1", "speaker": "shining_one_a", "text": "ch06.shining.forgiven", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "shining_one_b", "text": "ch06.shining.newClothes", "expr": "happy", "next": "n3" },
+      { "id": "n3", "speaker": "shining_one_c", "text": "ch06.shining.roll", "expr": "happy", "effects": { "give": "roll" } }
+    ]
+  },
+  {
+    "id": "ch06_simple",
+    "nodes": [
+      { "id": "n1", "speaker": "simple", "text": "ch06.simple.snore", "anim": "nap" }
+    ]
+  }
+]

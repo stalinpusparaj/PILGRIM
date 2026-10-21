@@ -1,0 +1,43 @@
+[
+  {
+    "id": "ch12_knowledge",
+    "nodes": [
+      { "id": "n1", "speaker": "knowledge", "text": "ch12.knowledge.welcome", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "knowledge", "text": "ch12.knowledge.warn", "expr": "neutral" }
+    ]
+  },
+  {
+    "id": "ch12_experience",
+    "nodes": [
+      { "id": "n1", "speaker": "experience", "text": "ch12.experience.seen", "effects": { "hope": 5 } }
+    ]
+  },
+  {
+    "id": "ch12_watchful_s",
+    "nodes": [
+      { "id": "n1", "speaker": "watchful_s", "text": "ch12.watchful.warn", "anim": "point" }
+    ]
+  },
+  {
+    "id": "ch12_sincere",
+    "nodes": [
+      { "id": "n1", "speaker": "sincere", "text": "ch12.sincere.gift", "effects": { "hope": 5 } }
+    ]
+  },
+  {
+    "id": "ch12_ignorance",
+    "nodes": [
+      { "id": "n1", "speaker": "ignorance", "text": "ch12.ignorance.fine", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch12.christian.roll", "expr": "neutral" }
+    ]
+  },
+  {
+    "id": "ch12_hopeful_talk",
+    "nodes": [
+      { "id": "n1", "speaker": "hopeful", "text": "ch12.hopeful.trust1", "next": "n2" },
+      { "id": "n2", "speaker": "hopeful", "text": "ch12.hopeful.trust2", "next": "n3" },
+      { "id": "n3", "speaker": "hopeful", "text": "ch12.hopeful.trust3", "next": "n4" },
+      { "id": "n4", "speaker": "hopeful", "text": "ch12.hopeful.trust4" }
+    ]
+  }
+]

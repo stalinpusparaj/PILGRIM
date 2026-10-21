@@ -1,0 +1,59 @@
+{
+  "id": "epilogue",
+  "seed": 14014,
+  "palette": "epilogue",
+  "size": 300,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.016, "height": 2, "octaves": 3 },
+    "stamps": [
+      { "type": "hill", "x": -100, "z": -20, "r": 40, "height": 6 },
+      { "type": "hill", "x": 100, "z": 20, "r": 36, "height": 5 },
+      { "type": "plateau", "x": 0, "z": 0, "r": 60, "height": 0.3 }
+    ]
+  },
+  "way": [
+    [-130, 0, 10],
+    [-100, 0, 4],
+    [-60, 0, 0],
+    [-20, 0, -2],
+    [20, 0, 0],
+    [60, 0, 4],
+    [100, 0, 2],
+    [136, 0, -2]
+  ],
+  "detours": [],
+  "zones": [
+    { "id": "town_area", "type": "town", "shape": "circle", "x": -20, "z": 0, "r": 50 },
+    { "id": "far_light_view", "type": "farLight", "shape": "circle", "x": 80, "z": 4, "r": 20 }
+  ],
+  "scatter": [
+    { "type": "grass", "density": 1.4, "minDist": 0.9 },
+    { "type": "flower", "zone": "far_light_view", "density": 0.6, "minDist": 1.1 },
+    { "type": "tree_round", "density": 0.07, "minDist": 7, "keepClear": 3 },
+    { "type": "bush", "density": 0.16, "minDist": 3 },
+    { "type": "rock", "density": 0.04, "minDist": 5 }
+  ],
+  "landmarks": [
+    { "type": "house_a", "id": "christian_home", "at": [-20, 0, 0], "rotY": 0, "params": { "clear": 10 } },
+    { "type": "sign", "id": "city_gate_sign", "at": [-60, 0, 4] },
+    { "type": "fence", "id": "epilogue_fence", "path": "way", "from": 0.08, "to": 0.35, "params": { "offset": 3 } },
+    { "type": "waystone", "id": "epilogue_ws1_stone", "at": [60, 0, 4] }
+  ],
+  "npcs": [
+    { "id": "christiana", "recipe": "christiana", "role": "story", "at": [-18, 0, 2], "rotY": 0 },
+    { "id": "secret", "recipe": "secret", "role": "story", "at": [-40, 0, 0], "rotY": 0 }
+  ],
+  "triggers": [
+    { "id": "christiana_start", "shape": "circle", "at": [-20, 0, 2], "r": 8, "script": "christianaStart", "once": true },
+    { "id": "secret_arrives", "shape": "circle", "at": [-30, 0, 0], "r": 8, "script": "secretArrives", "once": true },
+    { "id": "far_light_view_trig", "shape": "circle", "at": [80, 0, 4], "r": 10, "script": "farLightView", "once": true },
+    { "id": "epilogue_end", "shape": "circle", "at": [128, 0, -2], "r": 8, "script": "epilogueEnd", "once": false }
+  ],
+  "waystones": [
+    { "id": "epilogue_w1", "at": [60, 0, 4] }
+  ],
+  "promises": [],
+  "ambience": "birdsong",
+  "music": "pilgrim"
+}

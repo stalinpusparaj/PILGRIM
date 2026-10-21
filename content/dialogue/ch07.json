@@ -1,0 +1,40 @@
+[
+  {
+    "id": "ch07_timorous",
+    "nodes": [
+      { "id": "n1", "speaker": "timorous", "text": "ch07.timorous.warning", "expr": "scared" }
+    ]
+  },
+  {
+    "id": "ch07_watchful",
+    "nodes": [
+      { "id": "n1", "speaker": "watchful_porter", "text": "ch07.watchful.middle", "anim": "point", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch07.christian.thanks" }
+    ]
+  },
+  {
+    "id": "ch07_discretion",
+    "nodes": [
+      { "id": "n1", "speaker": "discretion", "text": "ch07.discretion.welcome", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch07.christian.grateful", "effects": { "hope": 10 } }
+    ]
+  },
+  {
+    "id": "ch07_prudence",
+    "nodes": [
+      { "id": "n1", "speaker": "prudence", "text": "ch07.prudence.gift", "effects": { "hope": 5 } }
+    ]
+  },
+  {
+    "id": "ch07_piety",
+    "nodes": [
+      { "id": "n1", "speaker": "piety", "text": "ch07.piety.gift", "effects": { "hope": 5 } }
+    ]
+  },
+  {
+    "id": "ch07_charity",
+    "nodes": [
+      { "id": "n1", "speaker": "charity", "text": "ch07.charity.gift", "effects": { "hope": 5 } }
+    ]
+  }
+]

@@ -1,0 +1,97 @@
+{
+  "id": "ch07",
+  "seed": 7707,
+  "palette": "hill",
+  "size": 300,
+  "terrain": {
+    "base": 0,
+    "noise": { "scale": 0.02, "height": 4, "octaves": 4 },
+    "stamps": [
+      { "type": "hill", "x": 0, "z": 0, "r": 80, "height": 24 },
+      { "type": "valley", "x": -100, "z": -10, "r": 50, "depth": 2 },
+      { "type": "plateau", "x": 110, "z": -10, "r": 60, "height": 4 },
+      { "type": "hill", "x": -120, "z": 30, "r": 35, "height": 6 },
+      { "type": "hill", "x": -90, "z": -50, "r": 30, "height": 5 }
+    ]
+  },
+  "way": [
+    [-130, 0, -20],
+    [-100, 0, -14],
+    [-70, 0, -8],
+    [-40, 0, -4],
+    [-14, 0, 0],
+    [10, 0, 8],
+    [30, 0, 10],
+    [60, 0, 4],
+    [90, 0, -4],
+    [118, 0, -10],
+    [136, 0, -12]
+  ],
+  "detours": [
+    {
+      "id": "danger",
+      "points": [[-14, 0, 0], [-20, 0, -20], [-28, 0, -40], [-30, 0, -60]],
+      "width": 3
+    },
+    {
+      "id": "destruction",
+      "points": [[-14, 0, 0], [-8, 0, 20], [-4, 0, 40], [0, 0, 60]],
+      "width": 3
+    }
+  ],
+  "zones": [
+    { "id": "danger_zone", "type": "detour", "shape": "way", "path": "danger", "from": 0.1, "to": 1.0, "hopeDrain": 2.0 },
+    { "id": "destruction_zone", "type": "detour", "shape": "way", "path": "destruction", "from": 0.1, "to": 1.0, "hopeDrain": 2.0 },
+    { "id": "palace_grounds", "type": "meadow", "shape": "circle", "x": 110, "z": -10, "r": 55 }
+  ],
+  "scatter": [
+    { "type": "grass", "density": 1.6, "minDist": 0.8 },
+    { "type": "flower", "zone": "palace_grounds", "density": 0.7, "minDist": 1.1 },
+    { "type": "tree_round", "density": 0.06, "minDist": 7, "keepClear": 3 },
+    { "type": "tree_cone", "density": 0.05, "minDist": 8, "keepClear": 4 },
+    { "type": "bush", "density": 0.2, "minDist": 3 },
+    { "type": "rock", "density": 0.06, "minDist": 5 },
+    { "type": "tree_dead", "zone": "danger_zone", "density": 0.3, "minDist": 4 }
+  ],
+  "landmarks": [
+    { "type": "well", "id": "spring_well", "at": [-48, 0, -2], "params": { "clear": 4 } },
+    { "type": "bench", "id": "arbour_bench", "at": [10, 0, 8] },
+    { "type": "palace_tower", "id": "palace_main", "at": [110, 0, -10], "params": { "clear": 20 } },
+    { "type": "gate", "id": "palace_gate", "at": [84, 0, -6] },
+    { "type": "fence", "id": "ch07_fence_l", "path": "way", "from": 0.52, "to": 0.72, "params": { "offset": 3 } },
+    { "type": "fence", "id": "ch07_fence_r", "path": "way", "from": 0.52, "to": 0.72, "params": { "offset": -3 } },
+    { "type": "waystone", "id": "ch07_ws1_stone", "at": [-90, 0, -10] },
+    { "type": "waystone", "id": "ch07_ws2_stone", "at": [30, 0, 8] },
+    { "type": "waystone", "id": "ch07_ws3_stone", "at": [120, 0, -12] }
+  ],
+  "npcs": [
+    { "id": "timorous", "recipe": "timorous", "role": "story", "at": [-4, 0, 6], "rotY": 3.14 },
+    { "id": "mistrust", "recipe": "mistrust", "role": "story", "at": [2, 0, 10], "rotY": 3.14 },
+    { "id": "watchful_porter", "recipe": "watchful", "role": "story", "at": [84, 0, -4], "rotY": 3.14 },
+    { "id": "discretion", "recipe": "discretion", "role": "story", "at": [100, 0, -6] },
+    { "id": "prudence", "recipe": "prudence", "role": "story", "at": [104, 0, -10] },
+    { "id": "piety", "recipe": "piety", "role": "story", "at": [108, 0, -8] },
+    { "id": "charity", "recipe": "charity", "role": "story", "at": [112, 0, -6] }
+  ],
+  "triggers": [
+    { "id": "spring_arrive", "shape": "circle", "at": [-48, 0, -2], "r": 7, "script": "springArrive", "once": true },
+    { "id": "detour_warning", "shape": "circle", "at": [-16, 0, 2], "r": 6, "script": "detourWarning", "once": true },
+    { "id": "arbour_reach", "shape": "circle", "at": [10, 0, 8], "r": 6, "script": "arbourReach", "once": true },
+    { "id": "lion_zone", "shape": "circle", "at": [68, 0, 0], "r": 8, "script": "lionZone", "once": true },
+    { "id": "palace_enter", "shape": "circle", "at": [90, 0, -6], "r": 7, "script": "palaceEnter", "once": true },
+    { "id": "armoury_trigger", "shape": "circle", "at": [110, 0, -12], "r": 8, "script": "armouryTrigger", "once": true },
+    { "id": "ch07_end", "shape": "circle", "at": [130, 0, -14], "r": 7, "script": "chapterEnd", "once": false }
+  ],
+  "waystones": [
+    { "id": "ch07_w1", "at": [-90, 0, -10] },
+    { "id": "ch07_w2", "at": [30, 0, 8] },
+    { "id": "ch07_w3", "at": [120, 0, -12] }
+  ],
+  "promises": [
+    { "id": "p11", "at": [96, 0.8, 10] },
+    { "id": "p12", "at": [106, 0.8, -22] },
+    { "id": "p13", "at": [116, 0.8, 4] }
+  ],
+  "ambience": "wind",
+  "music": "pilgrim"
+}
