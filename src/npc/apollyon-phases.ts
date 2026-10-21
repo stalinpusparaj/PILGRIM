@@ -16,7 +16,7 @@ import type { DartHost } from './apollyon-darts';
 export const PHASE_HITS = 3;
 export const FIGHT = {
   telegraph: 0.8, open: 2, recover: 1.1, slamReach: 2.4, slamAhead: 2.2, near: 3.0, walk: 2.0,
-  takeoff: 1.4, hover: 4.2, hoverDist: 8, gap: 0.45, rest: 1.6, dart: 6.5, dartEasy: 5, knock: 0.7, down: 4,
+  takeoff: 1.4, hover: 4.2, hoverDist: 6.5, gap: 0.7, rest: 1.6, dart: 6, dartEasy: 4.5, knock: 0.7, down: 4,
   body: 1.25,
 }; // not `as const`: the F1 tuning sliders (apollyon-tune.ts) write it live
 

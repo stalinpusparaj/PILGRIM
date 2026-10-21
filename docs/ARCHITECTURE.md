@@ -1243,7 +1243,7 @@ export class Shadows {                                 // service 'shadows' (tes
 - The fight (GDD 2.9) is a fixed-step state machine on its own loop systems (update at NPC_ORDER + 2, pose and glows
   after the World draws at PLAY_ORDER.world + 2). Phases in `apollyon-phases.ts` (paws: approach → telegraph (paw
   glow + red ground ring, 0.8 s / 1.6 s Easy) → slam → blocked: 'open' belly 2 s; darts: takeoff → hover (belly
-  brightens) → volley of 3 → rest; 3 bounced darts → knocked → 'down' 4 s) and `apollyon-fall.ts` (swoop → throw
+  brightens) → volley of 3, 0.7 s apart, at 6 m/s (4.5 on Easy), from 6.5 m away → rest; 3 bounced darts → knocked → 'down' 4 s) and `apollyon-fall.ts` (swoop → throw
   in slow motion, the sword (`apollyon-sword.ts`) lands 4 m off → "[E] Reach for the sword", 5 s with Timed
   prompts). 3 hits per phase. Body language and glows: `apollyon-body.ts`; darts: `apollyon-darts.ts`; the sky
   darkens per phase: `apollyon-sky.ts`. Christian is held inside the arena and outside Apollyon's body. Events
