@@ -342,5 +342,18 @@
     "expression": "neutral",
     "voice": { "pitch": 0.9, "speed": 0.95, "wave": "triangle", "vowel": 0.45 },
     "style": { "bounce": 0.7, "stiffness": 0.3, "swagger": 0.05, "lean": 0.15 }
+  },
+  "secret": {
+    "id": "secret",
+    "name": "Secret",
+    "body": "adultF",
+    "build": { "height": 1.0, "girth": 0.95, "head": 1.0, "legs": 1.0, "arms": 1.0, "belly": 0.95 },
+    "skin": "#C68A5E",
+    "colors": { "top": "#2E3A6B", "bottom": "#1E2747", "feet": "#1A2040", "accent": "#4A5A9B", "hair": "#1C1810", "hat": "#2E3A6B" },
+    "parts": { "top": "robe", "bottom": "robe", "hair": "bun", "beard": "none", "hat": "hood", "extras": [] },
+    "props": [{ "type": "letter", "bone": "propR" }],
+    "expression": "neutral",
+    "voice": { "pitch": 1.1, "speed": 0.85, "wave": "sine", "vowel": 0.65 },
+    "style": { "bounce": 0.5, "stiffness": 0.4, "swagger": 0.0, "lean": 0.0 }
   }
 }
