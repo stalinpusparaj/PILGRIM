@@ -31,6 +31,7 @@ import { ApollyonBody } from './apollyon-body';
 import { Darts } from './apollyon-darts';
 import { ThrownSword } from './apollyon-sword';
 import { ArenaDusk } from './apollyon-sky';
+import { installApollyonTuning } from './apollyon-tune';
 import { FallPhase } from './apollyon-fall';
 import { DartsPhase, FIGHT, PHASE_HITS, PawsPhase } from './apollyon-phases';
 import { NPC_ORDER, type NPC } from './NPC';
@@ -120,6 +121,7 @@ export class ApollyonFight {
         onHit: () => this.struck(),
       }),
       events.on('hearts:empty', () => void this.arise()),
+      installApollyonTuning(),
     );
     services.register('apollyon', this);
   }

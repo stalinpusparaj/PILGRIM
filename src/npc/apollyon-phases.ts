@@ -18,7 +18,7 @@ export const FIGHT = {
   telegraph: 0.8, open: 2, recover: 1.1, slamReach: 2.4, slamAhead: 2.2, near: 3.0, walk: 2.0,
   takeoff: 1.4, hover: 4.2, hoverDist: 8, gap: 0.45, rest: 1.6, dart: 6.5, dartEasy: 5, knock: 0.7, down: 4,
   body: 1.25,
-} as const;
+}; // not `as const`: the F1 tuning sliders (apollyon-tune.ts) write it live
 
 const tmp = new THREE.Vector3();
 const tmp2 = new THREE.Vector3();
