@@ -39,5 +39,12 @@
       { "id": "n3", "speaker": "hopeful", "text": "ch12.hopeful.trust3", "next": "n4" },
       { "id": "n4", "speaker": "hopeful", "text": "ch12.hopeful.trust4" }
     ]
+  },
+  {
+    "id": "ch12_flatterer",
+    "nodes": [
+      { "id": "n1", "speaker": "flatterer", "text": "ch12.flatterer.hello", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "hopeful", "text": "ch12.hopeful.unsure", "expr": "determined", "bubble": true }
+    ]
   }
 ]

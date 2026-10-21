@@ -149,11 +149,19 @@ export async function installDialogueSpy(page: Page): Promise<void> {
     p.events.on('dialogue:chose', (raw) => spy.chose.push((raw as { index: number }).index));
     const audio = p.services.get('audio') as {
       babble: { speak(voice: unknown, text: string, opts?: unknown): unknown };
+      spoken: { speak(text: string, voice: unknown, priority?: number): unknown };
     };
-    const speak = audio.babble.speak;
+    // A line is voiced by the device's offline voice when one exists (voiceMode 'spoken'), else by babble.
+    const speak = audio.babble.speak.bind(audio.babble);
     audio.babble.speak = (voice, text, opts) => {
       spy.babble.push(text);
       return speak(voice, text, opts);
+    };
+    const say = audio.spoken.speak.bind(audio.spoken);
+    audio.spoken.speak = (text, voice, priority) => {
+      const handle = say(text, voice, priority);
+      if (handle) spy.babble.push(text);
+      return handle;
     };
   });
 }

@@ -3,20 +3,29 @@
     "id": "ch08_apollyon_claim",
     "nodes": [
       { "id": "n1", "speaker": "apollyon", "text": "ch08.apollyon.claim", "expr": "angry", "next": "n2" },
-      { "id": "n2", "speaker": "christian", "text": "ch08.christian.no1",
-        "choices": [
-          { "text": "ch08.choice.brave", "next": "n3" },
-          { "text": "ch08.choice.polite", "next": "n3" },
-          { "text": "ch08.choice.funny", "next": "n3" }
-        ]
-      },
+      { "id": "n2", "speaker": "christian", "text": "ch08.christian.no1", "choices": [{ "text": "ch08.choice.brave", "next": "n3" }, { "text": "ch08.choice.polite", "next": "n3" }, { "text": "ch08.choice.funny", "next": "n3" }] },
       { "id": "n3", "speaker": "apollyon", "text": "ch08.apollyon.fight", "expr": "angry" }
     ]
   },
   {
     "id": "ch08_apollyon_defeat",
     "nodes": [
-      { "id": "n1", "speaker": "apollyon", "text": "ch08.apollyon.flee", "expr": "scared" }
+      { "id": "n1", "speaker": "christian", "text": "ch08.christian.arise", "expr": "determined", "next": "n2" },
+      { "id": "n2", "speaker": "apollyon", "text": "ch08.apollyon.flee", "expr": "scared" }
+    ]
+  },
+  {
+    "id": "ch08_sisters_farewell",
+    "nodes": [
+      { "id": "n1", "speaker": "discretion", "text": "ch08.discretion.down", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "prudence", "text": "ch08.prudence.down", "expr": "determined", "next": "n3" },
+      { "id": "n3", "speaker": "christian", "text": "ch08.christian.goodbye", "expr": "determined" }
+    ]
+  },
+  {
+    "id": "ch08_after_fight",
+    "nodes": [
+      { "id": "n1", "speaker": "christian", "text": "ch08.christian.phew", "expr": "happy", "anim": "pray" }
     ]
   }
 ]

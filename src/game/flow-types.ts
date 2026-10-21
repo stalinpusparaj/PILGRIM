@@ -29,6 +29,8 @@ export interface ChapterHandle {
   readonly gameplay?: boolean;
   setPaused?(paused: boolean): void;
   satchelMap?(): SatchelMapContext | null;
+  /** Whether a Satchel > CARRIED item shows "Use" now (ChapterContext.itemUse). */
+  satchelCanUse?(itemId: string): boolean;
 }
 
 /**

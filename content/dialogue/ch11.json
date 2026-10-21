@@ -31,5 +31,18 @@
     "nodes": [
       { "id": "n1", "speaker": "hopeful", "text": "ch11.hopeful.key_hint", "bubble": true }
     ]
+  },
+  {
+    "id": "ch11_remember",
+    "nodes": [
+      { "id": "n1", "speaker": "christian", "text": "ch11.christian.remember", "expr": "surprised" }
+    ]
+  },
+  {
+    "id": "ch11_cell_open",
+    "nodes": [
+      { "id": "n1", "speaker": "christian", "text": "ch11.christian.cageOpen", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "hopeful", "text": "ch11.hopeful.cheer", "expr": "happy", "bubble": true }
+    ]
   }
 ]

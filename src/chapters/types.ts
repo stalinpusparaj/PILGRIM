@@ -118,4 +118,9 @@ export interface ChapterContext {
   complete(): void;
   /** Frees `dispose` with the chapter (newest first). */
   own(dispose: () => void): void;
+  /**
+   * Which Satchel > CARRIED items show a "Use" button right now (the Key of Promise at a locked door, GDD 2.10
+   * Ch XI); null hides every Use button. A use arrives as 'satchel:use' {id}. Cleared when the chapter ends.
+   */
+  itemUse(canUse: ((itemId: string) => boolean) | null): void;
 }

@@ -5,7 +5,7 @@
  * Cross-drop sequence (PlaySession.crossDrop) → the key_promise is quietly added
  * (GDD 2.7.6) → three Shining Ones give the Roll, new clothes and a glowing mark →
  * 20 s of free meadow running → the sleepers (Simple, Sloth, Presumption) are funny
- * and unkockable → Formalist and Hypocrisy tumble over the wall → end trigger.
+ * and impossible to wake → Formalist and Hypocrisy tumble over the wall → end trigger.
  */
 import * as THREE from 'three';
 import type { ChapterContext, ChapterScript } from './types';
@@ -16,6 +16,7 @@ class Chapter6 {
   private crossDone = false;
   private ending = false;
   private removeKneel: (() => void) | null = null;
+  private sleepersReady = false;
 
   constructor(private readonly ctx: ChapterContext) {}
 
@@ -40,15 +41,18 @@ class Chapter6 {
       }
     });
 
-    // Sleepers appear after the Cross
     ctx.onTrigger('sleepers_near', () => {
-      if (this.crossDone) this.installSleepers();
+      if (this.crossDone) ctx.toast('ch06.toast.sleepers');
     });
 
-    // Formalist / Hypocrisy
-    ctx.onTrigger('wall_jumpers', () => {
-      if (this.crossDone) void ctx.talk('ch06_formalist');
-    });
+    // Formalist and Hypocrisy tumble over the wall instead of using the gate.
+    ctx.onTrigger(
+      'wall_jumpers',
+      () => {
+        if (this.crossDone) void ctx.talk('ch06_formalist', { with: 'formalist' });
+      },
+      { once: false },
+    );
 
     ctx.onTrigger('ch06_end', () => void this.end(), { once: false });
 
@@ -57,6 +61,9 @@ class Chapter6 {
       ctx.objective('ui.hud.objective.followLight');
       ctx.guide(null);
       ctx.music('pilgrim', 'joy');
+      if (ctx.session.player.character.recipe.id !== 'christian_free')
+        ctx.session.player.setRecipe('christian_free');
+      this.installSleepers();
     }
   }
 
@@ -102,6 +109,8 @@ class Chapter6 {
     await ctx.talk('ch06_shining_ones');
 
     if (ctx.session.isDisposed) return;
+    // The white clothes with gold trim and the mark on his forehead (sparkle outfit swap).
+    ctx.session.player.setRecipe('christian_free');
 
     ctx.toast('ch06.toast.freeAtLast');
     ctx.objective('ui.hud.objective.followLight');
@@ -111,9 +120,10 @@ class Chapter6 {
   // ── sleepers ────────────────────────────────────────────────────────────────
 
   private installSleepers(): void {
-    const ctx = this.ctx;
+    if (this.sleepersReady) return;
+    this.sleepersReady = true;
     for (const id of ['simple', 'sloth', 'presumption'] as const) {
-      ctx.onTalk(id, 'ch06_sleepers', { once: false });
+      this.ctx.onTalk(id, `ch06_${id}`, { once: false });
     }
   }
 

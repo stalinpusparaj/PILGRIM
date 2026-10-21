@@ -65,7 +65,7 @@
     { "id": "hopeful", "recipe": "hopeful", "role": "companion", "at": [-130, 0, 10] },
     { "id": "knowledge", "recipe": "knowledge", "role": "story", "at": [-60, 0, -2] },
     { "id": "experience", "recipe": "experience", "role": "story", "at": [-54, 0, 4] },
-    { "id": "watchful_s", "recipe": "watchful", "role": "story", "at": [-56, 0, -6] },
+    { "id": "watchful_s", "recipe": "shepherd_watchful", "role": "story", "at": [-56, 0, -6] },
     { "id": "sincere", "recipe": "sincere", "role": "story", "at": [-48, 0, 2] },
     { "id": "ignorance", "recipe": "ignorance", "role": "story", "at": [40, 0, -4] },
     { "id": "flatterer", "recipe": "flatterer", "role": "story", "at": [22, 0, 4] },

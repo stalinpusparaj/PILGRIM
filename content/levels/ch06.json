@@ -62,6 +62,7 @@
     { "id": "hill_base", "shape": "circle", "at": [-20, 0, -10], "r": 8, "script": "hillBase", "once": true },
     { "id": "cross_near", "shape": "circle", "at": [20, 0, -12], "r": 7, "script": "crossNear", "once": true },
     { "id": "after_cross", "shape": "circle", "at": [44, 0, -2], "r": 8, "script": "afterCross", "once": true },
+    { "id": "wall_jumpers", "shape": "circle", "at": [70, 0, 9], "r": 7, "script": "wallJumpers", "once": true },
     { "id": "sleepers_near", "shape": "circle", "at": [56, 0, 6], "r": 10, "script": "sleepersNear", "once": true },
     { "id": "ch06_end", "shape": "circle", "at": [128, 0, 14], "r": 8, "script": "chapterEnd", "once": false }
   ],

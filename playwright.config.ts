@@ -22,7 +22,9 @@ const chromeArgs =
 
 // A dedicated port (not Vite's default 5173), and never reuse a running server: another project's dev
 // server on a shared port would otherwise be tested by mistake.
-const PORT = 5317;
+// PILGRIM_TEST_PORT moves the test server off 5317 when that port is taken by something else.
+const env = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env;
+const PORT = Number(env?.['PILGRIM_TEST_PORT']) || 5317;
 const BASE_URL = `http://localhost:${PORT}`;
 
 /**

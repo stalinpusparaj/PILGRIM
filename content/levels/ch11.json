@@ -43,7 +43,8 @@
     { "id": "river_rest", "type": "river", "shape": "circle", "x": -20, "z": 0, "r": 16 },
     { "id": "rocky_road", "type": "stone", "shape": "way", "from": 0.52, "to": 0.68 },
     { "id": "soft_meadow", "type": "detour", "shape": "way", "path": "stile_meadow", "from": 0.1, "to": 1.0 },
-    { "id": "dungeon_zone", "type": "dungeon", "shape": "circle", "x": 110, "z": 0, "r": 22, "hopeDrain": 2.0 }
+    { "id": "dungeon_zone", "type": "dungeon", "shape": "circle", "x": 110, "z": 0, "r": 22, "hopeDrain": 2.0 },
+    { "id": "silver_mine", "type": "pit", "shape": "circle", "x": -100, "z": 25, "r": 3 }
   ],
   "scatter": [
     { "type": "grass", "density": 1.5, "minDist": 0.9 },
@@ -60,7 +61,7 @@
     { "type": "well", "id": "river_bank", "at": [-20, 0, 0] },
     { "type": "stile", "id": "meadow_stile", "at": [50, 0, -6] },
     { "type": "sign", "id": "warning_sign", "at": [50, 0, 0] },
-    { "type": "castle_tower", "id": "doubting_castle", "at": [110, 0, 0], "params": { "clear": 20 } },
+    { "type": "castle_tower", "id": "doubting_castle", "at": [112, 0, -13], "params": { "clear": 20 } },
     { "type": "rock", "id": "mine_hill_rock", "at": [-100, 0, 20] },
     { "type": "waystone", "id": "ch11_ws1_stone", "at": [-88, 0, -2] },
     { "type": "waystone", "id": "ch11_ws2_stone", "at": [136, 0, 2] }
@@ -79,12 +80,12 @@
     { "id": "river_reach", "shape": "circle", "at": [-20, 0, 0], "r": 8, "script": "riverReach", "once": true },
     { "id": "stile_cross", "shape": "circle", "at": [50, 0, -6], "r": 6, "script": "stileCross", "once": true },
     { "id": "storm_trigger", "shape": "circle", "at": [58, 0, -28], "r": 8, "script": "stormTrigger", "once": true },
-    { "id": "dungeon_door", "shape": "circle", "at": [108, 0, 2], "r": 4, "script": "dungeonDoor", "once": true },
-    { "id": "cell_door", "shape": "circle", "at": [106, 0, 0], "r": 3, "script": "cellDoor", "once": true },
-    { "id": "outer_door", "shape": "circle", "at": [110, 0, 4], "r": 3, "script": "outerDoor", "once": true },
-    { "id": "iron_gate", "shape": "circle", "at": [116, 0, 2], "r": 3, "script": "ironGate", "once": true },
-    { "id": "escape_trigger", "shape": "circle", "at": [126, 0, 2], "r": 5, "script": "escapeTrigger", "once": true },
-    { "id": "ch11_end", "shape": "circle", "at": [136, 0, 2], "r": 5, "script": "chapterEnd", "once": false }
+    { "id": "dungeon_door", "shape": "circle", "at": [100, 0, -1.3], "r": 6, "script": "dungeonDoor", "once": true },
+    { "id": "cell_door", "shape": "circle", "at": [105, 0, -0.7], "r": 3, "script": "cellDoor", "once": true },
+    { "id": "outer_door", "shape": "circle", "at": [111, 0, 0.1], "r": 3, "script": "outerDoor", "once": true },
+    { "id": "iron_gate", "shape": "circle", "at": [117, 0, 0.5], "r": 3, "script": "ironGate", "once": true },
+    { "id": "escape_trigger", "shape": "circle", "at": [124, 0, 1.1], "r": 5, "script": "escapeTrigger", "once": true },
+    { "id": "ch11_end", "shape": "circle", "at": [134, 0, 1.8], "r": 5, "script": "chapterEnd", "once": false }
   ],
   "waystones": [
     { "id": "ch11_w1", "at": [-88, 0, -2] },

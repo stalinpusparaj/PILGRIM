@@ -54,7 +54,6 @@ class Chapter10 {
 
     // ── Enter the fair ─────────────────────────────────────────────────────
     ctx.onTrigger('fair_enter', () => {
-
       ctx.music('vanity', 'calm');
       ctx.ambience('fair');
       ctx.objective('ch10.objective.throughFair');

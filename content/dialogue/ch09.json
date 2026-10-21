@@ -9,7 +9,19 @@
   {
     "id": "ch09_voice_ahead",
     "nodes": [
-      { "id": "n1", "speaker": "christian", "text": "ch09.christian.psalm", "bubble": true }
+      { "id": "n1", "speaker": "christian", "text": "ch09.christian.notAlone", "expr": "surprised", "bubble": true }
+    ]
+  },
+  {
+    "id": "ch09_dawn_praise",
+    "nodes": [
+      { "id": "n1", "speaker": "christian", "text": "ch09.christian.dawn", "expr": "happy", "bubble": true }
+    ]
+  },
+  {
+    "id": "ch09_end_talk",
+    "nodes": [
+      { "id": "n1", "speaker": "christian", "text": "ch09.christian.end", "expr": "determined" }
     ]
   }
 ]

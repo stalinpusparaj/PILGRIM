@@ -71,6 +71,7 @@ const LOGGED = [
   'trigger:enter',
   'promise:collected',
   'save:written',
+  'waystone:read',
 ];
 
 async function open(page: Page): Promise<void> {
@@ -317,6 +318,8 @@ test('Chapter II: Pliable sinks and quits, alone in the bog, Help pulls Christia
   await waitSim(page, 0.4);
   await expect.poll(() => focusedId(page), { timeout: 5000 }).toBe('ch02_w2');
   await page.keyboard.press('KeyE');
+  // The auto slot is also written every few seconds (ProgressAutosave), so wait for the read itself.
+  await expect.poll(() => logged(page, 'waystone:read'), { timeout: 5000 }).toContainEqual({ id: 'ch02_w2' });
   await expect.poll(() => logged(page, 'save:written'), { timeout: 5000 }).toContainEqual({ slot: 'auto' });
   expect((await stateOf(page)).waystone).toBe('ch02_w2');
 

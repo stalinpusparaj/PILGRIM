@@ -1309,7 +1309,8 @@ class GameFlow {                                        // service 'flow'
 }
 type ChapterLauncher = (chapter: number, waystone: string | null, state: GameState) => Promise<ChapterHandle>;
 interface ChapterHandle { dispose(): void; readonly gameplay?: boolean /* true */; setPaused?(paused: boolean): void;
-  satchelMap?(): SatchelMapContext | null /* level + player for MAP when the flow owns the Satchel */ }
+  satchelMap?(): SatchelMapContext | null /* level + player for MAP when the flow owns the Satchel */;
+  satchelCanUse?(itemId: string): boolean /* ChapterContext.itemUse: the flow's Satchel asks it for "Use" */ }
 type ScreenFactory = (ctx: { parent; from: 'title' | 'pause'; close(): void }) => { dispose(): void };
 ```
 - Flow: title → START (new GameState; the opening narration while Chapter I loads behind it; click / tap to play,
@@ -1382,6 +1383,7 @@ interface ChapterContext {
   landmark(id: string): THREE.Vector3 | null;                         // ground + lift; null for path landmarks
   complete(): void;                                                   // 'chapter:complete' {chapter}, once
   own(dispose: () => void): void;
+  itemUse(canUse: ((itemId: string) => boolean) | null): void;        // Satchel > CARRIED "Use" buttons; a use is 'satchel:use' {id}
 }
 // src/chapters/index.ts
 const CHAPTERS: Record<string, () => Promise<{ default: ChapterScript }>>;   // 'test' now; '1'..'13', 'epilogue' later
@@ -1426,6 +1428,8 @@ function chapterLauncher(engine, opts?: { script?: string; onManager?(m: Chapter
   `events.count()` flat (tests/chapters.spec.ts).
 - The test chapter (`src/chapters/test.ts`): Pliable is a companion, Evangelist has [E] Talk → `test_evangelist`,
   objective `ui.hud.objective.followLight`, trigger `test_cross_near` (content/levels/test.json) → toast.
+- `tests/chapters-late.spec.ts`: Chapters V-XIII and the Epilogue played through by script (every trigger in Way
+  order, every conversation answered, each chapter's key action), each reaching 'chapter:complete' with a clean console.
 - `tests/chapters.spec.ts`: the Evangelist talk by keyboard in English and Tamil (third answer: Hope +10, cuts,
   babble, Tamil panel text; screenshots `test-results/phase3/chapter-talk-<lang>.png`), 5 builds with flat
   memory and listeners, title → START → opening → Chapter I (the test chapter in its place), clean consoles.
@@ -1537,7 +1541,8 @@ ropes `stepPitch('rope_snap', i)`; dialogue emits `'audio:duck' {on}` around lin
   sentences per line and no GDD 2.16 sectarian words. Speakers that are not NPCs of the matching level and very
   long lines are warnings.
 - `playwright.config.ts` uses the installed Google Chrome (`channel: 'chrome'`) so no browser download is
-  needed; `webServer` runs `gen-icons` then `vite` on the dedicated port 5317 (`reuseExistingServer: false`).
+  needed; `webServer` runs `gen-icons` then `vite` on the dedicated port 5317 (`reuseExistingServer: false`; the env var
+  `PILGRIM_TEST_PORT` moves it).
   Headless, with `--use-angle=metal` / swiftshader fallback flags.
 - `tools/gen-icons.mjs` writes the favicon, PWA icons and manifest into `public/` (git-ignored) before every
   dev/build/test run. It loads `src/ui/Emblem.ts` through Node's type stripping, so Node must be

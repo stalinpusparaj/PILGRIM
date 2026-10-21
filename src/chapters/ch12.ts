@@ -5,14 +5,20 @@
  * → Ignorance meets → fork in road (correct path or net trap) → Atheist laughs
  * → enchanted ground (sleepy Hope drain) → Hopeful's story keeps them awake → end.
  */
+import '../audio/events';
+import { events } from '../core/Events';
 import type { ChapterContext, ChapterScript } from './types';
 
+/** Sitting on a sleepy couch costs this much Hope and wakes him at the last waystone (GDD 2.7.8). */
+const COUCH_HOPE = -40;
+const COUCHES = ['sleepy_couch_1', 'sleepy_couch_2'] as const;
 
 class Chapter12 {
   private shepherdsDone = false;
   private forkDone = false;
   private enchanted = false;
   private ending = false;
+  private removeHopefulTalk: (() => void) | null = null;
 
   constructor(private readonly ctx: ChapterContext) {}
 
@@ -37,7 +43,8 @@ class Chapter12 {
       if (this.shepherdsDone) return;
       this.shepherdsDone = true;
       ctx.state.setFlag('ch12.shepherdsDone', true);
-      void ctx.talk('ch12_knowledge', { with: 'knowledge' })
+      void ctx
+        .talk('ch12_knowledge', { with: 'knowledge' })
         .then(() => ctx.talk('ch12_experience', { with: 'experience' }))
         .then(() => ctx.talk('ch12_watchful_s', { with: 'watchful_s' }))
         .then(() => ctx.talk('ch12_sincere', { with: 'sincere' }))
@@ -48,17 +55,21 @@ class Chapter12 {
     });
 
     // ── Viewpoint / Looking Glass ────────────────────────────────────────────
-    ctx.onInteract({
-      id: 'looking_glass_use',
-      pos: ctx.landmark('viewpoint') ?? { x: 0, y: 0, z: 0 } as unknown as import('three').Vector3,
-      radius: 3,
-      verb: 'ui.verb.look',
-      enabled: true,
-      onUse: () => {
-        ctx.toast('ch12.toast.lookingGlass');
-        ctx.objective('ch12.objective.followWay');
-      },
-    });
+    const viewpoint = ctx.landmark('viewpoint_sign');
+    if (viewpoint) {
+      ctx.onInteract({
+        id: 'looking_glass_use',
+        pos: viewpoint,
+        radius: 3,
+        verb: 'ui.verb.look',
+        enabled: true,
+        onUse: () => {
+          ctx.toast('ch12.toast.lookingGlass');
+          ctx.objective('ch12.objective.followWay');
+        },
+      });
+    }
+    ctx.onTrigger('viewpoint_reach', () => ctx.objective('ch12.objective.lookGlass'));
 
     // ── Ignorance ────────────────────────────────────────────────────────────
     ctx.onTrigger('ignorance_meets', () => {
@@ -75,19 +86,11 @@ class Chapter12 {
     });
 
     ctx.onTrigger('fork_flatterer', () => {
-      void ctx.talk('ch12_flatterer_warn', { with: 'flatterer' }).catch(() => {
-        ctx.toast('ch12.toast.flattererNet');
-        ctx.state.enterDetour('flatterer_road');
-      });
+      void ctx.talk('ch12_flatterer', { with: 'flatterer' });
     });
 
-    ctx.onTrigger('net_trap', () => {
-      ctx.state.enterDetour('flatterer_road');
-      ctx.toast('ch12.toast.flattererNet');
-      void ctx.wait(3).then(() => {
-        ctx.toast('ch12.toast.shiningOneFrees');
-      });
-    });
+    // Following the Flatterer: a net drops, a Shining One cuts them free and sets them back at the fork.
+    ctx.onTrigger('net_trap', () => void this.netTrap(), { once: false });
 
     // ── Atheist ──────────────────────────────────────────────────────────────
     ctx.onTrigger('atheist_near', () => {
@@ -101,32 +104,40 @@ class Chapter12 {
     });
 
     // ── Enchanted ground zone ────────────────────────────────────────────────
+    // Talking with Hopeful keeps them awake: [E] Talk on him only while on the Enchanted Ground.
     ctx.onZone(
-      'enchantedGround',
+      'sleepy',
       () => {
+        if (this.enchanted) return;
         this.enchanted = true;
         ctx.music('mountains', 'sad');
+        ctx.objective('ch12.objective.stayAwake');
+        this.removeHopefulTalk ??= ctx.onTalk(
+          'hopeful',
+          () => ctx.talk('ch12_hopeful_talk', { with: 'hopeful' }).then(() => ctx.state.addHope(15)),
+          { once: false },
+        );
       },
       () => {
         this.enchanted = false;
+        this.removeHopefulTalk?.();
+        this.removeHopefulTalk = null;
         if (!this.ending) ctx.music('mountains', 'calm');
       },
     );
 
-    // ── Hopeful's story ──────────────────────────────────────────────────────
-    ctx.onInteract({
-      id: 'hopeful_talk_enchanted',
-      pos: ctx.session.player.renderPosition,
-      radius: 5,
-      verb: 'ui.verb.talk',
-      enabled: true,
-      onUse: () => {
-        if (!this.enchanted) return;
-        void ctx.talk('ch12_hopeful_talk', { with: 'hopeful' }).then(() => {
-          ctx.state.addHope(15);
-        });
-      },
-    });
+    for (const id of COUCHES) {
+      const pos = ctx.landmark(id);
+      if (!pos) continue;
+      ctx.onInteract({
+        id,
+        pos,
+        radius: 2.2,
+        verb: 'ui.verb.sit',
+        enabled: true,
+        onUse: () => void this.couch(),
+      });
+    }
 
     // ── Chapter end ──────────────────────────────────────────────────────────
     ctx.onTrigger('ch12_end', () => {
@@ -134,6 +145,38 @@ class Chapter12 {
       this.ending = true;
       ctx.complete();
     });
+  }
+
+  private async netTrap(): Promise<void> {
+    const ctx = this.ctx;
+    const player = ctx.session.player;
+    if (player.mode !== 'play') return;
+    ctx.state.enterDetour('flatterer_road');
+    events.emit('sfx', { id: 'net_drop' });
+    ctx.toast('ch12.toast.flattererNet');
+    player.mode = 'locked';
+    await ctx.wait(3);
+    if (ctx.session.isDisposed) return;
+    const fork = ctx.level.triggers.find((t) => t.id === 'fork_correct');
+    if (fork) ctx.session.teleport(fork.at[0], fork.at[2]);
+    player.mode = 'play';
+    ctx.toast('ch12.toast.shiningOneFrees');
+  }
+
+  /** The soft cushions: he falls asleep and wakes at the last waystone with less Hope. */
+  private async couch(): Promise<void> {
+    const ctx = this.ctx;
+    const player = ctx.session.player;
+    if (player.mode !== 'play') return;
+    player.mode = 'locked';
+    player.character.animator.play('nap');
+    ctx.toast('ch12.toast.fellAsleep');
+    await ctx.wait(2.5);
+    if (ctx.session.isDisposed) return;
+    ctx.state.addHope(COUCH_HOPE);
+    ctx.session.respawn(ctx.state.waystone || null);
+    player.character.animator.play('idle');
+    player.mode = 'play';
   }
 }
 

@@ -108,6 +108,7 @@ export class FlowSatchel {
     this.own ??= new SatchelUI({
       parent: this.parent,
       map: () => this.chapter()?.satchelMap?.() ?? null,
+      canUse: (id) => this.chapter()?.satchelCanUse?.(id) === true,
       // A fly-through chapter (the test world) keeps gameplay input off after the Satchel closes.
       resumeGameplay: () => chapterWantsGameplay(this.chapter()),
     });

@@ -12,9 +12,23 @@ import '../audio/events';
 import { events } from '../core/Events';
 import { CharacterFactory, type Character } from '../gen/CharacterFactory';
 import { DEFAULT_STYLE, type AnimStyle } from '../gen/anim';
+import type { GameState } from '../core/GameState';
 import type { World } from '../world/World';
 
-export const RECIPES = { burdened: 'christian_burdened', free: 'christian_free' } as const;
+export const RECIPES = {
+  burdened: 'christian_burdened',
+  free: 'christian_free',
+  armour: 'christian_armour',
+} as const;
+/** GameState flag set on the River's far bank, where the armour turns to light (GDD 2.10 Ch XIII). */
+export const ARMOUR_LIGHT_FLAG = 'armourLight';
+
+/** The outfit a session starts in: burdened until the Cross, armour from the Palace armoury, light after the River. */
+export function sessionRecipe(state: Pick<GameState, 'burden' | 'hasGift' | 'flag'>): string {
+  if (state.burden) return RECIPES.burdened;
+  if (state.hasGift('breastplate') && state.flag(ARMOUR_LIGHT_FLAG) !== true) return RECIPES.armour;
+  return RECIPES.free;
+}
 
 /** Sparkle burst on an outfit swap. */
 const SWAP = { sparkles: 24, chest: 0.55 } as const;

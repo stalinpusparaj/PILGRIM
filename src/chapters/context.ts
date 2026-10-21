@@ -44,6 +44,7 @@ export class ChapterRuntime implements ChapterContext {
   private readonly disposers: Array<() => void> = [];
   private completed = false;
   private disposed = false;
+  private canUse: ((itemId: string) => boolean) | null = null;
 
   constructor(
     readonly chapter: number,
@@ -232,6 +233,15 @@ export class ChapterRuntime implements ChapterContext {
     if (this.completed || this.disposed) return;
     this.completed = true;
     events.emit('chapter:complete', { chapter: this.chapter });
+  }
+
+  itemUse(canUse: ((itemId: string) => boolean) | null): void {
+    this.canUse = canUse;
+  }
+
+  /** The Satchel asks whether a CARRIED item has a "Use" button right now. */
+  canUseItem(itemId: string): boolean {
+    return !this.disposed && this.canUse?.(itemId) === true;
   }
 
   own(dispose: () => void): void {

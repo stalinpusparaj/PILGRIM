@@ -81,16 +81,15 @@ class Chapter5 {
 
     ctx.onTrigger('house_arrive', () => {
       ctx.objective('ch05.objective.rooms');
-      ctx.guide({ npc: 'interpreter' });
-      void ctx.talk('ch05_interpreter_welcome', { with: 'interpreter' });
+      void ctx.talk('ch05_interpreter_welcome', { with: 'interpreter' }).then(() => {
+        // He carries his candle from room to room beside Christian (GDD 2.10 Ch V).
+        if (!this.ending) ctx.addCompanion('interpreter');
+      });
     });
+    if (this.roomsVisited > 0 && this.roomsVisited < ROOM_COUNT) ctx.addCompanion('interpreter');
 
     for (const room of ROOM) {
-      ctx.onTrigger(
-        room.trigger,
-        () => void this.visitRoom(room),
-        { once: false },
-      );
+      ctx.onTrigger(room.trigger, () => void this.visitRoom(room), { once: false });
     }
 
     ctx.onTrigger('ch05_end', () => void this.end(), { once: false });
@@ -107,8 +106,12 @@ class Chapter5 {
     await this.ctx.talk(room.graph, { with: 'interpreter' });
     this.ctx.state.setFlag(room.doneFlag, true);
     this.roomsVisited++;
+    this.ctx.toast(room.objective.replace('.objective.', '.toast.'));
     if (this.roomsVisited === ROOM_COUNT - 1) {
       this.ctx.objective('ch05.objective.lastRoom');
+    } else if (this.roomsVisited === ROOM_COUNT) {
+      this.ctx.toast('ch05.toast.allRooms');
+      this.ctx.objective('ui.hud.objective.followLight');
     }
   }
 
@@ -123,6 +126,7 @@ class Chapter5 {
     ctx.objective(null);
     ctx.guide(null);
     await ctx.talk('ch05_interpreter_farewell', { with: 'interpreter' });
+    ctx.removeCompanion('interpreter');
     ctx.complete();
   }
 }

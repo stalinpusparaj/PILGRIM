@@ -25,9 +25,9 @@
   "detours": [],
   "zones": [
     { "id": "shadow_valley", "type": "shadowValley", "shape": "way", "from": 0.1, "to": 0.9, "hopeDrain": 2.5 },
-    { "id": "ditch_right", "type": "ditch", "shape": "way", "from": 0.1, "to": 0.85, "hopeDrain": 1.8 },
-    { "id": "bog_left", "type": "bogHole", "shape": "way", "from": 0.1, "to": 0.85, "hopeDrain": 1.8 },
-    { "id": "ember_pit", "type": "hazard", "shape": "circle", "x": 10, "z": 0, "r": 10, "hopeDrain": 3.0 },
+    { "id": "ditch_right", "type": "ditch", "shape": "box", "x": 15, "z": 7.5, "size": [190, 4] },
+    { "id": "bog_left", "type": "bogHole", "shape": "box", "x": 15, "z": -8, "size": [190, 4] },
+    { "id": "ember_pit", "type": "smoke", "shape": "circle", "x": 10, "z": 0, "r": 10, "hopeDrain": 3.0 },
     { "id": "dawn_zone", "type": "meadow", "shape": "circle", "x": 100, "z": 0, "r": 30 }
   ],
   "scatter": [
@@ -49,9 +49,14 @@
   "triggers": [
     { "id": "valley_enter", "shape": "circle", "at": [-90, 0, 0], "r": 8, "script": "valleyEnter", "once": true },
     { "id": "two_men_warn", "shape": "circle", "at": [-70, 0, 0], "r": 8, "script": "twoMenWarn", "once": true },
-    { "id": "whisper1", "shape": "circle", "at": [-40, 0, 0], "r": 6, "script": "whisper1", "once": true },
+    { "id": "whisper_zone_1", "shape": "circle", "at": [-40, 0, 0], "r": 6, "script": "whisper_zone_1", "once": true },
+    { "id": "whisper_zone_2", "shape": "circle", "at": [-22, 0, 0], "r": 6, "script": "whisper_zone_2", "once": true },
     { "id": "ember_pit_near", "shape": "circle", "at": [0, 0, 0], "r": 14, "script": "emberPitNear", "once": true },
     { "id": "dawn_breaks", "shape": "circle", "at": [80, 0, 0], "r": 10, "script": "dawnBreaks", "once": true },
+    { "id": "whisper_zone_3", "shape": "circle", "at": [34, 0, 0], "r": 6, "script": "whisper_zone_3", "once": true },
+    { "id": "voice_ahead", "shape": "circle", "at": [48, 0, 0], "r": 7, "script": "voice_ahead", "once": true },
+    { "id": "whisper_zone_4", "shape": "circle", "at": [62, 0, 0], "r": 6, "script": "whisper_zone_4", "once": true },
+    { "id": "trap_section", "shape": "circle", "at": [100, 0, 0], "r": 8, "script": "trap_section", "once": true },
     { "id": "ch09_end", "shape": "circle", "at": [128, 0, 0], "r": 8, "script": "chapterEnd", "once": false }
   ],
   "waystones": [

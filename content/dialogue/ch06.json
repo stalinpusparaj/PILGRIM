@@ -10,7 +10,33 @@
   {
     "id": "ch06_simple",
     "nodes": [
-      { "id": "n1", "speaker": "simple", "text": "ch06.simple.snore", "anim": "nap" }
+      { "id": "n1", "speaker": "christian", "text": "ch06.christian.wake", "expr": "surprised", "next": "n2" },
+      { "id": "n2", "speaker": "simple", "text": "ch06.simple.reply", "expr": "sleepy", "bubble": true, "next": "n3" },
+      { "id": "n3", "speaker": "christian", "text": "ch06.christian.sigh", "expr": "sad" }
+    ]
+  },
+  {
+    "id": "ch06_sloth",
+    "nodes": [
+      { "id": "n1", "speaker": "christian", "text": "ch06.christian.wake", "expr": "surprised", "next": "n2" },
+      { "id": "n2", "speaker": "sloth", "text": "ch06.sloth.reply", "expr": "sleepy", "bubble": true, "next": "n3" },
+      { "id": "n3", "speaker": "christian", "text": "ch06.christian.sigh", "expr": "sad" }
+    ]
+  },
+  {
+    "id": "ch06_presumption",
+    "nodes": [
+      { "id": "n1", "speaker": "christian", "text": "ch06.christian.wake", "expr": "surprised", "next": "n2" },
+      { "id": "n2", "speaker": "presumption", "text": "ch06.presumption.reply", "expr": "sleepy", "bubble": true, "next": "n3" },
+      { "id": "n3", "speaker": "christian", "text": "ch06.christian.sigh", "expr": "sad" }
+    ]
+  },
+  {
+    "id": "ch06_formalist",
+    "nodes": [
+      { "id": "n1", "speaker": "formalist", "text": "ch06.formalist.hop", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch06.christian.gate", "expr": "surprised", "next": "n3" },
+      { "id": "n3", "speaker": "hypocrisy", "text": "ch06.hypocrisy.fine", "expr": "happy", "bubble": true }
     ]
   }
 ]

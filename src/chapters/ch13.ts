@@ -6,6 +6,7 @@
  * → far bank, armour turns to light → climb to the Gate → [E] Show the Roll
  * → gate opens, bells, light fills.
  */
+import { ARMOUR_LIGHT_FLAG } from '../player/player-outfit';
 import type { ChapterContext, ChapterScript } from './types';
 
 class Chapter13 {
@@ -53,7 +54,7 @@ class Chapter13 {
 
     // ── Zone: river ──────────────────────────────────────────────────────────
     ctx.onZone(
-      'riverCrossing',
+      'river',
       () => {
         ctx.music('celestial', 'tension');
       },
@@ -70,9 +71,8 @@ class Chapter13 {
     ctx.onTrigger('far_bank', () => {
       ctx.toast('ch13.toast.armourLight');
       // Outfit swap to the light version
-      if (!ctx.state.data.burden) {
-        ctx.session.player.setRecipe('christian_free');
-      }
+      ctx.state.setFlag(ARMOUR_LIGHT_FLAG, true);
+      if (!ctx.state.burden) ctx.session.player.setRecipe('christian_free');
       ctx.objective('ch13.objective.climbToGate');
     });
 
@@ -81,35 +81,42 @@ class Chapter13 {
       ctx.objective('ch13.objective.showRoll');
     });
 
-    ctx.onInteract({
-      id: 'show_roll_gate',
-      pos: ctx.landmark('celestial_gate') ?? { x: 0, y: 0, z: 0 } as unknown as import('three').Vector3,
-      radius: 3,
-      verb: 'ui.verb.showRoll',
-      enabled: true,
-      onUse: () => {
-        if (!ctx.state.data.hasRoll) {
-          ctx.toast('ui.toast.needRoll');
-          return;
-        }
-        void ctx.talk('ch13_gate').then(() => {
-          ctx.music('celestial', 'joy');
-          ctx.toast('ch13.toast.gateOpens');
-          void ctx.wait(2).then(() => {
-            if (this.ending) return;
-            this.ending = true;
-            ctx.complete();
+    const gate = ctx.landmark('celestial_gate');
+    if (gate) {
+      ctx.onInteract({
+        id: 'show_roll_gate',
+        pos: gate,
+        radius: 3,
+        verb: 'ui.verb.showRoll',
+        enabled: true,
+        onUse: () => {
+          if (!ctx.state.data.hasRoll) {
+            ctx.toast('ui.toast.needRoll');
+            return;
+          }
+          void ctx.talk('ch13_gate').then(() => {
+            ctx.music('celestial', 'joy');
+            ctx.toast('ch13.toast.gateOpens');
+            void ctx.wait(2).then(() => {
+              if (this.ending) return;
+              this.ending = true;
+              ctx.complete();
+            });
           });
-        });
-      },
-    });
+        },
+      });
+    }
 
-    // ── Fallback end trigger ─────────────────────────────────────────────────
-    ctx.onTrigger('ch13_end', () => {
-      if (this.ending) return;
-      this.ending = true;
-      ctx.complete();
-    });
+    // The last action of the game is "[E] Show the Roll" at the Gate (GDD 2.7.4): walking past it does not end it.
+    ctx.onTrigger(
+      'ch13_end',
+      () => {
+        if (this.ending) return;
+        ctx.objective('ch13.objective.showRoll');
+        ctx.guide({ landmark: 'celestial_gate' });
+      },
+      { once: false },
+    );
   }
 }
 

@@ -158,6 +158,7 @@ export class ChapterManager {
         };
         return { level: s.world.level, player };
       },
+      satchelCanUse: (id) => this.active?.ctx.canUseItem(id) ?? false,
       dispose: () => this.end(),
     };
     return handle;

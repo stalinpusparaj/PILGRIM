@@ -43,7 +43,7 @@ import { Slough } from './Slough';
 import { Interactables } from './Interactables';
 import { PitMarks } from './play-pits';
 import { abortError, buildPlayWorld, isAbort, loadingScene, precompileWorld } from './play-build';
-import { facingAlongWay, spawnPoint } from './play-spawn';
+import { facingAlongWay, sessionRecipe, spawnPoint } from './play-spawn';
 import { crossSkipHeld, crossStand, crossTomb } from './play-cross';
 import { playLevelAudio } from './play-audio';
 import { installPlayDebug } from './play-debug';
@@ -173,7 +173,7 @@ export class PlaySession {
         world,
         col: this.col,
         state: this.state,
-        recipe: this.state.burden ? 'christian_burdened' : 'christian_free',
+        recipe: sessionRecipe(this.state),
         spawn: start.pos,
         facing: start.facing,
       });

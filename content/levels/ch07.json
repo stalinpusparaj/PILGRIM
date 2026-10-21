@@ -76,10 +76,12 @@
   "triggers": [
     { "id": "spring_arrive", "shape": "circle", "at": [-48, 0, -2], "r": 7, "script": "springArrive", "once": true },
     { "id": "detour_warning", "shape": "circle", "at": [-16, 0, 2], "r": 6, "script": "detourWarning", "once": true },
+    { "id": "timorous_run", "shape": "circle", "at": [-2, 0, 4], "r": 7, "script": "timorousRun", "once": true },
     { "id": "arbour_reach", "shape": "circle", "at": [10, 0, 8], "r": 6, "script": "arbourReach", "once": true },
     { "id": "lion_zone", "shape": "circle", "at": [68, 0, 0], "r": 8, "script": "lionZone", "once": true },
     { "id": "palace_enter", "shape": "circle", "at": [90, 0, -6], "r": 7, "script": "palaceEnter", "once": true },
     { "id": "armoury_trigger", "shape": "circle", "at": [110, 0, -12], "r": 8, "script": "armouryTrigger", "once": true },
+    { "id": "roof_arrive", "shape": "circle", "at": [122, 0, -14], "r": 5, "script": "roofArrive", "once": true },
     { "id": "ch07_end", "shape": "circle", "at": [130, 0, -14], "r": 7, "script": "chapterEnd", "once": false }
   ],
   "waystones": [

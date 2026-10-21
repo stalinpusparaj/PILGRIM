@@ -6,6 +6,8 @@
 import * as THREE from 'three';
 import type { World } from './World';
 
+export { sessionRecipe } from '../player/player-outfit';
+
 export interface SpawnPoint {
   readonly pos: THREE.Vector3;
   /** rotation.y that looks along the Way (characters face +Z). */

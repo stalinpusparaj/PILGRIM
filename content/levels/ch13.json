@@ -47,8 +47,8 @@
   ],
   "npcs": [
     { "id": "hopeful", "recipe": "hopeful", "role": "companion", "at": [-130, 0, 12] },
-    { "id": "shining_one_a", "recipe": "shining_one", "role": "story", "at": [46, 0, 8] },
-    { "id": "shining_one_b", "recipe": "shining_one", "role": "story", "at": [46, 0, -10] }
+    { "id": "shining_one_a", "recipe": "shining_one", "role": "story", "at": [4, 0, 6] },
+    { "id": "shining_one_b", "recipe": "shining_one", "role": "story", "at": [4, 0, -6] }
   ],
   "triggers": [
     { "id": "beulah_walk", "shape": "circle", "at": [-80, 0, 10], "r": 10, "script": "beulahWalk", "once": true },

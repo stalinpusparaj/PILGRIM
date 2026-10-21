@@ -2,13 +2,15 @@
   {
     "id": "ch07_timorous",
     "nodes": [
-      { "id": "n1", "speaker": "timorous", "text": "ch07.timorous.warning", "expr": "scared" }
+      { "id": "n1", "speaker": "timorous", "text": "ch07.timorous.warning", "expr": "scared", "next": "n2" },
+      { "id": "n2", "speaker": "mistrust", "text": "ch07.mistrust.run", "expr": "scared", "bubble": true, "next": "n3" },
+      { "id": "n3", "speaker": "christian", "text": "ch07.christian.onward", "expr": "determined" }
     ]
   },
   {
     "id": "ch07_watchful",
     "nodes": [
-      { "id": "n1", "speaker": "watchful_porter", "text": "ch07.watchful.middle", "anim": "point", "next": "n2" },
+      { "id": "n1", "speaker": "watchful_porter", "text": "ch07.watchful.welcome", "expr": "happy", "next": "n2" },
       { "id": "n2", "speaker": "christian", "text": "ch07.christian.thanks" }
     ]
   },
@@ -35,6 +37,27 @@
     "id": "ch07_charity",
     "nodes": [
       { "id": "n1", "speaker": "charity", "text": "ch07.charity.gift", "effects": { "hope": 5 } }
+    ]
+  },
+  {
+    "id": "ch07_watchful_lion",
+    "nodes": [
+      { "id": "n1", "speaker": "watchful_porter", "text": "ch07.watchful.middle", "anim": "point", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch07.christian.lions", "expr": "determined" }
+    ]
+  },
+  {
+    "id": "ch07_armoury_intro",
+    "nodes": [
+      { "id": "n1", "speaker": "watchful_porter", "text": "ch07.watchful.armoury", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "discretion", "text": "ch07.discretion.armour", "expr": "happy" }
+    ]
+  },
+  {
+    "id": "ch07_farewell",
+    "nodes": [
+      { "id": "n1", "speaker": "discretion", "text": "ch07.discretion.farewell", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch07.christian.bye", "expr": "happy" }
     ]
   }
 ]

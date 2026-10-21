@@ -42,5 +42,12 @@
     "nodes": [
       { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room6", "expr": "sad" }
     ]
+  },
+  {
+    "id": "ch05_interpreter_farewell",
+    "nodes": [
+      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.farewell", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch05.christian.farewell", "expr": "happy" }
+    ]
   }
 ]
