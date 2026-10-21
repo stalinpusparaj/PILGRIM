@@ -131,6 +131,15 @@ export class Companion {
       events.on('detour:entered', () => {
         this.detourT = DETOUR_WINDOW;
       }),
+      events.on('promise:collected', () => {
+        if (this.disposed || !this.autoBarks) return;
+        const n = this.npc.position;
+        const pp = pl.controller.position;
+        const d2 = (pp.x - n.x) ** 2 + (pp.z - n.z) ** 2;
+        if (d2 > CHEER_RANGE * CHEER_RANGE * 4) return;
+        const key = this.picker.pick('promiseFound');
+        if (key) this.say(key, 'promiseFound', true, null);
+      }),
     );
     Companion.all.push(this);
   }

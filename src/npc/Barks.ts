@@ -9,6 +9,7 @@ import type { Mood } from '../audio/types';
 export interface BarkSet {
   lowHope?: string[];
   promiseNear?: string[];
+  promiseFound?: string[];
   detour?: string[];
   idle?: string[];
   cheer?: string[];
@@ -27,20 +28,23 @@ export const PROMISE_RANGE = 8;
 /** Seconds the player stands still before the idle bark. */
 export const IDLE_AFTER = 20;
 
-const generic = (kind: string): string[] => [1, 2, 3].map((i) => `bark.generic.${kind}.${i}`);
+const generic = (kind: string, count = 3): string[] =>
+  Array.from({ length: count }, (_, i) => `bark.generic.${kind}.${i + 1}`);
 
 export const DEFAULT_BARKS: Readonly<Required<BarkSet>> = {
-  lowHope: generic('lowHope'),
-  cheer: generic('cheer'),
-  promiseNear: generic('promise'),
-  detour: generic('detour'),
-  idle: generic('idle'),
+  lowHope: generic('lowHope', 5),
+  cheer: generic('cheer', 5),
+  promiseNear: generic('promise', 5),
+  promiseFound: generic('promiseFound', 3),
+  detour: generic('detour', 3),
+  idle: generic('idle', 5),
 };
 
 export const BARK_MOOD: Readonly<Record<BarkKind, Mood>> = {
   lowHope: 'sad',
   cheer: 'excited',
   promiseNear: 'excited',
+  promiseFound: 'excited',
   detour: 'scared',
   idle: 'neutral',
 };
@@ -55,6 +59,7 @@ export function withDefaults(set: BarkSet | undefined): Required<BarkSet> {
     lowHope: pick('lowHope'),
     cheer: pick('cheer'),
     promiseNear: pick('promiseNear'),
+    promiseFound: pick('promiseFound'),
     detour: pick('detour'),
     idle: pick('idle'),
   };
@@ -66,6 +71,7 @@ export class BarkPicker {
     lowHope: -1,
     cheer: -1,
     promiseNear: -1,
+    promiseFound: -1,
     detour: -1,
     idle: -1,
   };

@@ -41,7 +41,8 @@ const PICKUP = {
 };
 /** The scroll floats this far above its anchor (PromiseMarkers HOVER). */
 const SCROLL_HEIGHT = 0.95;
-const BURST = { count: 18, spread: 0.4 };
+const BURST = { count: 28, spread: 0.45 };
+const BURST_MOTES = { count: 12, spread: 0.3 };
 
 export class Promises {
   private readonly markers: PromiseMarkers;
@@ -54,6 +55,7 @@ export class Promises {
   private readonly taken: Uint8Array;
   private readonly tmp = new THREE.Vector3();
   private readonly burstOpts = { spread: BURST.spread };
+  private readonly motesOpts = { spread: BURST_MOTES.spread };
   private readonly offs: Array<() => void> = [];
   private disposed = false;
 
@@ -95,6 +97,7 @@ export class Promises {
     const z = this.anchors[i * 3 + 2]!;
     this.tmp.set(x, y, z);
     this.particles.emit('sparkle', this.tmp, BURST.count, this.burstOpts);
+    this.particles.emit('motes', this.tmp, BURST_MOTES.count, this.motesOpts);
     events.emit('sfx', { id: 'promise_chime', at: [x, y, z] });
     this.state.collectPromise(id);
     events.emit('hud:toast', { key: 'ui.toast.promise' });

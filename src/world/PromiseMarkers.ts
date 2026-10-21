@@ -22,7 +22,11 @@ const HOVER = 0.95;
 const BOB = { amp: 0.09, speed: 2.1 };
 const SPIN = 0.75; // rad/s
 const TILT = 0.12; // rad, a gentle rocking lean
-const SPARKLE = { every: 0.55, range: 32, spread: 0.35 };
+const SPARKLE = { every: 0.55, near: 0.22, range: 32, spread: 0.35 };
+/** Horizontal distance (m) from camera for the proximity pulse to activate. */
+const PULSE_RANGE = 7;
+/** Pulse: oscillates the scale between SCALE and SCALE * PULSE_MAX at PULSE_FREQ Hz. */
+const PULSE = { max: 1.32, freq: 1.4 };
 
 /** Reused emit options (no per-frame allocation). */
 const SPARKLE_OPTS = { spread: SPARKLE.spread };
@@ -98,6 +102,7 @@ export class PromiseMarkers {
   update(time: number, dt: number, camPos: THREE.Vector3 | null, particles: Particles | null): void {
     if (this.disposed) return;
     const range2 = SPARKLE.range * SPARKLE.range;
+    const pulse2 = PULSE_RANGE * PULSE_RANGE;
     for (let i = 0; i < this.anchors.length; i++) {
       const anchor = this.anchors[i]!;
       if (this.collected[i] === 1) {
@@ -109,6 +114,20 @@ export class PromiseMarkers {
       this.pos.set(anchor.x, anchor.y + HOVER + Math.sin(time * BOB.speed + ph) * BOB.amp, anchor.z);
       this.euler.set(0, time * SPIN + ph, Math.sin(time * 1.3 + ph) * TILT);
       this.quat.setFromEuler(this.euler);
+
+      // Proximity pulse: scale pulses bigger when the camera is close.
+      let s = SCALE;
+      let sparkleEvery = SPARKLE.every;
+      if (camPos) {
+        const dx = camPos.x - anchor.x;
+        const dz = camPos.z - anchor.z;
+        if (dx * dx + dz * dz < pulse2) {
+          const pulse = 0.5 + 0.5 * Math.sin(time * PULSE.freq * Math.PI * 2 + ph);
+          s = SCALE * (1 + (PULSE.max - 1) * pulse);
+          sparkleEvery = SPARKLE.near;
+        }
+      }
+      this.scale.setScalar(s);
       this.matrix.compose(this.pos, this.quat, this.scale);
       this.mesh.setMatrixAt(i, this.matrix);
 
@@ -116,7 +135,7 @@ export class PromiseMarkers {
         const timer = this.sparkleTimer[i]! - dt;
         if (timer <= 0) {
           particles.emit('sparkle', this.pos, 1, SPARKLE_OPTS);
-          this.sparkleTimer[i] = timer + SPARKLE.every;
+          this.sparkleTimer[i] = timer + sparkleEvery;
         } else {
           this.sparkleTimer[i] = timer;
         }
