@@ -160,7 +160,7 @@ test('every character plays every animation and expression, and blinks', async (
   for (const id of ids) {
     const r = await lab(page, (p, recipe) => p.exercise(recipe), id);
     expect(r.issues, `${id}: ${r.issues.join('; ')}`).toEqual([]);
-    expect(r.clips).toBe(22);
+    expect(r.clips).toBe(24);
     expect(r.expressions).toBe(8);
     expect(r.lowestBone, `${id}: a bone sank below the ground`).toBeGreaterThan(-0.15);
     // Blinks every 2-5 s: at least two in 12 s of idle.

@@ -88,6 +88,8 @@ export class Player {
   speedScale = 1;
   /** Set by scripts that slow the player to a stop (the Cross): input still walks, but jump and climbs do nothing. */
   walkOnly = false;
+  /** A unit XZ direction he turns to face instead of his motion (Combat: the foe while the shield is up), or null. */
+  aim: { x: number; z: number } | null = null;
   /** The bonk system (GDD 2.7.3): `player.bonks.bonk('arrow')`, or use `player.bonk()`. */
   readonly bonks: Bonk;
 
@@ -264,7 +266,9 @@ export class Player {
     const res = ctrl.step(dt, this.wish, jump, p);
     this.grounded = res.grounded;
     this.face(dt, burdened);
-    this.measureSpeed(dt);
+    const dx = ctrl.position.x - this.prevPos.x;
+    const dz = ctrl.position.z - this.prevPos.z;
+    this.speedH = dt > 0 ? Math.sqrt(dx * dx + dz * dz) / dt : 0;
     // A buffered jump lands and takes off in the same step: land first, so the new jump's clip is not cancelled.
     if (res.landed) this.onLand(res.landSpeed, p);
     if (res.jumped) this.onJump(p, burdened);
@@ -314,8 +318,6 @@ export class Player {
     this.char.dispose();
   }
 
-  // ------------------------------------------------------------------------------------------- inside
-
   /** A new Character joins the scene, the blob shadows, the animation and the footsteps. */
   private adopt(c: Character): void {
     this.world.scene.add(c.root);
@@ -327,7 +329,7 @@ export class Player {
     c.update(0); // posed at once: never a bind-pose frame
   }
 
-  /** The running Burden system (GDD 2.7.1), or null (fallback speeds, no joy jumps). */
+  /** The running Burden system (GDD 2.7.1), or null. */
   private get burdenSys(): BurdenSystem | null {
     return services.tryGet('burden') ?? null;
   }
@@ -354,14 +356,8 @@ export class Player {
   }
 
   private face(dt: number, burdened: boolean): void {
-    this.yaw = faceWish(this.yaw, this.wish, dt, burdened);
+    this.yaw = faceWish(this.yaw, this.aim ?? this.wish, dt, burdened);
     this.forward.set(Math.sin(this.yaw), 0, Math.cos(this.yaw));
-  }
-
-  private measureSpeed(dt: number): void {
-    const dx = this.controller.position.x - this.prevPos.x;
-    const dz = this.controller.position.z - this.prevPos.z;
-    this.speedH = dt > 0 ? Math.sqrt(dx * dx + dz * dz) / dt : 0;
   }
 
   private onJump(p: MoveParams, burdened: boolean): void {

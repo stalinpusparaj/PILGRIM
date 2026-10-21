@@ -134,7 +134,9 @@ export type AnimName =
   | 'knock'
   | 'reach'
   | 'fall'
-  | 'land';
+  | 'land'
+  | 'swing'
+  | 'block';
 
 export interface ProcClip {
   name: AnimName;

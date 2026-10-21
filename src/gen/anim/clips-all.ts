@@ -9,6 +9,7 @@ import { kneel, nap, pray, sit } from './clips-rest';
 import { knock, point, reach, read, talk, wave } from './clips-upper';
 import { fall, trip } from './clips-tumble';
 import { climb, push } from './clips-work';
+import { block, swing } from './clips-combat';
 
 export const CLIPS: Record<AnimName, ProcClip> = {
   idle,
@@ -33,6 +34,8 @@ export const CLIPS: Record<AnimName, ProcClip> = {
   reach,
   fall,
   land,
+  swing,
+  block,
 };
 
 /** Every clip name in a stable order (Lab lists, tests). */
@@ -59,6 +62,8 @@ export const ANIM_NAMES: readonly AnimName[] = [
   'reach',
   'fall',
   'land',
+  'swing',
+  'block',
 ];
 
 /**
@@ -74,7 +79,7 @@ export const NOMINAL_SPEED: Readonly<Partial<Record<AnimName, number>>> = {
   push: 1.2,
 };
 
-/** True for overlay clips (talk, wave, point, read, knock, reach). */
+/** True for overlay clips (talk, wave, point, read, knock, reach, swing, block). */
 export function isUpperClip(name: AnimName): boolean {
   return CLIPS[name].layer === 'upper';
 }

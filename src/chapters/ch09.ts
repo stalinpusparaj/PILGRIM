@@ -5,17 +5,21 @@
  * bonk-hazards beside the path) → whispers that feel like his own thoughts → the smoking pit blocks the path and
  * only Prayer pushes the smoke back → a voice ahead recites Psalm 23:4 → dawn: the traps are easy to see → end.
  *
- * Prayer (Q / pad Y / the PRAY button) is read here directly: the general Prayer gift (golden ring, shadows
- * fleeing, GDD 2.7.6 #6) is not built yet, so this chapter answers the one prayer its story needs.
+ * Prayer is the general gift (src/player/Prayer.ts: Q / pad Y / PRAY, a golden ring, +20 Hope, 15 s rest); this
+ * chapter only listens for its `prayer:burst` near the smoke. The shadows (src/npc/Shadow.ts, GDD 2.9) lurk along
+ * the dark stretch, drain Hope when close and nudge him toward the ditch and the bog; Prayer sends them fleeing, the
+ * Sword scatters them. At dawn they slip away.
  *
  * Positions come from the level file: triggers 'valley_enter', 'two_men_warn', 'whisper_zone_1'..'_4',
- * 'ember_pit_near', 'voice_ahead', 'dawn_breaks', 'trap_section', 'ch09_end'; the zone 'ember_pit' (the smoke).
+ * 'ember_pit_near', 'voice_ahead', 'dawn_breaks', 'trap_section', 'ch09_end'; the zone 'ember_pit' (the smoke);
+ * 'shadows' zones (where the shadows lurk; also a combat zone for the Sword and Shield).
  */
 import * as THREE from 'three';
 import '../audio/events';
 import { events } from '../core/Events';
-import { services } from '../core/Services';
 import { ParticleEmitter } from '../gen/Particles';
+import { Shadows } from '../npc/Shadow';
+import { ensureArmour } from './armour-kit';
 import type { ChapterContext, ChapterScript } from './types';
 
 const WHISPERS = [
@@ -26,7 +30,6 @@ const WHISPERS = [
 ] as const;
 /** A prayer counts when he is this close to the smoke's edge (m). */
 const PRAY_REACH = 8;
-const PRAYER_HOPE = 20;
 
 class Chapter9 {
   private whisperIdx = 0;
@@ -34,6 +37,7 @@ class Chapter9 {
   private ending = false;
   private smoke: { center: THREE.Vector3; radius: number; handle: number; emitter: ParticleEmitter } | null =
     null;
+  private shadows: Shadows | null = null;
 
   constructor(private readonly ctx: ChapterContext) {}
 
@@ -41,11 +45,20 @@ class Chapter9 {
     const ctx = this.ctx;
     this.pitDone = ctx.state.flag('ch09.pitDone') === true;
     const dawnBroken = ctx.state.flag('ch09.dawnBroken') === true;
+    ensureArmour(ctx);
 
     ctx.objective('ch09.objective.crossValley');
     ctx.music('valley', 'sad');
     ctx.ambience('valley');
     if (!this.pitDone) this.blockPit();
+    this.addShadows(dawnBroken);
+    ctx.own(
+      events.on('prayer:burst', (b) => {
+        const sm = this.smoke;
+        if (!sm || this.pitDone) return;
+        if (Math.hypot(b.x - sm.center.x, b.z - sm.center.z) <= sm.radius + PRAY_REACH) void this.clearSmoke();
+      }),
+    );
 
     ctx.onTrigger('valley_enter', () => ctx.toast('ch09.toast.dark'));
     ctx.onTrigger('two_men_warn', () => void ctx.talk('ch09_two_men', { with: 'two_men_a' }));
@@ -89,12 +102,27 @@ class Chapter9 {
 
   update(dt: number): void {
     const s = this.smoke;
-    if (!s) return;
-    s.emitter.update(dt, s.center);
-    const p = this.ctx.session.player;
-    if (p.mode !== 'play' || !services.tryGet('input')?.pressed('pray')) return;
-    const d = Math.hypot(p.renderPosition.x - s.center.x, p.renderPosition.z - s.center.z);
-    if (d <= s.radius + PRAY_REACH) void this.pray();
+    if (s) s.emitter.update(dt, s.center);
+  }
+
+  /** The shadows along the dark stretch ('shadows' zones); gone at dawn. */
+  private addShadows(dawn: boolean): void {
+    const ctx = this.ctx;
+    const zones = ctx.level.zones.filter((z) => z.type === 'shadows');
+    if (zones.length === 0) return;
+    const shadows = new Shadows({
+      engine: ctx.engine,
+      session: ctx.session,
+      combat: ctx.session.gifts.combat,
+      zones,
+      seed: ctx.level.seed + 9,
+    });
+    if (dawn) shadows.setActive(false);
+    this.shadows = shadows;
+    ctx.own(() => {
+      shadows.dispose();
+      if (this.shadows === shadows) this.shadows = null;
+    });
   }
 
   /** The smoke stands in the path as a wall until a prayer pushes it back. */
@@ -121,28 +149,17 @@ class Chapter9 {
     this.smoke = null;
   }
 
-  private async pray(): Promise<void> {
+  /** A prayer went up near the smoke (the Prayer gift already knelt him, lit the ring and gave the Hope). */
+  private async clearSmoke(): Promise<void> {
     if (this.pitDone || !this.smoke) return;
     this.pitDone = true;
     const ctx = this.ctx;
-    const player = ctx.session.player;
     const at = this.smoke.center.clone();
     ctx.state.setFlag('ch09.pitDone', true);
-    player.mode = 'locked';
-    player.character.animator.play('pray');
-    events.emit('sfx', { id: 'prayer_swell' });
-    ctx.state.addHope(PRAYER_HOPE);
-    ctx.session.world.particles.emit(
-      'sparkle',
-      player.renderPosition.clone().setY(player.renderPosition.y + 1),
-      30,
-    );
-    await ctx.wait(1.4);
+    await ctx.wait(1.2);
     if (ctx.session.isDisposed) return;
     this.clearPit();
     ctx.session.world.particles.emit('smoke', at.setY(at.y + 1), 20, { spread: 3 });
-    player.character.animator.play('idle');
-    player.mode = 'play';
     ctx.toast('ch09.toast.pitCleared');
     ctx.objective('ch09.objective.keepGoing');
   }
@@ -156,6 +173,7 @@ class Chapter9 {
     const ctx = this.ctx;
     if (ctx.state.flag('ch09.dawnBroken') === true) return;
     ctx.state.setFlag('ch09.dawnBroken', true);
+    this.shadows?.setActive(false);
     ctx.music('pilgrim', 'calm');
     ctx.ambience('birdsong');
     ctx.toast('ch09.toast.dawn');

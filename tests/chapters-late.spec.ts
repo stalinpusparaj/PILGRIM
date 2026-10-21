@@ -5,8 +5,8 @@ import { logged, waitSim } from './play-support';
 /**
  * CHAPTERS V–XIII and the EPILOGUE played through by script on `/?chapter=N&skipIntro=1`: Christian is stood on
  * every story trigger in Way order, every conversation is answered (first choice) and skipped through, and each
- * chapter's own key action is done (kneel at the Cross, reach for the sword, pray at the smoking pit, the Key of
- * Promise on Doubting Castle's three locks, show the Roll at the Gate). Each chapter must reach
+ * chapter's own key action is done (kneel at the Cross, reach for the sword in Apollyon's Phase 3, pray at the
+ * smoking pit, the Key of Promise on Doubting Castle's three locks, show the Roll at the Gate). Each chapter must reach
  * 'chapter:complete' with a clean console: no missing dialogue, text key, recipe or trigger.
  */
 
@@ -16,7 +16,8 @@ type Step =
   | { key: string } // a key press (Q = pray)
   | { door: string } // west of this Ch XI lock: the Satchel's Key of Promise "Use"
   | { roll: true } // the Roll in hand (a chapter started on its own has none yet)
-  | { flag: string }; // wait until this GameState flag is true
+  | { flag: string } // wait until this GameState flag is true
+  | { apollyon: 'fall' }; // once the fight runs, skip it to Phase 3 (the fight itself: tests/combat.spec.ts)
 
 const PLAN: Array<{ n: string; chapter: number; steps: Step[] }> = [
   {
@@ -74,6 +75,7 @@ const PLAN: Array<{ n: string; chapter: number; steps: Step[] }> = [
     steps: [
       'sisters_farewell',
       'apollyon_approach',
+      { apollyon: 'fall' },
       { use: 'reach_sword' },
       { flag: 'ch08.fightDone' },
       'ch08_end',
@@ -251,6 +253,21 @@ async function step(page: Page, s: Step): Promise<void> {
     await page.evaluate(() =>
       (window as unknown as Win).__pilgrim.events.emit('satchel:use', { id: 'key_promise' }),
     );
+  } else if ('apollyon' in s) {
+    const phase = s.apollyon;
+    await expect
+      .poll(
+        async () => {
+          await settle(page);
+          return page.evaluate(() => (window as unknown as Win).__pilgrim.services.tryGet('apollyon') != null);
+        },
+        { timeout: 30_000, message: 'the Apollyon fight starts' },
+      )
+      .toBe(true);
+    await page.evaluate((p) => {
+      const f = (window as unknown as Win).__pilgrim.services.get('apollyon') as { skipTo(p: string): void };
+      f.skipTo(p);
+    }, phase);
   } else if ('roll' in s) {
     await page.evaluate(() => (window as unknown as Win).__pilgrim.play!.state.giveRoll());
   } else {

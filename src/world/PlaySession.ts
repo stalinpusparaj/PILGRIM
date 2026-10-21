@@ -42,6 +42,7 @@ import { Zones } from './Zones';
 import { Slough } from './Slough';
 import { Interactables } from './Interactables';
 import { PitMarks } from './play-pits';
+import { PlayGifts } from './play-gifts';
 import { abortError, buildPlayWorld, isAbort, loadingScene, precompileWorld } from './play-build';
 import { facingAlongWay, sessionRecipe, spawnPoint } from './play-spawn';
 import { crossSkipHeld, crossStand, crossTomb } from './play-cross';
@@ -87,6 +88,8 @@ export class PlaySession {
   /** Where the HUD points next (service 'guide'). */
   readonly guide: Guide;
   readonly pits: PitMarks;
+  /** Prayer, Sword, Shield (GDD 2.7.6) and their touch buttons. */
+  readonly gifts: PlayGifts;
   hud: HUD | null = null;
 
   private readonly engine: Engine;
@@ -190,6 +193,8 @@ export class PlaySession {
       d.push(() => this.slough.dispose());
       this.interactables = new Interactables(this.player);
       d.push(() => this.interactables.dispose());
+      this.gifts = new PlayGifts({ player: this.player, state: this.state, world, zones: this.zones });
+      d.push(() => this.gifts.dispose());
       this.waystones = new Waystones({
         world,
         player: this.player,
@@ -341,8 +346,8 @@ export class PlaySession {
   }
 
   private systems(): Omit<PlayLoopParts, 'tick' | 'frame'> {
-    const { player, zones, slough, hope, burden, interactables, waystones, promises, camera } = this;
-    return { player, zones, slough, hope, burden, interactables, waystones, promises, camera };
+    const { player, zones, slough, hope, burden, interactables, gifts, waystones, promises, camera } = this;
+    return { player, zones, slough, hope, burden, interactables, gifts, waystones, promises, camera };
   }
 
   /** Per rendered frame, after the camera: the world animates around the view, the shadows follow the player. */
@@ -365,11 +370,7 @@ export class PlaySession {
       this.hud = null;
     });
     const input = services.tryGet('input');
-    // GDD 2.6: JUMP and USE; PRAY once the Prayer gift is given (Ch VII); combat buttons are the fight's call.
-    const buttons = (): void =>
-      input?.setTouchButtons(this.state.hasGift('prayer') ? ['jump', 'use', 'pray'] : ['jump', 'use']);
-    buttons();
-    this.disposers.push(events.on('gift:given', buttons), events.on('state:reset', buttons));
+    this.gifts.show(); // GDD 2.6 round buttons: JUMP, USE, PRAY with the gift, SWORD / SHIELD in combat
     input?.setGameplayActive(true);
     this.disposers.push(() => services.tryGet('input')?.setGameplayActive(false));
     this.disposers.push(playLevelAudio(this.world.level));

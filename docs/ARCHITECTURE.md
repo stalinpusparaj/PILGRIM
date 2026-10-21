@@ -755,7 +755,8 @@ export interface ProcClip {
   gait?: number; steps?: readonly number[]; cues?: readonly number[];   // in-step crossfades, foot plants, cues
 }
 export type AnimName = 'idle' | 'walk' | 'run' | 'burdenedWalk' | 'hop' | 'joyJump' | 'talk' | 'wave' | 'point' | 'sit'
-  | 'nap' | 'pray' | 'read' | 'trip' | 'coverEarsRun' | 'climb' | 'push' | 'kneel' | 'knock' | 'reach' | 'fall' | 'land';
+  | 'nap' | 'pray' | 'read' | 'trip' | 'coverEarsRun' | 'climb' | 'push' | 'kneel' | 'knock' | 'reach' | 'fall' | 'land'
+  | 'swing' | 'block';
 export interface PlayOptions { fade?: number; speed?: number; restart?: boolean }
 export class Animator {
   constructor(bones: Record<string, THREE.Bone>, params: AnimParams);       // starts on idle
@@ -773,7 +774,7 @@ export function isUpperClip(name: AnimName): boolean;
 export const DEFAULT_STYLE: AnimStyle;              // bounce 0.4, stiffness 0.4, swagger 0.1, lean 0
 // Also: ANIM_BONES, UPPER_BONES, measureRig, standardRig, types RigInfo, ArmRest, AnimStyle.
 ```
-Upper clips: talk, wave, point, read, knock, reach. Full-body one-shots: hop, joyJump, land, trip, fall.
+Upper clips: talk, wave, point, read, knock, reach, swing (sword, one-shot), block (shield held; clips-combat.ts). Full-body one-shots: hop, joyJump, land, trip, fall.
 Planted feet (`clips-gait.ts`): walk, run, burdenedWalk, coverEarsRun and push solve stride cadence and thigh swing
 together from the speed (a preferred cadence per leg length per second, the swing that makes the planted foot
 travel as far as the body, the cadence solved back within limits scaled by leg length), with a linear stance
@@ -968,6 +969,7 @@ export class Player {
   mode: PlayerMode;                       // leaving 'cutscene' takes the root's position as the new feet; leaving 'play' drops a buffered jump
   speedScale: number;                     // the Slough (0.5) and the Cross (slows to 0) write it
   walkOnly: boolean;                      // scripts slowing him to a stop (the Cross): the stick walks; jump, climbs and USE do nothing
+  aim: { x: number; z: number } | null;   // unit XZ direction he turns to face instead of his motion (Combat: the foe)
   setRecipe(id: string): void;            // sparkle outfit swap, same clip and pose
   teleport(p: THREE.Vector3, facing?: number): void;   // no streak; safe spots restart here
   bonk(reason: BonkReason): boolean;
@@ -1158,7 +1160,7 @@ export class PlaySession {
   readonly state: GameState; readonly view: THREE.PerspectiveCamera; readonly levelId: string;
   readonly burden: BurdenSystem; readonly hope: HopeSystem; readonly zones: Zones; readonly slough: Slough;
   readonly interactables: Interactables; readonly waystones: Waystones; readonly promises: Promises;
-  readonly pits: PitMarks; hud: HUD | null;
+  readonly pits: PitMarks; readonly gifts: PlayGifts /* .combat, .prayer */; hud: HUD | null;
   god: boolean;                                   // no Hope drain, no bonks (?god=1, F1)
   respawn(waystone: string | null): void;         // in front of a waystone facing along the Way, else the Way's start
   setBurden(on: boolean): void; teleport(x: number, z: number, facing?: number): void;
@@ -1169,16 +1171,87 @@ export class PlaySession {
 ```
 - start(): loading screen → `buildWorld` (gameplay-only landmarks 'pit' / 'steps' are kept out of the prop build
   and put back, `play-pits.ts`) → state ('state' service or a new one) → CollisionWorld, PitMarks, Player,
-  FollowCamera, BurdenSystem, HopeSystem, Zones, Slough, Interactables, Waystones, Promises → spawn at
-  `opts.waystone` / the state's waystone / the Way's start → shader precompile → show: HUD, gameplay input, touch
-  buttons (jump, use; + pray with the Prayer gift), the level's ambience and music.
-- Loop: player (100) → zones, Slough, Hope, Burden (110) → interactables, waystones, Promises (120) → camera (130)
+  FollowCamera, BurdenSystem, HopeSystem, Zones, Slough, Interactables, PlayGifts (Combat + Prayer), Waystones,
+  Promises → spawn at `opts.waystone` / the state's waystone / the Way's start → shader precompile → show: HUD,
+  gameplay input, touch buttons (`gifts.show()`: jump, use; + pray with the Prayer gift; + sword / shield while
+  combat is active), the level's ambience and music.
+- Loop: player (100) → zones, Slough, Hope, Burden (110) → gifts (Prayer, Combat; the prayer ring per frame),
+  interactables, waystones, Promises (120) → camera (130)
   → fly cameras / the Cross (135) → HUD timers, playtime, and per frame shadow focus + `world.update` + HUD bubble
   (140). `player:arise` → lock (taking over a running bonk's lock), `runArise`, respawn at the last waystone,
   unlock. dispose() frees newest-first (a running Cross is aborted first: nothing of it outlives the session) and
   leaves the engine on an empty scene.
 - F1 (play-debug.ts): Burden, Go to the Cross, Cross drop now, God mode, Show colliders / Way, go to each waystone;
   the systems add their own (Grow, Hope slider, Hope 0, Alone, Reveal steps, Show zones, HUD tests, camera tuning).
+
+### Combat, Prayer and Hearts (Phase 5) — `src/player/Combat.ts`, `src/player/Prayer.ts`, `src/player/Hearts.ts`, `src/world/play-gifts.ts`
+```ts
+export const COMBAT_ZONE_TYPES = ['arena', 'shadows'];   // level zone types where the Sword and Shield work
+export interface CombatTarget { pos(out: THREE.Vector3): THREE.Vector3; radius: number; hittable(): boolean;
+  onHit(from: THREE.Vector3): void }
+export class Combat {                                  // service 'combat'; one per session (PlaySession.gifts.combat)
+  engaged: boolean;                                    // scripts keep combat on anywhere (the Apollyon fight)
+  readonly active: boolean; readonly shieldUp: boolean; readonly swinging: boolean;
+  addTarget(t: CombatTarget): () => void;
+  block(from: THREE.Vector3): 'none' | 'block' | 'perfect';   // attackers ask when a hit lands; plays clang / ring
+  swing(): boolean; holdShield(on: boolean | null): void;     // scripts / tests (null = input decides)
+  update(dt: number): void; dispose(): void;
+}
+export const PRAYER = { cooldown: 15, radius: 6, hope: 20, fleeSeconds: 8, lightAhead: 25, lightSeconds: 10 };
+export class Prayer {                                  // service 'prayer'
+  readonly ready: boolean; readonly cooldownLeft: number;
+  pray(): boolean; resetCooldown(): void; update(dt): void; render(frameDt): void; dispose(): void;
+}
+export function hitCost(state, difficulty: 'easy' | 'normal'): number;   // 1, ×0.5 Breastplate, ×0.5 Easy
+export class Hearts { constructor(view: () => { setHearts(n, max?) } | null, max = 5);
+  readonly value: number; readonly visible: boolean; show(); hide(); fill(); damage(n): number; dispose() }
+export class PlayGifts { readonly combat: Combat; readonly prayer: Prayer; show(): void; buttons(): TouchButton[];
+  update(dt): void; render(frameDt): void; dispose(): void }
+```
+- Combat (GDD 2.6, 2.7.6 #1-#2): active with the gift in a combat zone or while `engaged` (`combat:active` {on}).
+  Sword (LMB / RT / SWORD): the 'swing' overlay, whoosh, a sparkle trail; at 0.15 s every hittable target within
+  1.9 m + its radius and ±80° in front gets `onHit` (`combat:swing` {hits}), one swing per 0.42 s. Shield (RMB /
+  LT / SHIELD held): the 'block' overlay; `block(from)` stops anything within ±75° in front, perfect when raised
+  within 0.3 s (0.5 s on Easy) of the hit (`combat:block` {perfect}). Shield up or mid-swing, he turns to the
+  nearest target within 10 m (`Player.aim`).
+- Prayer (GDD 2.7.6 #6, Q / Y / PRAY, any chapter once given): the 'pray' clip (moving cancels it), +20 Hope, a 6 m
+  golden ring (one mesh, own material), motes along the next 25 m of the main Way for 10 s, `prayer:burst`
+  {x, y, z, radius}; then 15 s of rest. Not while `player.mode !== 'play'`.
+- Hearts (GDD 2.7.7): quarter-heart values, shown rounded up to the half heart on HUD.setHearts;
+  `hearts:changed` {value, max}, `hearts:empty` once per emptying (re-armed by `fill()`).
+- Touch buttons: PlayGifts owns `input.setTouchButtons` during play and re-applies it after story beats.
+- F1 "Gifts": give all gifts, pray now, readout (prayer rest, combat on, shield).
+
+### Apollyon and the Shadows (Phase 5) — `src/npc/Apollyon.ts` (+ `apollyon-*.ts`), `src/npc/Shadow.ts` (+ `shadow-mesh.ts`)
+```ts
+export type ApollyonPhase = 'paws' | 'darts' | 'fall' | 'done';
+export class ApollyonFight {                           // service 'apollyon' (tests: probe(), skipTo())
+  constructor(o: { engine; session: PlaySession; npc: NPC; combat: Combat; hearts: Hearts; arena: Arena });
+  run(): Promise<void>;          // Phase 1 → 3; resolves when Christian reaches his sword
+  flyAway(): Promise<void>;      // he flaps off in smoke and is hidden
+  skipTo(phase: 'paws' | 'darts' | 'fall'): void;
+  probe(): { phase; sub; hits; bounced; darts; dartDist };
+  dispose(): void;
+}
+export class Arena { constructor(zone: LevelZone /* type 'arena', box */); start(out); home(out);
+  landing(from, dist, out); readonly facing: number; contains(x, z, margin?); clamp(p, inset?) }
+export class Shadows {                                 // service 'shadows' (tests: probe(), summon(i))
+  constructor(o: { engine; session; combat: Combat | null; zones: LevelZone[] /* type 'shadows' */; seed });
+  readonly count: number; setActive(on: boolean): void; dispose(): void;
+}
+```
+- The fight (GDD 2.9) is a fixed-step state machine on its own loop systems (update at NPC_ORDER + 2, pose and glows
+  after the World draws at PLAY_ORDER.world + 2). Phases in `apollyon-phases.ts` (paws: approach → telegraph (paw
+  glow + red ground ring, 0.8 s / 1.6 s Easy) → slam → blocked: 'open' belly 2 s; darts: takeoff → hover (belly
+  brightens) → volley of 3 → rest; 3 bounced darts → knocked → 'down' 4 s) and `apollyon-fall.ts` (swoop → throw
+  in slow motion, the sword (`apollyon-sword.ts`) lands 4 m off → "[E] Reach for the sword", 5 s with Timed
+  prompts). 3 hits per phase. Body language and glows: `apollyon-body.ts`; darts: `apollyon-darts.ts`; the sky
+  darkens per phase: `apollyon-sky.ts`. Christian is held inside the arena and outside Apollyon's body. Events
+  `apollyon:phase` {phase}, `apollyon:hit` {phase, hits}. `hearts:empty` → I SHALL ARISE → the same phase again.
+- Shadows (GDD 2.9, Ch IX): placed along each 'shadows' way zone (`count`, default 4), 2 instanced meshes for the
+  swarm. lurk → chase within 11 m; within 3.2 m drain 3 Hope/s (Helmet half), within 2.4 m push him toward the
+  Way's edge; `prayer:burst` → flee 8 s (`shadow:flee` {count}); a sword hit → scatter 3 s (`shadow:scatter`);
+  never destroyed; `setActive(false)` at dawn.
 
 New events, all declared in their modules: `zone:enter/exit/hazard`, `player:bonk/landed/jump/recipe/arise`,
 `hope:low`, `burden:grew/joyJump`, `slough:steps`, `interact:focus/use/hold`, `satchel:closed`; core ones used:
@@ -1429,7 +1502,11 @@ function chapterLauncher(engine, opts?: { script?: string; onManager?(m: Chapter
 - The test chapter (`src/chapters/test.ts`): Pliable is a companion, Evangelist has [E] Talk → `test_evangelist`,
   objective `ui.hud.objective.followLight`, trigger `test_cross_near` (content/levels/test.json) → toast.
 - `tests/chapters-late.spec.ts`: Chapters V-XIII and the Epilogue played through by script (every trigger in Way
-  order, every conversation answered, each chapter's key action), each reaching 'chapter:complete' with a clean console.
+  order, every conversation answered, each chapter's key action; Ch VIII skips the fight to Phase 3 and reaches
+  for the sword, Ch IX prays with Q at the smoking pit), each reaching 'chapter:complete' with a clean console.
+- Chapters VIII and IX (Phase 5): `ensureArmour(ctx)` (src/chapters/armour-kit.ts) first; Ch VIII builds the Arena,
+  Hearts and ApollyonFight when 'apollyon_approach' fires and plays the claim, the fight, the Micah 7:8 line, his
+  flight and the healing leaves; Ch IX builds the Shadows and clears the smoking pit on a `prayer:burst` near it.
 - `tests/chapters.spec.ts`: the Evangelist talk by keyboard in English and Tamil (third answer: Hope +10, cuts,
   babble, Tamil panel text; screenshots `test-results/phase3/chapter-talk-<lang>.png`), 5 builds with flat
   memory and listeners, title → START → opening → Chapter I (the test chapter in its place), clean consoles.
@@ -1562,7 +1639,7 @@ ropes `stepPitch('rope_snap', i)`; dialogue emits `'audio:duck' {on}` around lin
   the dialogue demo scene (`?dialogue=test`). GameFlow is `services.get('flow')` (`probe()` for tests).
 - Phase 1 specs (`tests/support.ts` holds the shared console capture, frame waits and typings):
   - `tests/lab.spec.ts`: `?lab=1` boots with zero console errors/warnings; every recipe builds and its main mesh is
-    exactly 1 draw call (2 only with a glow mesh), < 2500 triangles; every recipe runs all 22 clips and 8
+    exactly 1 draw call (2 only with a glow mesh), < 2500 triangles; every recipe runs all 24 clips and 8
     expressions (correct mouth bone shown), blinks at least twice in 12 s and keeps every bone finite and above
     ground, napping and praying close the eyes, and planted feet slide less than 25 % of the body speed at mid-stance
     (walk, run; burdened walk < 15 %) at the GDD 2.7.1 speeds; every clip and expression also plays live on burdened
@@ -1594,6 +1671,12 @@ ropes `stepPitch('rope_snap', i)`; dialogue emits `'audio:duck' {on}` around lin
   - Both save report screenshots to `test-results/phase2/` (burdened-walk, interaction-bubble-keyboard/-touch/-pad,
     touch-controls, cross-drop-ropes/-sack-rolling/-tomb/-stretch, joy-jump, free-run, bonk-stars,
     slough-steps, hud-lantern-low-hope, arise-screen). Every test runs with a clean console.
+- Phase 5 combat spec `tests/combat.spec.ts` (screenshots `test-results/combat/`): an in-page bot beats Apollyon's
+  three phases with shield blocks, at least 3 perfect blocks and sword hits, then reaches for the sword (hearts
+  shown, then hidden; Apollyon gone; `ch08.fightDone`); 0 hearts shows I SHALL ARISE and restarts the same phase
+  with 5 hearts; on touch SWORD / SHIELD show only inside the arena; in Ch IX, Q prays (+20 Hope, one burst, then
+  rest), a close shadow drains Hope, prayer makes it flee and the sword scatters one for 3 s, and a prayer at the
+  smoking pit clears it; restarting Ch VIII mid-fight and Ch IX keeps GPU memory and listeners flat.
 - Phase 3 specs (`tests/story-support.ts`: flow probe, fake standard gamepad, dialogue drivers):
   - `tests/story.spec.ts`: `?dialogue=test` plays the sample in English (key 2) and Tamil (a click) with a clean
     console: every line shows, Hope moves by the chosen amount, the camera cuts between lines, babble is spoken for

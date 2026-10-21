@@ -1,8 +1,8 @@
 /**
  * The play session's loop systems (fixed 60 Hz update + per-frame render, src/core/Loop.ts) in their order:
- * input-driven player → zones, the Slough, Hope, the Burden → interactables, waystones, Promises → the follow
- * camera → (fly cameras, PLAY_ORDER.cameraOverride) → HUD timers + playtime, and per frame the world around the
- * camera's view. Render runs in the same order: player interpolation → Slough sink → camera → world + HUD.
+ * input-driven player → zones, the Slough, Hope, the Burden → gifts (Prayer, Sword, Shield), interactables,
+ * waystones, Promises → the follow camera → (fly cameras, PLAY_ORDER.cameraOverride) → HUD timers + playtime, and
+ * per frame the world around the camera's view. Render runs in the same order: player interpolation → Slough sink → camera → world + HUD.
  */
 import type { Loop, System } from '../core/Loop';
 
@@ -28,6 +28,8 @@ export interface PlayLoopParts {
   hope: Stepper;
   burden: Stepper;
   interactables: Stepper;
+  /** Prayer, Sword and Shield (after the player moved, before the interactables). */
+  gifts: Stepper & { render(frameDt: number): void };
   waystones: Stepper;
   promises: Stepper;
   camera: System;
@@ -56,10 +58,12 @@ export function addPlayLoop(loop: Loop, p: PlayLoopParts): Array<() => void> {
     loop.add(
       {
         update: (dt) => {
+          p.gifts.update(dt);
           p.interactables.update(dt);
           p.waystones.update(dt);
           p.promises.update(dt);
         },
+        render: (_a, frameDt) => p.gifts.render(frameDt),
       },
       PLAY_ORDER.interact,
     ),

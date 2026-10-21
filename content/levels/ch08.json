@@ -52,7 +52,7 @@
   ],
   "triggers": [
     { "id": "sisters_farewell", "shape": "circle", "at": [-80, 0, -2], "r": 8, "script": "sistersFarewell", "once": true },
-    { "id": "apollyon_approach", "shape": "circle", "at": [40, 0, 0], "r": 12, "script": "apollyonApproach", "once": true },
+    { "id": "apollyon_approach", "shape": "circle", "at": [12, 0, 0], "r": 8, "script": "apollyonApproach", "once": true },
     { "id": "ch08_end", "shape": "circle", "at": [126, 0, -6], "r": 8, "script": "chapterEnd", "once": false }
   ],
   "waystones": [
