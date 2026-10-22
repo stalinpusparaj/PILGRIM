@@ -1,0 +1,21 @@
+/* Chapter X trial: the jury's name cards (src/chapters/ch10-jury.ts). Cream cards like the HUD's panels. */
+.ch10-jury {
+  position: absolute; left: 50%; bottom: calc(18% + var(--safe-bottom, 0px)); transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 0.4em; pointer-events: none; z-index: 26;
+}
+.ch10-jury__title {
+  font-family: var(--font-title, Georgia, serif); letter-spacing: 0.18em; color: var(--ink-inverse, #fff8ea);
+  font-size: calc(var(--fs-body, 20px) * 0.9); text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+.ch10-jury__card {
+  padding: 0.35em 1.1em; border-radius: var(--radius-sm, 12px); background: var(--panel, #fff4dc);
+  color: var(--ink, #3b2a1f); border: 3px solid var(--panel-edge, #e6c891);
+  box-shadow: 0 5px 0 var(--shadow-solid, #c9a066), 0 10px 22px var(--shadow, rgba(59, 36, 20, 0.35));
+  font-size: calc(var(--fs-body, 20px) * 1.15); font-weight: 700; white-space: nowrap;
+  animation: ch10-card-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes ch10-card-pop {
+  from { opacity: 0; transform: translateY(16px) scale(0.85) rotate(-3deg); }
+  to { opacity: 1; transform: none; }
+}
+body.reduce-motion .ch10-jury__card { animation: none; }

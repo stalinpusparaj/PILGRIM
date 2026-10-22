@@ -20,7 +20,6 @@ import { events } from '../core/Events';
 import { ParticleEmitter } from '../gen/Particles';
 import { LookShift, type Look } from '../gen/fx/LookShift';
 import { Shadows } from '../npc/Shadow';
-import { ensureArmour } from './armour-kit';
 import type { ChapterContext, ChapterScript } from './types';
 
 const WHISPERS = [
@@ -55,7 +54,6 @@ class Chapter9 {
     const ctx = this.ctx;
     this.pitDone = ctx.state.flag('ch09.pitDone') === true;
     const dawnBroken = ctx.state.flag('ch09.dawnBroken') === true;
-    ensureArmour(ctx);
 
     ctx.objective('ch09.objective.crossValley');
     ctx.music('valley', 'sad');

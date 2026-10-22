@@ -15,7 +15,6 @@ import { events } from '../core/Events';
 import { Hearts } from '../player/Hearts';
 import { ApollyonFight, type ApollyonPhase } from '../npc/Apollyon';
 import { Arena } from '../npc/apollyon-arena';
-import { ensureArmour } from './armour-kit';
 import type { ChapterContext, ChapterScript } from './types';
 
 const PHASE_TEXT: Record<Exclude<ApollyonPhase, 'done'>, { toast: string; objective: string }> = {
@@ -39,7 +38,6 @@ class Chapter8 {
   start(): void {
     const ctx = this.ctx;
     this.fightDone = ctx.state.flag('ch08.fightDone') === true;
-    ensureArmour(ctx);
 
     ctx.objective(this.fightDone ? 'ui.hud.objective.followLight' : 'ch08.objective.crossValley');
     ctx.music(this.fightDone ? 'pilgrim' : 'apollyon', 'calm');

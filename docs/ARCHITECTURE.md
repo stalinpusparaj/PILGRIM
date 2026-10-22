@@ -1480,7 +1480,9 @@ class ChapterManager {
 // src/game/flow-launcher.ts
 function chapterLauncher(engine, opts?: { script?: string; onManager?(m: ChapterManager): void }): ChapterLauncher;  // GameFlow's default
 ```
-- launch(chapter, waystone, state): the script (`CHAPTERS[chapterKey(n)]`, or the forced key; a chapter with no
+- launch(chapter, waystone, state): `catchUp(state, chapter)` (src/game/chapter-progress.ts: from Ch VII no Burden,
+  the Roll and the Key of Promise; from Ch VIII the six armoury gifts; only what is missing, quietly; not for the
+  Epilogue or a forced script) → the script (`CHAPTERS[chapterKey(n)]`, or the forced key; a chapter with no
   script yet plays `test` with a `console.info`) → `PlaySession.start(engine, script.level, { state, waystone,
   loading: chapterLoadingInfo(chapter) })` → `state.setChapter(n)` if it differs → `ChapterRuntime` (the context)
   + `Triggers` → `'hud:chapterCard'` → `script.start(ctx)` on the next microtask, not awaited (errors logged).
@@ -1504,10 +1506,20 @@ function chapterLauncher(engine, opts?: { script?: string; onManager?(m: Chapter
   `events.count()` flat (tests/chapters.spec.ts).
 - The test chapter (`src/chapters/test.ts`): Pliable is a companion, Evangelist has [E] Talk → `test_evangelist`,
   objective `ui.hud.objective.followLight`, trigger `test_cross_near` (content/levels/test.json) → toast.
+- Chapter X (Phase 5, GDD 2.10) is split by beat: `ch10.ts` (stages road → fair → trial → sneak → free, flags
+  'ch10.faithfulJoined', 'ch10.talkativeDone', 'ch10.arrested', 'ch10.escaped'), `ch10-pride.ts` (Faithful ahead;
+  run past him = trip), `ch10-talkative.ts` (piled bubbles, the telling question), `ch10-fair.ts` (keepers, "Yes
+  please" sacks: -10 % speed each, the chapter owns `player.speedScale`; crowds), `ch10-trial.ts` (cage, witnesses,
+  jury pan with `ch10-jury.ts` name cards, night, `ch10-chariot.ts`), `ch10-night.ts` (night LookShift, watchmen
+  patrols, lantern pools: caught = back to 'sneak_start'), `ch10-kit.ts` (zone lookups, instanced crowds). Level
+  zones it reads: types 'crowd' (count, face; `day: "cage"` = the square), 'jury', 'spot' ('cage_inside',
+  'sneak_start', 'chariot_spot'), 'patrol' (npc, phase).
+- `tests/ch10.spec.ts`: the pride trip by running, Talkative's pile and questions, a "Yes please" sack slowing him
+  (No thank you does not), and arrest → jury cards → chariot → night (a lantern catches him) → Hopeful → day.
 - `tests/chapters-late.spec.ts`: Chapters V-XIII and the Epilogue played through by script (every trigger in Way
   order, every conversation answered, each chapter's key action; Ch VIII skips the fight to Phase 3 and reaches
   for the sword, Ch IX prays with Q at the smoking pit), each reaching 'chapter:complete' with a clean console.
-- Chapters VIII and IX (Phase 5): `ensureArmour(ctx)` (src/chapters/armour-kit.ts) first; Ch VIII builds the Arena,
+- Chapters VIII and IX (Phase 5): Ch VIII builds the Arena,
   Hearts and ApollyonFight when 'apollyon_approach' fires and plays the claim, the fight, the Micah 7:8 line, his
   flight and the healing leaves; Ch IX builds the Shadows, clears the smoking pit on a `prayer:burst` inside
   'ember_pit_near' or near the smoke, and eases the valley to dawn at 'dawn_breaks' (LookShift).

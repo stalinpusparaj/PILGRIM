@@ -7,18 +7,29 @@
     ]
   },
   {
+    "id": "ch10_pride",
+    "nodes": [
+      { "id": "n1", "speaker": "faithful", "text": "ch10.faithful.helpUp", "expr": "happy", "anim": "reach", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch10.christian.oops", "expr": "sad", "next": "n3" },
+      { "id": "n3", "speaker": "faithful", "text": "ch10.faithful.pride", "expr": "happy", "next": "n4" },
+      { "id": "n4", "speaker": "christian", "text": "ch10.christian.sideBySide", "expr": "happy" }
+    ]
+  },
+  {
     "id": "ch10_talkative",
     "nodes": [
-      { "id": "n1", "speaker": "talkative", "text": "ch10.talkative.1", "next": "n2" },
-      { "id": "n2", "speaker": "talkative", "text": "ch10.talkative.2", "next": "n3" },
-      { "id": "n3", "speaker": "christian", "text": "ch10.christian.question",
+      { "id": "n1", "speaker": "christian", "text": "ch10.christian.mayAsk",
         "choices": [
-          { "text": "ch10.choice.ask1", "next": "n4" },
-          { "text": "ch10.choice.ask2", "next": "n4" }
+          { "text": "ch10.choice.whatTalk", "next": "n2", "cond": "!ch10.askedTalk", "effects": { "flag": { "ch10.askedTalk": true } } },
+          { "text": "ch10.choice.heaven", "next": "n3", "cond": "!ch10.askedHeaven", "effects": { "flag": { "ch10.askedHeaven": true } } },
+          { "text": "ch10.choice.doIt", "next": "n4" }
         ]
       },
-      { "id": "n4", "speaker": "talkative", "text": "ch10.talkative.3", "next": "n5" },
-      { "id": "n5", "speaker": "talkative", "text": "ch10.talkative.leaves" }
+      { "id": "n2", "speaker": "talkative", "text": "ch10.talkative.everything", "expr": "happy", "next": "n1" },
+      { "id": "n3", "speaker": "talkative", "text": "ch10.talkative.shiny", "expr": "happy", "next": "n1" },
+      { "id": "n4", "speaker": "talkative", "text": "ch10.talkative.doThem", "expr": "surprised", "next": "n5" },
+      { "id": "n5", "speaker": "faithful", "text": "ch10.faithful.lamp", "expr": "determined", "next": "n6" },
+      { "id": "n6", "speaker": "talkative", "text": "ch10.talkative.leaves", "expr": "angry" }
     ]
   },
   {
@@ -26,6 +37,97 @@
     "nodes": [
       { "id": "n1", "speaker": "evangelist_brief", "text": "ch10.evangelist.warn", "anim": "point", "next": "n2" },
       { "id": "n2", "speaker": "christian", "text": "ch10.christian.ready", "expr": "determined" }
+    ]
+  },
+  {
+    "id": "ch10_stall_games",
+    "nodes": [
+      { "id": "n1", "speaker": "keeper_games", "text": "ch10.keeper.games", "expr": "happy", "anim": "wave",
+        "choices": [
+          { "text": "ui.verb.yesPlease", "next": "n2", "effects": { "flag": { "ch10.yes.games": true } } },
+          { "text": "ui.verb.noThankYou", "next": "n3", "effects": { "flag": { "ch10.no.games": true } } }
+        ]
+      },
+      { "id": "n2", "speaker": "keeper_games", "text": "ch10.keeper.yes", "expr": "happy" },
+      { "id": "n3", "speaker": "keeper_games", "text": "ch10.keeper.no", "expr": "sad" }
+    ]
+  },
+  {
+    "id": "ch10_stall_sweets",
+    "nodes": [
+      { "id": "n1", "speaker": "keeper_sweets", "text": "ch10.keeper.sweets", "expr": "happy", "anim": "wave",
+        "choices": [
+          { "text": "ui.verb.yesPlease", "next": "n2", "effects": { "flag": { "ch10.yes.sweets": true } } },
+          { "text": "ui.verb.noThankYou", "next": "n3", "effects": { "flag": { "ch10.no.sweets": true } } }
+        ]
+      },
+      { "id": "n2", "speaker": "keeper_sweets", "text": "ch10.keeper.yes", "expr": "happy" },
+      { "id": "n3", "speaker": "keeper_sweets", "text": "ch10.keeper.no", "expr": "sad" }
+    ]
+  },
+  {
+    "id": "ch10_stall_hats",
+    "nodes": [
+      { "id": "n1", "speaker": "keeper_hats", "text": "ch10.keeper.hats", "expr": "happy", "anim": "wave",
+        "choices": [
+          { "text": "ui.verb.yesPlease", "next": "n2", "effects": { "flag": { "ch10.yes.hats": true } } },
+          { "text": "ui.verb.noThankYou", "next": "n3", "effects": { "flag": { "ch10.no.hats": true } } }
+        ]
+      },
+      { "id": "n2", "speaker": "keeper_hats", "text": "ch10.keeper.yes", "expr": "happy" },
+      { "id": "n3", "speaker": "keeper_hats", "text": "ch10.keeper.no", "expr": "sad" }
+    ]
+  },
+  {
+    "id": "ch10_stall_trinkets",
+    "nodes": [
+      { "id": "n1", "speaker": "keeper_trinkets", "text": "ch10.keeper.trinkets", "expr": "happy", "anim": "wave",
+        "choices": [
+          { "text": "ui.verb.yesPlease", "next": "n2", "effects": { "flag": { "ch10.yes.trinkets": true } } },
+          { "text": "ui.verb.noThankYou", "next": "n3", "effects": { "flag": { "ch10.no.trinkets": true } } }
+        ]
+      },
+      { "id": "n2", "speaker": "keeper_trinkets", "text": "ch10.keeper.yes", "expr": "happy" },
+      { "id": "n3", "speaker": "keeper_trinkets", "text": "ch10.keeper.no", "expr": "sad" }
+    ]
+  },
+  {
+    "id": "ch10_buy_truth",
+    "nodes": [
+      { "id": "n1", "speaker": "crier", "text": "ch10.crier.what", "expr": "surprised", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch10.christian.truth", "expr": "determined", "next": "n3" },
+      { "id": "n3", "speaker": "crier", "text": "ch10.crier.noStall", "expr": "angry", "next": "n4" },
+      { "id": "n4", "speaker": "crier", "text": "ch10.crier.guards", "expr": "angry", "anim": "point" }
+    ]
+  },
+  {
+    "id": "ch10_trial",
+    "nodes": [
+      { "id": "n1", "speaker": "lord_hate_good", "text": "ch10.hategood.order", "expr": "angry", "next": "n2" },
+      { "id": "n2", "speaker": "envy", "text": "ch10.envy.says", "expr": "angry", "next": "n3" },
+      { "id": "n3", "speaker": "superstition", "text": "ch10.superstition.says", "expr": "scared", "next": "n4" },
+      { "id": "n4", "speaker": "pickthank", "text": "ch10.pickthank.says", "expr": "happy" }
+    ]
+  },
+  {
+    "id": "ch10_verdict",
+    "nodes": [
+      { "id": "n1", "speaker": "lord_hate_good", "text": "ch10.hategood.speak", "expr": "angry", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch10.christian.ready", "expr": "determined",
+        "choices": [
+          { "text": "ch10.choice.king", "next": "n3" },
+          { "text": "ch10.choice.truth", "next": "n3" }
+        ]
+      },
+      { "id": "n3", "speaker": "faithful", "text": "ch10.faithful.brave", "expr": "determined", "next": "n4" },
+      { "id": "n4", "speaker": "lord_hate_good", "text": "ch10.hategood.verdict", "expr": "angry" }
+    ]
+  },
+  {
+    "id": "ch10_farewell",
+    "nodes": [
+      { "id": "n1", "speaker": "faithful", "text": "ch10.faithful.goodbye", "expr": "happy", "next": "n2" },
+      { "id": "n2", "speaker": "christian", "text": "ch10.christian.goodbye", "expr": "sad" }
     ]
   },
   {

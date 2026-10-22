@@ -5,7 +5,8 @@
  *
  *   const dawn = new LookShift(world, DAWN_LOOK, 4);   // 4 s ease
  *   loop: dawn.update(frameDt)                          // or dawn.snap() to arrive at once
- *   dawn.dispose();                                     // back to the level's own look
+ *   dawn.back();                                        // eases back to the level's own look
+ *   dawn.dispose();                                     // back to the level's own look at once
  */
 import * as THREE from 'three';
 import type { World } from '../../world/World';
@@ -29,6 +30,7 @@ export class LookShift {
   private readonly colors: ColorTrack[] = [];
   private readonly nums: Array<{ set(v: number): void; from: number; to: number }> = [];
   private k = 0;
+  private goal = 1;
   private disposed = false;
 
   constructor(
@@ -75,16 +77,22 @@ export class LookShift {
     return this.k;
   }
 
-  /** Per rendered frame (or fixed step): eases toward the target. */
+  /** Per rendered frame (or fixed step): eases toward the target (or back, after `back()`). */
   update(dt: number): void {
-    if (this.disposed || this.k >= 1) return;
-    this.k = Math.min(1, this.k + dt / Math.max(1e-3, this.seconds));
+    if (this.disposed || this.k === this.goal) return;
+    const step = dt / Math.max(1e-3, this.seconds);
+    this.k = this.goal > this.k ? Math.min(this.goal, this.k + step) : Math.max(this.goal, this.k - step);
     this.apply(this.k * this.k * (3 - 2 * this.k));
+  }
+
+  /** Eases back to the level's own look over the same time. */
+  back(): void {
+    this.goal = 0;
   }
 
   /** Arrives at the target at once (a chapter reopened after its dawn). */
   snap(): void {
-    this.k = 1;
+    this.k = this.goal = 1;
     this.apply(1);
   }
 

@@ -6,7 +6,8 @@
  * launch(chapter, waystone, state):
  *   1. the script: CHAPTERS[key] ('1'..'13', 'epilogue'; `opts.script` forces one, `?chapter=test` → 'test'). A
  *      chapter with no script yet is played with the test script on the test level (logged with console.info).
- *   2. PlaySession.start(engine, script.level, {state, waystone}) behind the chapter's loading screen
+ *   2. catchUp(state, chapter) (src/game/chapter-progress.ts: Burden, Roll, gifts the story has given by then),
+ *      then PlaySession.start(engine, script.level, {state, waystone}) behind the chapter's loading screen
  *   3. state.setChapter(chapter) when it differs, the chapter card, the ChapterContext, level Triggers
  *   4. script.start(ctx) (not awaited), then every fixed step: triggers → ctx (timers, NPCs, companions) →
  *      script.update; every frame: NPC render, held talk shots, bubbles.
@@ -23,6 +24,7 @@ import type { GameState } from '../core/GameState';
 import { services } from '../core/Services';
 import { chapterKey, hasChapter, nextChapterKey } from '../chapters/index';
 import { ChapterRuntime } from '../chapters/context';
+import { catchUp } from '../game/chapter-progress';
 import type { ChapterScript } from '../chapters/types';
 import type { ChapterHandle, ChapterLauncher } from '../game/flow-types';
 import { chapterLoadingInfo } from '../ui/Loading';
@@ -246,6 +248,7 @@ export class ChapterManager {
       const script = await this.scripts.load(key);
       if (abort.signal.aborted) throw abortError();
       const forced = this.opts.script !== undefined;
+      if (!forced) catchUp(l.state, l.chapter); // a chapter opened on its own starts as the story left him
       const session = await PlaySession.start(this.engine, script.level, {
         state: l.state,
         waystone: l.waystone ?? undefined,
