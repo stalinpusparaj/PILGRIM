@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { frames, waitForMode, watchConsole } from './support';
 import { waitSim } from './play-support';
+import { waitForFlow } from './story-support';
 
 /**
  * Engagement (badges, curiosity nudges, the journey line) and the Easy lantern floor:
@@ -83,7 +84,7 @@ test('journey line, Promise nudges and badges with their toast, points and Satch
   await expect.poll(() => toasts(page)).toContain('ui.toast.badge');
   await expect.poll(async () => Number(await score())).toBeGreaterThanOrEqual(before + 75);
   await page.keyboard.press('Tab');
-  await expect(page.locator('.pg-satchel__awards')).toContainText('1 of 12');
+  await expect(page.locator('.pg-satchel__awards')).toContainText('1 of 13');
   await expect(page.locator('[data-key="badge:brightLantern"]')).not.toHaveClass(/is-locked/);
   await expect(page.locator('[data-key="badge:unshaken"]')).toHaveClass(/is-locked/);
   expect(problems, problems.join('\n')).toEqual([]);
@@ -142,3 +143,29 @@ for (const difficulty of ['easy', 'normal'] as const) {
     expect(problems.filter((p) => !p.includes('I SHALL ARISE')), problems.join('\n')).toEqual([]);
   });
 }
+
+test('CHAPTERS shows each reached land\'s Promises and badges found', async ({ page }) => {
+  test.setTimeout(60_000);
+  const problems = watchConsole(page);
+  await page.goto('/');
+  await waitForFlow(page, (p) => p.titleReady);
+  await page.evaluate(async () => {
+    const w = window as unknown as Win;
+    const s = w.__pilgrim.services.get('save') as { write(slot: string, d: unknown): Promise<void> };
+    await s.write('slot1', {
+      version: 1, chapter: 4, waystone: '', playerName: '', hasRoll: false, burden: true, gifts: [], carried: [],
+      hope: 60, promises: ['p01', 'p04'], promisesReadThisChapter: [], detours: [], flags: {},
+      achievements: ['arrowDodger'], playtimeSec: 0, savedAt: 0,
+    });
+  });
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await waitForFlow(page, (p) => p.screen === 'chapters');
+  await expect(page.locator('.pg-chapter[data-chapter="1"] .pg-chapter__finds')).toHaveText('Promises 1/1');
+  await expect(page.locator('.pg-chapter[data-chapter="3"] .pg-chapter__finds')).toHaveText('Promises 1/2');
+  await expect(page.locator('.pg-chapter[data-chapter="4"] .pg-chapter__finds')).toHaveText('Promises 0/1  ·  Badges 1/1');
+  await expect(page.locator('.pg-chapter[data-chapter="5"] .pg-chapter__finds')).toHaveCount(0); // not reached
+  await page.waitForTimeout(600); // the panel's pop-in
+  await page.screenshot({ path: 'test-results/engagement/chapters-finds.png' });
+  expect(problems, problems.join('\n')).toEqual([]);
+});

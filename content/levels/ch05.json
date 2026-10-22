@@ -5,72 +5,580 @@
   "size": 300,
   "terrain": {
     "base": 0,
-    "noise": { "scale": 0.012, "height": 1.5, "octaves": 2 },
+    "noise": {
+      "scale": 0.012,
+      "height": 1.5,
+      "octaves": 2
+    },
     "stamps": [
-      { "type": "plateau", "x": 20, "z": 10, "r": 60, "height": 0.5 },
-      { "type": "hill", "x": -100, "z": -30, "r": 45, "height": 5 },
-      { "type": "hill", "x": 120, "z": 40, "r": 40, "height": 4 }
+      {
+        "type": "plateau",
+        "x": 20,
+        "z": 10,
+        "r": 60,
+        "height": 0.5
+      },
+      {
+        "type": "hill",
+        "x": -100,
+        "z": -30,
+        "r": 45,
+        "height": 5
+      },
+      {
+        "type": "hill",
+        "x": 120,
+        "z": 40,
+        "r": 40,
+        "height": 4
+      }
     ]
   },
   "way": [
-    [-130, 0, -20],
-    [-90, 0, -12],
-    [-50, 0, -6],
-    [-10, 0, 0],
-    [30, 0, 4],
-    [70, 0, 2],
-    [110, 0, -2],
-    [136, 0, -8]
+    [
+      -130,
+      0,
+      -20
+    ],
+    [
+      -90,
+      0,
+      -12
+    ],
+    [
+      -50,
+      0,
+      -6
+    ],
+    [
+      -10,
+      0,
+      0
+    ],
+    [
+      30,
+      0,
+      4
+    ],
+    [
+      70,
+      0,
+      2
+    ],
+    [
+      110,
+      0,
+      -2
+    ],
+    [
+      136,
+      0,
+      -8
+    ]
   ],
   "detours": [],
   "zones": [
-    { "id": "house_interior", "type": "indoors", "shape": "box", "x": 20, "z": 4, "size": [50, 20] },
-    { "id": "room1", "type": "room", "shape": "circle", "x": 0, "z": 4, "r": 8 },
-    { "id": "room2", "type": "room", "shape": "circle", "x": 12, "z": 4, "r": 8 },
-    { "id": "room3", "type": "room", "shape": "circle", "x": 24, "z": 4, "r": 8 },
-    { "id": "room4", "type": "room", "shape": "circle", "x": 36, "z": 4, "r": 8 },
-    { "id": "room5", "type": "room", "shape": "circle", "x": 48, "z": 4, "r": 8 },
-    { "id": "room6", "type": "room", "shape": "circle", "x": 60, "z": 4, "r": 8 }
+    {
+      "id": "house_interior",
+      "type": "indoors",
+      "shape": "box",
+      "x": 20,
+      "z": 4,
+      "size": [
+        50,
+        20
+      ]
+    },
+    {
+      "id": "room1",
+      "type": "room",
+      "shape": "circle",
+      "x": 0,
+      "z": 4,
+      "r": 8
+    },
+    {
+      "id": "room2",
+      "type": "room",
+      "shape": "circle",
+      "x": 12,
+      "z": 4,
+      "r": 8
+    },
+    {
+      "id": "room3",
+      "type": "room",
+      "shape": "circle",
+      "x": 24,
+      "z": 4,
+      "r": 8
+    },
+    {
+      "id": "room4",
+      "type": "room",
+      "shape": "circle",
+      "x": 36,
+      "z": 4,
+      "r": 8
+    },
+    {
+      "id": "room5",
+      "type": "room",
+      "shape": "circle",
+      "x": 48,
+      "z": 4,
+      "r": 8
+    },
+    {
+      "id": "room6",
+      "type": "room",
+      "shape": "circle",
+      "x": 60,
+      "z": 4,
+      "r": 8,
+      "hopeDrain": 0.5
+    },
+    {
+      "id": "room2_middle",
+      "type": "spot",
+      "shape": "circle",
+      "x": 12,
+      "z": 5.6,
+      "r": 1
+    },
+    {
+      "id": "room4_fire",
+      "type": "spot",
+      "shape": "circle",
+      "x": 36,
+      "z": 7.4,
+      "r": 1
+    }
   ],
   "scatter": [
-    { "type": "tree_round", "density": 0.08, "minDist": 7, "keepClear": 4 },
-    { "type": "tree_cone", "density": 0.06, "minDist": 8, "keepClear": 4 },
-    { "type": "bush", "density": 0.2, "minDist": 3 },
-    { "type": "flower", "density": 0.4, "minDist": 1.2 },
-    { "type": "grass", "density": 1.5, "minDist": 0.9 }
+    {
+      "type": "tree_round",
+      "density": 0.08,
+      "minDist": 7,
+      "keepClear": 4
+    },
+    {
+      "type": "tree_cone",
+      "density": 0.06,
+      "minDist": 8,
+      "keepClear": 4
+    },
+    {
+      "type": "bush",
+      "density": 0.2,
+      "minDist": 3
+    },
+    {
+      "type": "flower",
+      "density": 0.4,
+      "minDist": 1.2
+    },
+    {
+      "type": "grass",
+      "density": 1.5,
+      "minDist": 0.9
+    }
   ],
   "landmarks": [
-    { "type": "house_b", "id": "interpreter_house", "at": [20, 0, 4], "rotY": 0, "params": { "clear": 18 } },
-    { "type": "candle", "id": "candle_entrance", "at": [-2, 0, 4] },
-    { "type": "candle", "id": "candle_room1", "at": [0, 0, 2] },
-    { "type": "candle", "id": "candle_room2", "at": [12, 0, 2] },
-    { "type": "candle", "id": "candle_room3", "at": [24, 0, 2] },
-    { "type": "candle", "id": "candle_room4", "at": [36, 0, 2] },
-    { "type": "candle", "id": "candle_room5", "at": [48, 0, 2] },
-    { "type": "candle", "id": "candle_room6", "at": [60, 0, 2] },
-    { "type": "waystone", "id": "ch05_ws1_stone", "at": [-60, 0, -4] },
-    { "type": "waystone", "id": "ch05_ws2_stone", "at": [112, 0, -6] }
+    {
+      "type": "house_b",
+      "id": "interpreter_house",
+      "at": [
+        20,
+        0,
+        -7
+      ],
+      "rotY": 0,
+      "params": {
+        "clear": 7
+      }
+    },
+    {
+      "type": "candle",
+      "id": "candle_entrance",
+      "at": [
+        -2,
+        0,
+        4
+      ]
+    },
+    {
+      "type": "candle",
+      "id": "candle_room1",
+      "at": [
+        0,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "candle",
+      "id": "candle_room2",
+      "at": [
+        12,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "candle",
+      "id": "candle_room3",
+      "at": [
+        24,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "candle",
+      "id": "candle_room4",
+      "at": [
+        36,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "candle",
+      "id": "candle_room5",
+      "at": [
+        48,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "candle",
+      "id": "candle_room6",
+      "at": [
+        60,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "lamp",
+      "id": "room1_lamp_a",
+      "at": [
+        -2.6,
+        0,
+        5.5
+      ],
+      "params": {
+        "height": 1.6,
+        "lit": false
+      }
+    },
+    {
+      "type": "lamp",
+      "id": "room1_lamp_b",
+      "at": [
+        0,
+        0,
+        6.2
+      ],
+      "params": {
+        "height": 1.6,
+        "lit": false
+      }
+    },
+    {
+      "type": "lamp",
+      "id": "room1_lamp_c",
+      "at": [
+        2.6,
+        0,
+        5.5
+      ],
+      "params": {
+        "height": 1.6,
+        "lit": false
+      }
+    },
+    {
+      "type": "sign",
+      "id": "room1_portrait",
+      "at": [
+        0,
+        0,
+        7.8
+      ]
+    },
+    {
+      "type": "crate",
+      "id": "room2_broom",
+      "at": [
+        10.2,
+        0,
+        6.6
+      ]
+    },
+    {
+      "type": "barrel",
+      "id": "room2_jug",
+      "at": [
+        13.8,
+        0,
+        6.6
+      ]
+    },
+    {
+      "type": "wall",
+      "id": "room4_wall",
+      "at": [
+        36,
+        0,
+        9
+      ],
+      "params": {
+        "length": 5,
+        "height": 1.9
+      }
+    },
+    {
+      "type": "crate",
+      "id": "room5_desk",
+      "at": [
+        48,
+        0,
+        6.7
+      ]
+    },
+    {
+      "type": "cage",
+      "id": "room6_cage",
+      "at": [
+        60,
+        0,
+        8
+      ],
+      "rotY": 3.14
+    },
+    {
+      "type": "waystone",
+      "id": "ch05_ws1_stone",
+      "at": [
+        -60,
+        0,
+        -4
+      ]
+    },
+    {
+      "type": "waystone",
+      "id": "ch05_ws2_stone",
+      "at": [
+        112,
+        0,
+        -6
+      ]
+    }
   ],
   "npcs": [
-    { "id": "interpreter", "recipe": "interpreter", "role": "story", "at": [-2, 0, 6], "rotY": 0 }
+    {
+      "id": "interpreter",
+      "recipe": "interpreter",
+      "role": "story",
+      "at": [
+        -2,
+        0,
+        6
+      ],
+      "rotY": 0
+    },
+    {
+      "id": "passion",
+      "recipe": "son_2",
+      "role": "story",
+      "at": [
+        22.4,
+        0,
+        7.4
+      ],
+      "rotY": 3.14
+    },
+    {
+      "id": "patience",
+      "recipe": "son_3",
+      "role": "story",
+      "at": [
+        25.6,
+        0,
+        7.4
+      ],
+      "rotY": 3.14
+    },
+    {
+      "id": "oil_helper",
+      "recipe": "crowd_5",
+      "role": "story",
+      "at": [
+        36,
+        0,
+        11.2
+      ],
+      "rotY": 3.14
+    },
+    {
+      "id": "scribe",
+      "recipe": "crowd_6",
+      "role": "story",
+      "at": [
+        48,
+        0,
+        7.6
+      ],
+      "rotY": 3.14
+    },
+    {
+      "id": "cage_man",
+      "recipe": "crowd_3",
+      "role": "story",
+      "at": [
+        60,
+        0,
+        8
+      ],
+      "rotY": 3.14
+    }
   ],
   "triggers": [
-    { "id": "house_arrive", "shape": "circle", "at": [-4, 0, 4], "r": 6, "script": "houseArrive", "once": true },
-    { "id": "room1_look", "shape": "circle", "at": [0, 0, 4], "r": 5, "script": "room1Look", "once": true },
-    { "id": "room2_look", "shape": "circle", "at": [12, 0, 4], "r": 5, "script": "room2Look", "once": true },
-    { "id": "room3_look", "shape": "circle", "at": [24, 0, 4], "r": 5, "script": "room3Look", "once": true },
-    { "id": "room4_look", "shape": "circle", "at": [36, 0, 4], "r": 5, "script": "room4Look", "once": true },
-    { "id": "room5_look", "shape": "circle", "at": [48, 0, 4], "r": 5, "script": "room5Look", "once": true },
-    { "id": "room6_look", "shape": "circle", "at": [60, 0, 4], "r": 5, "script": "room6Look", "once": true },
-    { "id": "ch05_end", "shape": "circle", "at": [126, 0, -5], "r": 8, "script": "chapterEnd", "once": false }
+    {
+      "id": "house_arrive",
+      "shape": "circle",
+      "at": [
+        -4,
+        0,
+        4
+      ],
+      "r": 6,
+      "script": "houseArrive",
+      "once": true
+    },
+    {
+      "id": "room1_look",
+      "shape": "circle",
+      "at": [
+        0,
+        0,
+        4
+      ],
+      "r": 5,
+      "script": "room1Look",
+      "once": true
+    },
+    {
+      "id": "room2_look",
+      "shape": "circle",
+      "at": [
+        12,
+        0,
+        4
+      ],
+      "r": 5,
+      "script": "room2Look",
+      "once": true
+    },
+    {
+      "id": "room3_look",
+      "shape": "circle",
+      "at": [
+        24,
+        0,
+        4
+      ],
+      "r": 5,
+      "script": "room3Look",
+      "once": true
+    },
+    {
+      "id": "room4_look",
+      "shape": "circle",
+      "at": [
+        36,
+        0,
+        4
+      ],
+      "r": 5,
+      "script": "room4Look",
+      "once": true
+    },
+    {
+      "id": "room5_look",
+      "shape": "circle",
+      "at": [
+        48,
+        0,
+        4
+      ],
+      "r": 5,
+      "script": "room5Look",
+      "once": true
+    },
+    {
+      "id": "room6_look",
+      "shape": "circle",
+      "at": [
+        60,
+        0,
+        4
+      ],
+      "r": 5,
+      "script": "room6Look",
+      "once": true
+    },
+    {
+      "id": "ch05_end",
+      "shape": "circle",
+      "at": [
+        126,
+        0,
+        -5
+      ],
+      "r": 8,
+      "script": "chapterEnd",
+      "once": false
+    }
   ],
   "waystones": [
-    { "id": "ch05_w1", "at": [-60, 0, -4] },
-    { "id": "ch05_w2", "at": [112, 0, -6] }
+    {
+      "id": "ch05_w1",
+      "at": [
+        -60,
+        0,
+        -4
+      ]
+    },
+    {
+      "id": "ch05_w2",
+      "at": [
+        112,
+        0,
+        -6
+      ]
+    }
   ],
   "promises": [
-    { "id": "p07", "at": [40, 0.8, 12] },
-    { "id": "p08", "at": [52, 0.8, -8] }
+    {
+      "id": "p07",
+      "at": [
+        40,
+        0.8,
+        12
+      ]
+    },
+    {
+      "id": "p08",
+      "at": [
+        52,
+        0.8,
+        -8
+      ]
+    }
   ],
   "ambience": "candle",
   "music": "interpreter"

@@ -35,6 +35,7 @@ import {
   type ScreenBox,
 } from '../ui/dialogue-bubble-layout';
 import '../ui/dialogue.css';
+import { warnLongBubble } from './bubble-length';
 
 declare module '../core/Services' {
   interface ServiceMap {
@@ -105,7 +106,6 @@ const FAST_LEAVE_MS = 90;
 /** Bubble lift easing time constant (s). */
 const LIFT_EASE = 0.09;
 const TAIL_MARGIN = 24;
-const SENTENCE_END = /[.!?…।]+(?=\s|$)/gu;
 
 export class SpeechBubbles {
   private readonly parent: HTMLElement;
@@ -163,7 +163,7 @@ export class SpeechBubbles {
     if (this.disposed) return closedHandle();
     this.replaceFor(character, opts.pile === true);
     const text = t(key, opts.params);
-    this.checkLength(key, text);
+    warnLongBubble(key, text, this.warned);
 
     // The typing text is hidden from screen readers; the full line is announced once from its own span.
     const textEl = h('div', { className: 'dlg-bubble__text', 'aria-hidden': 'true' });
@@ -391,14 +391,6 @@ export class SpeechBubbles {
       b.tw = typewrite(b.text, text, { cps: 0, voice: null });
       this.measure(b);
     }
-  }
-
-  private checkLength(key: string, text: string): void {
-    if (!import.meta.env.DEV || this.warned.has(key)) return;
-    const sentences = text.trim().match(SENTENCE_END)?.length ?? 0;
-    if (sentences <= 2) return;
-    this.warned.add(key);
-    console.warn(`[SpeechBubbles] "${key}" has ${sentences} sentences (GDD 2.8: max 2 per bubble)`);
   }
 }
 

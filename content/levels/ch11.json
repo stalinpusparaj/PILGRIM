@@ -5,98 +5,578 @@
   "size": 300,
   "terrain": {
     "base": 0,
-    "noise": { "scale": 0.018, "height": 2.5, "octaves": 3 },
+    "noise": {
+      "scale": 0.018,
+      "height": 2.5,
+      "octaves": 3
+    },
     "stamps": [
-      { "type": "plateau", "x": -80, "z": 0, "r": 40, "height": 0.5 },
-      { "type": "valley", "x": -20, "z": -60, "r": 14, "depth": 4 },
-      { "type": "hill", "x": 30, "z": 20, "r": 20, "height": 3 },
-      { "type": "plateau", "x": 70, "z": -10, "r": 30, "height": 1 },
-      { "type": "hill", "x": 110, "z": 0, "r": 40, "height": 6 }
+      {
+        "type": "plateau",
+        "x": -80,
+        "z": 0,
+        "r": 40,
+        "height": 0.5
+      },
+      {
+        "type": "valley",
+        "x": -20,
+        "z": -60,
+        "r": 14,
+        "depth": 4
+      },
+      {
+        "type": "hill",
+        "x": 30,
+        "z": 20,
+        "r": 20,
+        "height": 3
+      },
+      {
+        "type": "plateau",
+        "x": 70,
+        "z": -10,
+        "r": 30,
+        "height": 1
+      },
+      {
+        "type": "hill",
+        "x": 110,
+        "z": 0,
+        "r": 40,
+        "height": 6
+      }
     ]
   },
   "way": [
-    [-130, 0, -4],
-    [-100, 0, -2],
-    [-68, 0, 0],
-    [-40, 0, 2],
-    [-10, 0, 0],
-    [20, 0, -2],
-    [50, 0, -6],
-    [80, 0, -4],
-    [110, 0, 0],
-    [136, 0, 2]
+    [
+      -130,
+      0,
+      -4
+    ],
+    [
+      -100,
+      0,
+      -2
+    ],
+    [
+      -68,
+      0,
+      0
+    ],
+    [
+      -40,
+      0,
+      2
+    ],
+    [
+      -10,
+      0,
+      0
+    ],
+    [
+      20,
+      0,
+      -2
+    ],
+    [
+      50,
+      0,
+      -6
+    ],
+    [
+      80,
+      0,
+      -4
+    ],
+    [
+      110,
+      0,
+      0
+    ],
+    [
+      136,
+      0,
+      2
+    ]
   ],
   "detours": [
     {
       "id": "stile_meadow",
       "points": [
-        [50, 0, -6],
-        [54, 0, -16],
-        [58, 0, -30],
-        [60, 0, -44]
+        [
+          50,
+          0,
+          -6
+        ],
+        [
+          54,
+          0,
+          -16
+        ],
+        [
+          58,
+          0,
+          -30
+        ],
+        [
+          60,
+          0,
+          -44
+        ]
       ],
       "width": 4
     }
   ],
   "zones": [
-    { "id": "ease_plain", "type": "meadow", "shape": "circle", "x": -80, "z": 0, "r": 40 },
-    { "id": "river_rest", "type": "river", "shape": "circle", "x": -20, "z": 0, "r": 16 },
-    { "id": "rocky_road", "type": "stone", "shape": "way", "from": 0.52, "to": 0.68 },
-    { "id": "soft_meadow", "type": "detour", "shape": "way", "path": "stile_meadow", "from": 0.1, "to": 1.0 },
-    { "id": "dungeon_zone", "type": "dungeon", "shape": "circle", "x": 110, "z": 0, "r": 22, "hopeDrain": 2.0 },
-    { "id": "silver_mine", "type": "pit", "shape": "circle", "x": -100, "z": 25, "r": 3 }
+    {
+      "id": "ease_plain",
+      "type": "meadow",
+      "shape": "circle",
+      "x": -80,
+      "z": 0,
+      "r": 40
+    },
+    {
+      "id": "river_rest",
+      "type": "river",
+      "shape": "circle",
+      "x": -20,
+      "z": 0,
+      "r": 16
+    },
+    {
+      "id": "rocky_road",
+      "type": "stone",
+      "shape": "way",
+      "from": 0.52,
+      "to": 0.68
+    },
+    {
+      "id": "soft_meadow",
+      "type": "detour",
+      "shape": "way",
+      "path": "stile_meadow",
+      "from": 0.1,
+      "to": 1.0
+    },
+    {
+      "id": "dungeon_zone",
+      "type": "dungeon",
+      "shape": "circle",
+      "x": 110,
+      "z": 0,
+      "r": 22,
+      "hopeDrain": 2.0
+    },
+    {
+      "id": "silver_mine",
+      "type": "pit",
+      "shape": "circle",
+      "x": -100,
+      "z": 25,
+      "r": 3
+    },
+    {
+      "id": "shelter",
+      "type": "spot",
+      "shape": "circle",
+      "x": 60,
+      "z": -42,
+      "r": 1
+    }
   ],
   "scatter": [
-    { "type": "grass", "density": 1.5, "minDist": 0.9 },
-    { "type": "flower", "zone": "ease_plain", "density": 0.6, "minDist": 1.1 },
-    { "type": "flower", "zone": "soft_meadow", "density": 1.2, "minDist": 0.9 },
-    { "type": "tree_fruit", "zone": "river_rest", "density": 0.5, "minDist": 4 },
-    { "type": "tree_round", "density": 0.05, "minDist": 7, "keepClear": 3 },
-    { "type": "rock", "zone": "rocky_road", "density": 0.3, "minDist": 3 },
-    { "type": "rock", "density": 0.05, "minDist": 5 },
-    { "type": "bush", "density": 0.15, "minDist": 3 }
+    {
+      "type": "grass",
+      "density": 1.5,
+      "minDist": 0.9
+    },
+    {
+      "type": "flower",
+      "zone": "ease_plain",
+      "density": 0.6,
+      "minDist": 1.1
+    },
+    {
+      "type": "flower",
+      "zone": "soft_meadow",
+      "density": 1.2,
+      "minDist": 0.9
+    },
+    {
+      "type": "tree_fruit",
+      "zone": "river_rest",
+      "density": 0.5,
+      "minDist": 4
+    },
+    {
+      "type": "tree_round",
+      "density": 0.05,
+      "minDist": 7,
+      "keepClear": 3
+    },
+    {
+      "type": "rock",
+      "zone": "rocky_road",
+      "density": 0.3,
+      "minDist": 3
+    },
+    {
+      "type": "rock",
+      "density": 0.05,
+      "minDist": 5
+    },
+    {
+      "type": "bush",
+      "density": 0.15,
+      "minDist": 3
+    }
   ],
   "landmarks": [
-    { "type": "sign", "id": "lots_wife_pillar", "at": [-50, 0, 6] },
-    { "type": "well", "id": "river_bank", "at": [-20, 0, 0] },
-    { "type": "stile", "id": "meadow_stile", "at": [50, 0, -6] },
-    { "type": "sign", "id": "warning_sign", "at": [50, 0, 0] },
-    { "type": "castle_tower", "id": "doubting_castle", "at": [112, 0, -13], "params": { "clear": 20 } },
-    { "type": "rock", "id": "mine_hill_rock", "at": [-100, 0, 20] },
-    { "type": "waystone", "id": "ch11_ws1_stone", "at": [-88, 0, -2] },
-    { "type": "waystone", "id": "ch11_ws2_stone", "at": [136, 0, 2] }
+    {
+      "type": "sign",
+      "id": "lots_wife_pillar",
+      "at": [
+        -50,
+        0,
+        6
+      ]
+    },
+    {
+      "type": "well",
+      "id": "river_bank",
+      "at": [
+        -20,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "stile",
+      "id": "meadow_stile",
+      "at": [
+        50,
+        0,
+        -6
+      ]
+    },
+    {
+      "type": "sign",
+      "id": "warning_sign",
+      "at": [
+        50,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "castle_tower",
+      "id": "doubting_castle",
+      "at": [
+        112,
+        0,
+        -13
+      ],
+      "params": {
+        "clear": 20
+      }
+    },
+    {
+      "type": "rock",
+      "id": "mine_hill_rock",
+      "at": [
+        -100,
+        0,
+        20
+      ]
+    },
+    {
+      "type": "waystone",
+      "id": "ch11_ws1_stone",
+      "at": [
+        -88,
+        0,
+        -2
+      ]
+    },
+    {
+      "type": "waystone",
+      "id": "ch11_ws2_stone",
+      "at": [
+        136,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "tree_round",
+      "id": "shelter_tree",
+      "at": [
+        62.5,
+        0,
+        -44.5
+      ],
+      "params": {
+        "height": 6
+      }
+    }
   ],
   "npcs": [
-    { "id": "hopeful", "recipe": "hopeful", "role": "companion", "at": [-130, 0, -4] },
-    { "id": "by_ends", "recipe": "byends", "role": "story", "at": [-100, 0, -4] },
-    { "id": "demas", "recipe": "demas", "role": "story", "at": [-100, 0, 20] },
-    { "id": "giant_despair", "recipe": "giant_despair", "role": "story", "at": [110, 0, 6], "rotY": 3.14 },
-    { "id": "diffidence", "recipe": "diffidence", "role": "story", "at": [110, 0, -6] }
+    {
+      "id": "hopeful",
+      "recipe": "hopeful",
+      "role": "companion",
+      "at": [
+        -130,
+        0,
+        -4
+      ]
+    },
+    {
+      "id": "by_ends",
+      "recipe": "byends",
+      "role": "story",
+      "at": [
+        -100,
+        0,
+        -4
+      ]
+    },
+    {
+      "id": "demas",
+      "recipe": "demas",
+      "role": "story",
+      "at": [
+        -100,
+        0,
+        20
+      ]
+    },
+    {
+      "id": "giant_despair",
+      "recipe": "giant_despair",
+      "role": "story",
+      "at": [
+        110,
+        0,
+        6
+      ],
+      "rotY": 3.14
+    },
+    {
+      "id": "diffidence",
+      "recipe": "diffidence",
+      "role": "story",
+      "at": [
+        110,
+        0,
+        -6
+      ]
+    }
   ],
   "triggers": [
-    { "id": "by_ends_meet", "shape": "circle", "at": [-100, 0, -2], "r": 8, "script": "byEndsMeet", "once": true },
-    { "id": "demas_wave", "shape": "circle", "at": [-98, 0, 16], "r": 10, "script": "demasWave", "once": true },
-    { "id": "pillar_salt", "shape": "circle", "at": [-50, 0, 6], "r": 6, "script": "pillarSalt", "once": true },
-    { "id": "river_reach", "shape": "circle", "at": [-20, 0, 0], "r": 8, "script": "riverReach", "once": true },
-    { "id": "stile_cross", "shape": "circle", "at": [50, 0, -6], "r": 6, "script": "stileCross", "once": true },
-    { "id": "storm_trigger", "shape": "circle", "at": [58, 0, -28], "r": 8, "script": "stormTrigger", "once": true },
-    { "id": "dungeon_door", "shape": "circle", "at": [100, 0, -1.3], "r": 6, "script": "dungeonDoor", "once": true },
-    { "id": "cell_door", "shape": "circle", "at": [105, 0, -0.7], "r": 3, "script": "cellDoor", "once": true },
-    { "id": "outer_door", "shape": "circle", "at": [111, 0, 0.1], "r": 3, "script": "outerDoor", "once": true },
-    { "id": "iron_gate", "shape": "circle", "at": [117, 0, 0.5], "r": 3, "script": "ironGate", "once": true },
-    { "id": "escape_trigger", "shape": "circle", "at": [124, 0, 1.1], "r": 5, "script": "escapeTrigger", "once": true },
-    { "id": "ch11_end", "shape": "circle", "at": [134, 0, 1.8], "r": 5, "script": "chapterEnd", "once": false }
+    {
+      "id": "by_ends_meet",
+      "shape": "circle",
+      "at": [
+        -100,
+        0,
+        -2
+      ],
+      "r": 8,
+      "script": "byEndsMeet",
+      "once": true
+    },
+    {
+      "id": "demas_wave",
+      "shape": "circle",
+      "at": [
+        -98,
+        0,
+        16
+      ],
+      "r": 10,
+      "script": "demasWave",
+      "once": true
+    },
+    {
+      "id": "pillar_salt",
+      "shape": "circle",
+      "at": [
+        -50,
+        0,
+        6
+      ],
+      "r": 6,
+      "script": "pillarSalt",
+      "once": true
+    },
+    {
+      "id": "river_reach",
+      "shape": "circle",
+      "at": [
+        -20,
+        0,
+        0
+      ],
+      "r": 8,
+      "script": "riverReach",
+      "once": true
+    },
+    {
+      "id": "stile_cross",
+      "shape": "circle",
+      "at": [
+        50,
+        0,
+        -6
+      ],
+      "r": 6,
+      "script": "stileCross",
+      "once": true
+    },
+    {
+      "id": "storm_trigger",
+      "shape": "circle",
+      "at": [
+        58,
+        0,
+        -28
+      ],
+      "r": 8,
+      "script": "stormTrigger",
+      "once": true
+    },
+    {
+      "id": "dungeon_door",
+      "shape": "circle",
+      "at": [
+        100,
+        0,
+        -1.3
+      ],
+      "r": 6,
+      "script": "dungeonDoor",
+      "once": true
+    },
+    {
+      "id": "cell_door",
+      "shape": "circle",
+      "at": [
+        105,
+        0,
+        -0.7
+      ],
+      "r": 3,
+      "script": "cellDoor",
+      "once": true
+    },
+    {
+      "id": "outer_door",
+      "shape": "circle",
+      "at": [
+        111,
+        0,
+        0.1
+      ],
+      "r": 3,
+      "script": "outerDoor",
+      "once": true
+    },
+    {
+      "id": "iron_gate",
+      "shape": "circle",
+      "at": [
+        117,
+        0,
+        0.5
+      ],
+      "r": 3,
+      "script": "ironGate",
+      "once": true
+    },
+    {
+      "id": "escape_trigger",
+      "shape": "circle",
+      "at": [
+        124,
+        0,
+        1.1
+      ],
+      "r": 5,
+      "script": "escapeTrigger",
+      "once": true
+    },
+    {
+      "id": "ch11_end",
+      "shape": "circle",
+      "at": [
+        134,
+        0,
+        1.8
+      ],
+      "r": 5,
+      "script": "chapterEnd",
+      "once": false
+    },
+    {
+      "id": "shelter_reach",
+      "shape": "circle",
+      "at": [
+        60,
+        0,
+        -42
+      ],
+      "r": 3.5,
+      "script": "shelter"
+    }
   ],
   "waystones": [
-    { "id": "ch11_w1", "at": [-88, 0, -2] },
-    { "id": "ch11_w2", "at": [136, 0, 2] }
+    {
+      "id": "ch11_w1",
+      "at": [
+        -88,
+        0,
+        -2
+      ]
+    },
+    {
+      "id": "ch11_w2",
+      "at": [
+        136,
+        0,
+        2
+      ]
+    }
   ],
   "promises": [
-    { "id": "p19", "at": [-48, 0.8, 10] },
-    { "id": "p20", "at": [56, 0.8, -38] }
+    {
+      "id": "p19",
+      "at": [
+        -48,
+        0.8,
+        10
+      ]
+    },
+    {
+      "id": "p20",
+      "at": [
+        56,
+        0.8,
+        -38
+      ]
+    }
   ],
   "water": [
-    { "kind": "water", "shape": "circle", "x": -20, "z": 0, "r": 16, "level": -0.5 }
+    {
+      "kind": "water",
+      "shape": "circle",
+      "x": -20,
+      "z": 0,
+      "r": 16,
+      "level": -0.5
+    }
   ],
   "ambience": "wind",
   "music": "despair"

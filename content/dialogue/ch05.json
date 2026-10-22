@@ -2,52 +2,190 @@
   {
     "id": "ch05_interpreter_welcome",
     "nodes": [
-      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.welcome", "anim": "wave", "next": "n2" },
-      { "id": "n2", "speaker": "christian", "text": "ch05.christian.ready", "next": "n3" },
-      { "id": "n3", "speaker": "interpreter", "text": "ch05.interpreter.enter", "anim": "point" }
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.welcome",
+        "anim": "wave",
+        "next": "n2"
+      },
+      {
+        "id": "n2",
+        "speaker": "christian",
+        "text": "ch05.christian.ready",
+        "next": "n3"
+      },
+      {
+        "id": "n3",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.enter",
+        "anim": "point"
+      }
     ]
   },
   {
     "id": "ch05_room1",
     "nodes": [
-      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room1", "anim": "point" }
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room1Intro",
+        "anim": "point"
+      }
+    ]
+  },
+  {
+    "id": "ch05_room1_lesson",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room1",
+        "anim": "point"
+      }
     ]
   },
   {
     "id": "ch05_room2",
     "nodes": [
-      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room2" }
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room2Intro"
+      }
+    ]
+  },
+  {
+    "id": "ch05_room2_lesson",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room2"
+      }
     ]
   },
   {
     "id": "ch05_room3",
     "nodes": [
-      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room3" }
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room3Intro",
+        "anim": "point",
+        "choices": [
+          {
+            "text": "ch05.choice.passion",
+            "next": "n2",
+            "effects": {
+              "flag": {
+                "ch05.passion": true
+              }
+            }
+          },
+          {
+            "text": "ch05.choice.patience",
+            "next": "n3",
+            "effects": {
+              "hope": 5,
+              "flag": {
+                "ch05.patience": true
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "n2",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.crumble",
+        "next": "n3"
+      },
+      {
+        "id": "n3",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room3"
+      }
     ]
   },
   {
     "id": "ch05_room4",
     "nodes": [
-      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room4" }
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room4",
+        "anim": "point"
+      }
+    ]
+  },
+  {
+    "id": "ch05_room4_lesson",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room4Lesson"
+      }
     ]
   },
   {
     "id": "ch05_room5",
     "nodes": [
-      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room5" }
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room5",
+        "anim": "point"
+      }
+    ]
+  },
+  {
+    "id": "ch05_room5_lesson",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room5Lesson"
+      }
     ]
   },
   {
     "id": "ch05_room6",
     "nodes": [
-      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.room6", "expr": "sad" }
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room6Intro"
+      }
+    ]
+  },
+  {
+    "id": "ch05_room6_lesson",
+    "nodes": [
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.room6"
+      }
     ]
   },
   {
     "id": "ch05_interpreter_farewell",
     "nodes": [
-      { "id": "n1", "speaker": "interpreter", "text": "ch05.interpreter.farewell", "expr": "happy", "next": "n2" },
-      { "id": "n2", "speaker": "christian", "text": "ch05.christian.farewell", "expr": "happy" }
+      {
+        "id": "n1",
+        "speaker": "interpreter",
+        "text": "ch05.interpreter.farewell",
+        "expr": "happy",
+        "next": "n2"
+      },
+      {
+        "id": "n2",
+        "speaker": "christian",
+        "text": "ch05.christian.farewell",
+        "expr": "happy"
+      }
     ]
   }
 ]

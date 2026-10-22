@@ -81,8 +81,12 @@ export class Promises {
       // Reading a waystone tells how many of this land's Promises are found (only while some are still hidden).
       events.on('waystone:read', () => {
         const found = this.taken.reduce((n, v) => n + v, 0);
-        if (this.ids.length > 0 && found < this.ids.length)
-          events.emit('hud:toast', { key: 'ui.toast.promisesHere', params: { found, total: this.ids.length } });
+        if (this.ids.length === 0 || found >= this.ids.length) return;
+        // After the waystone's own "The Roll is updated" (emitted right after this event).
+        queueMicrotask(() => {
+          if (this.offs.length > 0)
+            events.emit('hud:toast', { key: 'ui.toast.promisesHere', params: { found, total: this.ids.length } });
+        });
       }),
     );
     const debug = services.tryGet('debug');

@@ -67,6 +67,7 @@ export class ChapterSelect {
   private readonly cards = new Map<number, HTMLButtonElement>();
   private readonly menu: Menu;
   private furthest = 1;
+  private progress: ((chapter: number) => string | null) | null = null;
 
   constructor(
     parent: HTMLElement,
@@ -124,6 +125,12 @@ export class ChapterSelect {
     this.furthest = next;
     this.applyLocks();
     if (onFirst) this.menu.focusInitial();
+  }
+
+  /** Each open chapter's finds line ("Promises 1/2 · Badges 0/1"), or null for none. */
+  setProgress(line: ((chapter: number) => string | null) | null): void {
+    this.progress = line;
+    this.applyLocks();
   }
 
   lockOf(n: number): ChapterLock {
@@ -186,7 +193,11 @@ export class ChapterSelect {
       if (!status) continue;
       this.texts.unbind(status.lastElementChild ?? status);
       status.replaceChildren();
-      if (lock === 'open') continue;
+      if (lock === 'open') {
+        const line = this.progress?.(n) ?? null;
+        if (line) status.append(h('span', { className: 'pg-chapter__finds' }, line));
+        continue;
+      }
       const icon = h('span', { className: 'pg-chapter__lock', 'aria-hidden': 'true' });
       icon.innerHTML = LOCK_SVG;
       const text = h('span');

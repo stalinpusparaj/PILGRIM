@@ -84,6 +84,7 @@ export function installBadges(): () => void {
       if (id === 'ch11_key_hint') track.keyHinted = true;
     }),
     events.on('flag:changed', ({ key, value }) => {
+      if (key === 'ch05.patience' && value === true) unlock('patientHeart');
       if (key === 'ch10.escaped' && value === true && !track.caught) unlock('unseen');
       if (key === 'ch08.fightDone' && value === true && !track.heartLost) unlock('unshaken');
       if (key === 'ch11.locksOpen' && value === 1 && !track.keyHinted) unlock('keyRemembered');

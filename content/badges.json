@@ -16,6 +16,14 @@
     "hint": "badge.arrowDodger.hint"
   },
   {
+    "id": "patientHeart",
+    "chapter": 5,
+    "points": 50,
+    "name": "badge.patientHeart.name",
+    "line": "badge.patientHeart.line",
+    "hint": "badge.patientHeart.hint"
+  },
+  {
     "id": "wideAwake",
     "chapter": 7,
     "points": 75,

@@ -17,6 +17,7 @@ import * as THREE from 'three';
 import '../audio/events';
 import type {} from '../ui/SatchelUI';
 import { events } from '../core/Events';
+import { Storm } from './ch11-storm';
 import type { ChapterContext, ChapterScript } from './types';
 
 const LOCKS = ['cell_door', 'outer_door', 'iron_gate'] as const;
@@ -47,8 +48,15 @@ class Chapter11 {
   private doors: Door[] = [];
   private ending = false;
   private gateHold: (() => void) | null = null;
+  private readonly weather: Storm;
 
-  constructor(private readonly ctx: ChapterContext) {}
+  constructor(private readonly ctx: ChapterContext) {
+    this.weather = new Storm(ctx);
+  }
+
+  update(dt: number): void {
+    this.weather.update(dt);
+  }
 
   start(): void {
     const ctx = this.ctx;
@@ -85,6 +93,7 @@ class Chapter11 {
       ctx.ambience('rain');
       ctx.toast('ch11.toast.storm');
       ctx.objective('ch11.objective.shelter');
+      this.weather.storm();
     });
 
     ctx.onTrigger('dungeon_door', () => void this.enterDungeon());
@@ -142,6 +151,7 @@ class Chapter11 {
   private async enterDungeon(resumed = false): Promise<void> {
     if (this.inDungeon || this.opened >= LOCKS.length) return;
     this.inDungeon = true;
+    this.weather.end();
     const ctx = this.ctx;
     ctx.music('despair', 'sad');
     ctx.ambience('dungeon');
@@ -246,6 +256,9 @@ const script: ChapterScript = {
   start(ctx) {
     running = new Chapter11(ctx);
     running.start();
+  },
+  update(dt) {
+    running?.update(dt);
   },
   dispose() {
     running = null;

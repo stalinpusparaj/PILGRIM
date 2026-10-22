@@ -158,6 +158,7 @@ class WrongHill {
     }
     this.detourTaken = true;
     const { ctx } = this;
+    ctx.guide(null); // the arrow back to the side road (if the Way's end showed it) has done its job
     ctx.state.enterDetour(DETOUR);
     ctx.toast('ui.toast.leftWay');
     ctx.objective('ch03.objective.goToVillage');
@@ -298,6 +299,10 @@ class WrongHill {
       else {
         ctx.objective('ch03.objective.goToVillage');
         this.say(ctx.session.player.character, 'ch03.christian.notYet', 'neutral');
+        // The Wrong Hill is the story's own detour: at the Way's end without it, the guide shows the side road
+        // (other detours are never pointed at, DECISIONS #346).
+        const road = ctx.session.world.wayById(DETOUR);
+        if (road) ctx.guide(road.sample(0.15, new THREE.Vector3()));
       }
       return;
     }

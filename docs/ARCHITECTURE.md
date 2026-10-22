@@ -1519,9 +1519,26 @@ function chapterLauncher(engine, opts?: { script?: string; onManager?(m: Chapter
   bells; Journey adds `points`); THE ROLL lists badges (`pg-satchel__awards`); Promises nudge once within 12 m
   ('ui.toast.promiseNear'), report on 'waystone:read' and on the last one; the journey line shows chapter / 13 (4 in
   the demo) and this land's Promises. `drainFloor()` (Hope.ts): drains stop at 10 Hope on Easy.
-- Dev: `window.__autopilot` (src/dev/autopilot.ts, debug builds only): `start(plan)`, `status()`, `stop()`.
+  The next chapter's loading screen shows `LoadingInfo.recap` (`recapLine(state, next)`: the land just finished,
+  Promises and badges found, "Something is still hidden there!"); CHAPTERS shows each open land's finds
+  (`ChapterSelect.setProgress(fn)`, `landProgress(chapter, promises, achievements)` over every save slot,
+  `journeyFinds()` in flow-title.ts).
+- Chapter V rooms (`src/chapters/ch05-rooms.ts`, `RoomPuzzles.solve(index)` → the room's lesson graph
+  `ch05_roomN_lesson`; room 3's choice and lesson are one graph): landmarks 'room1_lamp_a/b/c' (lamp `lit: false`),
+  'room1_portrait', 'room2_broom', 'room2_jug', 'room4_wall', 'room6_cage'; NPCs 'passion', 'patience',
+  'oil_helper', 'scribe', 'cage_man'; spot zones 'room2_middle', 'room4_fire'. `askName(initial)` (src/ui/NamePrompt.ts,
+  z-index 420) → `GameState.setPlayerName`, shown on THE ROLL.
+- Chapter XI storm (`src/chapters/ch11-storm.ts`): storm LookShift + rain round Christian from 'storm_trigger', the
+  guide on the 'shelter' spot; 'shelter_reach' → sit, nap, `fadeOut` / `fadeIn` (src/ui/Fade.ts, z-index 390),
+  teleport to 'dungeon_door', flag 'ch11.carried'.
+- Dev: `window.__autopilot` (src/dev/autopilot.ts, debug builds only): `start(plan)`, `status()`, `stop()`. Plan
+  options: `choices`, `visit`, `run`, `waystones`, `fight`, `useAll` (+ `skip`), `followGuide`, `detours` (detour ids
+  to walk along when on them); wedged for 1.5 s it follows the Way for 3 s and hops; it dismisses the name card.
+- `tests/way-clear.spec.ts`: every chapter's main Way is walkable end to end for the player's capsule (story locks
+  listed). `tests/ch05.spec.ts`: the six room puzzles (a typed name kept). `tests/ch11-storm.spec.ts`: storm →
+  shelter → sleep → the dungeon.
 - `tests/engagement.spec.ts`: journey line, Promise nudges, a badge's toast / points / Satchel card, the Ch X
-  badges, the Easy floor vs Normal.
+  badges, the Easy floor vs Normal, CHAPTERS finds lines.
 - `tests/ch10.spec.ts`: the pride trip by running, Talkative's pile and questions, a "Yes please" sack slowing him
   (No thank you does not), and arrest → jury cards → chariot → night (a lantern catches him) → Hopeful → day.
 - `tests/chapters-late.spec.ts`: Chapters V-XIII and the Epilogue played through by script (every trigger in Way

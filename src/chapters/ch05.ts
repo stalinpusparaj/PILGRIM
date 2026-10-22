@@ -5,9 +5,13 @@
  * (GDD 2.10, Room → Pay-off mapping).  The Interpreter accompanies Christian room to
  * room.  After all six rooms a final word sends him on toward the Cross.
  *
- * Positions come from the level file: landmark 'house_door', the per-room triggers
- * 'room1_look' … 'room6_look', and the exit trigger 'ch05_end'.
+ * Entering a room: the Interpreter sets its puzzle (ch05_roomN), the puzzle is solved (ch05-rooms.ts), then he
+ * gives the lesson (ch05_roomN_lesson; room 3's choice and lesson are one conversation).
+ *
+ * Positions come from the level file: the per-room triggers 'room1_look' … 'room6_look', each room's props and
+ * helpers (see ch05-rooms.ts), and the exit trigger 'ch05_end'.
  */
+import { RoomPuzzles } from './ch05-rooms';
 import type { ChapterContext, ChapterScript } from './types';
 
 // ─── constants ───────────────────────────────────────────────────────────────
@@ -63,8 +67,16 @@ const ROOM: {
 class Chapter5 {
   private ending = false;
   private roomsVisited = 0;
+  private readonly busy = new Set<string>();
+  private readonly puzzles: RoomPuzzles;
 
-  constructor(private readonly ctx: ChapterContext) {}
+  constructor(private readonly ctx: ChapterContext) {
+    this.puzzles = new RoomPuzzles(ctx);
+  }
+
+  update(dt: number): void {
+    this.puzzles.update(dt);
+  }
 
   start(): void {
     const ctx = this.ctx;
@@ -101,9 +113,14 @@ class Chapter5 {
     objective: string;
     doneFlag: string;
   }): Promise<void> {
-    if (this.ctx.state.flag(room.doneFlag) === true) return;
+    if (this.ctx.state.flag(room.doneFlag) === true || this.busy.has(room.trigger)) return;
+    this.busy.add(room.trigger);
+    const index = ROOM.indexOf(room);
     this.ctx.objective(room.objective);
     await this.ctx.talk(room.graph, { with: 'interpreter' });
+    if (index === 2) this.puzzles.crumble();
+    await this.puzzles.solve(index);
+    if (index !== 2) await this.ctx.talk(`${room.graph}_lesson`, { with: 'interpreter' });
     this.ctx.state.setFlag(room.doneFlag, true);
     this.roomsVisited++;
     this.ctx.toast(room.objective.replace('.objective.', '.toast.'));
@@ -141,6 +158,9 @@ const script: ChapterScript = {
   start(ctx) {
     running = new Chapter5(ctx);
     running.start();
+  },
+  update(dt) {
+    running?.update(dt);
   },
   dispose() {
     running = null;

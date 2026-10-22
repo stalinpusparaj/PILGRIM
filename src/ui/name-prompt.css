@@ -1,0 +1,77 @@
+/* "Give your name to the scribe" card (src/ui/NamePrompt.ts). Tokens from styles.css. */
+
+.pg-name {
+  position: fixed;
+  inset: 0;
+  z-index: 420; /* over the HUD and dialogue, under the pause menu stack's Satchel and loading */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--gap) + var(--safe-top)) calc(var(--gap) + var(--safe-right))
+    calc(var(--gap) + var(--safe-bottom)) calc(var(--gap) + var(--safe-left));
+  background: var(--scrim);
+  pointer-events: auto;
+}
+.pg-name__card {
+  width: min(440px, 100%);
+  padding: calc(var(--gap) * 1.5);
+  border: 3px solid var(--panel-edge);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 6px 0 var(--shadow-solid), 0 14px 30px var(--shadow);
+  text-align: center;
+}
+.pg-name__title {
+  margin: 0 0 8px;
+  font-family: var(--font-title);
+  font-size: 1.6em;
+}
+.pg-name__line {
+  margin: 0 0 var(--gap);
+  color: var(--ink-soft);
+  font-size: 1.1em;
+}
+.pg-name__field {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 16px;
+  border: 3px solid var(--panel-edge);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.4em;
+  text-align: center;
+}
+.pg-name__field:focus-visible,
+.pg-name__btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.pg-name__row {
+  display: flex;
+  gap: var(--gap);
+  justify-content: center;
+  margin-top: var(--gap);
+}
+.pg-name__btn {
+  min-height: 52px;
+  padding: 8px 22px;
+  border: 3px solid var(--panel-edge);
+  border-radius: 999px;
+  background: var(--panel-deep);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.1em;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pg-name__btn--ok {
+  border-color: var(--accent-deep);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+body.lang-ta .pg-name {
+  font-family: var(--font-tamil);
+}

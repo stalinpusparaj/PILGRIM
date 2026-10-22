@@ -23,6 +23,8 @@ export interface LoadingInfo {
   art?: string | null;
   /** Picks which friendly line comes first (default: from the title), so a chapter always opens the same way. */
   seed?: number;
+  /** How the land just finished went (Promises, badges), already translated; shown under the title. */
+  recap?: string | null;
 }
 
 /** Fade length; matches --dur-slow in styles.css. */
@@ -52,6 +54,7 @@ export class Loading {
   private readonly kicker: HTMLParagraphElement;
   private readonly title: HTMLHeadingElement;
   private readonly line: HTMLParagraphElement;
+  private readonly recap: HTMLParagraphElement;
   private readonly bar: HTMLDivElement;
   private readonly fill: HTMLDivElement;
   private readonly pct: HTMLParagraphElement;
@@ -74,6 +77,7 @@ export class Loading {
     this.kicker = h('p', { className: 'pg-loading__kicker' });
     this.title = h('h1', { className: 'pg-loading__title' });
     this.line = h('p', { className: 'pg-loading__line' });
+    this.recap = h('p', { className: 'pg-loading__recap' });
     this.fill = h('div', { className: 'pg-loading__fill' }, h('div', { className: 'pg-loading__shine' }));
     this.bar = h(
       'div',
@@ -98,6 +102,7 @@ export class Loading {
         emblem,
         this.kicker,
         this.title,
+        this.recap,
         this.line,
         this.bar,
         this.pct,
@@ -117,6 +122,8 @@ export class Loading {
     setText(this.kicker, info.kicker ?? '');
     this.kicker.hidden = !info.kicker;
     setText(this.title, info.title);
+    setText(this.recap, info.recap ?? '');
+    this.recap.hidden = !info.recap;
     this.lines = lineKeys();
     const seed = info.seed ?? hashString(info.title);
     this.lineIndex = this.lines.length > 0 ? seed % this.lines.length : 0;
@@ -305,6 +312,9 @@ const CSS = `
   margin: 0; color: var(--ink);
   font-family: var(--font-title); font-size: var(--fs-title); line-height: 1.12;
   text-wrap: balance; overflow-wrap: anywhere;
+}
+.pg-loading__recap {
+  margin: 0 0 4px; color: var(--accent-deep); font-weight: 700; font-size: calc(var(--fs-body) * 0.9); line-height: 1.35;
 }
 .pg-loading__line {
   margin: 2px 0 8px; min-height: 1.4em; color: var(--ink-soft);

@@ -21,6 +21,9 @@ import type { CutsceneDef } from '../narrative/cutscene-types';
 import type { ChapterContext, ChapterScript, NPC } from './types';
 import { TownLife } from './ch01-town';
 
+/** Metres in front of the town gate where the guide lines Christian up with the opening. */
+const GATE_LINE_UP = 4;
+
 type Stage = 'book' | 'day' | 'town' | 'homeward' | 'evening' | 'gate' | 'way' | 'done';
 
 const BOOK = { radius: 2.2, bubbleHeight: 1.15, grow: 0.3 } as const;
@@ -82,7 +85,7 @@ class ChapterOne {
       ctx.guide({ landmark: 'book' });
       this.hookBook();
     } else if (this.stage === 'day' || this.stage === 'homeward') ctx.guide({ npc: 'christiana' });
-    else if (this.stage === 'gate') ctx.guide({ landmark: 'town_gate' });
+    else if (this.stage === 'gate') this.guideThroughGate();
     else ctx.guide(null);
     if (this.stage === 'way') {
       if (ctx.npc('pliable')) ctx.addCompanion('pliable', PLIABLE_BARKS);
@@ -170,8 +173,30 @@ class ChapterOne {
     if (this.stage === 'evening') {
       this.stage = 'gate';
       ctx.objective('ch01.objective.toGate');
-      ctx.guide({ landmark: 'town_gate' });
+      this.guideThroughGate();
     }
+  }
+
+  /**
+   * Point the guide through the gate: first to the Way a few metres in front of it (the open door leaves stand out
+   * either side of the opening, so a line drawn straight from the square would run into one), then out through it
+   * to the trigger just outside.
+   */
+  private guideThroughGate(): void {
+    const ctx = this.ctx;
+    const out = ctx.level.triggers.find((t) => t.id === 'ch01_gate_out');
+    const gate = ctx.landmark('town_gate');
+    if (!out || !gate) return ctx.guide({ landmark: 'town_gate' });
+    const way = ctx.session.world.ways.main;
+    const gateT = way.closest(gate.x, gate.z).t;
+    const front = way.sample(Math.max(0, gateT - GATE_LINE_UP / way.length));
+    const beyond = new THREE.Vector3(out.at[0], ctx.session.world.terrain.heightAt(out.at[0], out.at[2]), out.at[2]);
+    const p = ctx.session.player.controller.position;
+    ctx.guide(() => {
+      const r = way.closest(p.x, p.z);
+      const lined = (gateT - r.t) * way.length < GATE_LINE_UP + 1 && r.dist < way.halfWidth;
+      return lined || r.t > gateT ? beyond : front;
+    });
   }
 
   /** Evangelist walks up and talks; the family calls; Obstinate and Pliable give chase. */

@@ -90,12 +90,12 @@ test('keyboard: W walks away from the camera, Space hops, E at a waystone saves 
   await expect.poll(() => logged(page, 'save:written'), { timeout: 5000 }).toContainEqual({ slot: 'auto' });
   // The waystone's toast is requested and the HUD shows its text.
   const toasts = (await logged(page, 'hud:toast')) as Array<{ key: string }>;
-  expect(toasts.length).toBeGreaterThan(0);
+  expect(toasts.map((x) => x.key)).toContain('ui.toast.rollUpdated');
   const text = await page.evaluate(
     (key) => (window as unknown as PlayWindow).__pilgrim.services.get('i18n').t(key),
-    toasts.at(-1)!.key,
+    'ui.toast.rollUpdated',
   );
-  await expect(page.locator('#ui')).toContainText(text, { timeout: 3000 });
+  await expect(page.locator('#ui')).toContainText(text, { timeout: 8000 }); // toasts queue one at a time
   expect(await page.evaluate(() => (window as unknown as PlayWindow).__pilgrim.play!.state.waystone)).toBe(
     'test_w1',
   );

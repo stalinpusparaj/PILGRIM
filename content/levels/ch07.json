@@ -55,8 +55,8 @@
   ],
   "landmarks": [
     { "type": "well", "id": "spring_well", "at": [-48, 0, -2], "params": { "clear": 4 } },
-    { "type": "bench", "id": "arbour_bench", "at": [10, 0, 8] },
-    { "type": "palace_tower", "id": "palace_main", "at": [110, 0, -10], "params": { "clear": 20 } },
+    { "type": "bench", "id": "arbour_bench", "at": [9.4, 0, 10.4] },
+    { "type": "palace_tower", "id": "palace_main", "at": [111, 0, -15], "params": { "clear": 20 } },
     { "type": "gate", "id": "palace_gate", "at": [84, 0, -6] },
     { "type": "fence", "id": "ch07_fence_l", "path": "way", "from": 0.52, "to": 0.72, "params": { "offset": 3 } },
     { "type": "fence", "id": "ch07_fence_r", "path": "way", "from": 0.52, "to": 0.72, "params": { "offset": -3 } },

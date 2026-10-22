@@ -37,6 +37,13 @@ export interface AutopilotPlan {
   waystones?: boolean;
   /** Pray / swing at the Ch IX shadows and pray when an objective asks (default true). */
   fight?: boolean;
+  /** A curious child: press E on anything offered (once each), except ids in `skip`. */
+  useAll?: boolean;
+  skip?: string[];
+  /** Follow the HUD guide (the chapter's goal marker) instead of the Way when it points somewhere. */
+  followGuide?: boolean;
+  /** Detour ids the story sends Christian down: walk along them when standing on one (Ch III, Ch XI). */
+  detours?: string[];
 }
 
 const LOG_EVENTS = [
@@ -54,9 +61,11 @@ const want = new THREE.Vector3();
 export class Autopilot {
   readonly log: string[] = [];
   stuck = 0;
+  private unstick = 0;
   private plan: AutopilotPlan = {};
   private readonly held = new Set<string>();
   private readonly asked = new Map<string, number>();
+  private readonly used = new Set<string>();
   private visits: AutopilotVisit[] = [];
   private arrivedFor = 0;
   private on = false;
@@ -80,6 +89,7 @@ export class Autopilot {
     this.plan = plan;
     this.visits = [...(plan.visit ?? [])];
     this.asked.clear();
+    this.used.clear();
     this.on = true;
     this.offLoop ??= this.engine.loop.add({ update: (dt) => this.step(dt) }, 127);
     window.clearInterval(this.repeat);
@@ -119,9 +129,19 @@ export class Autopilot {
     this.cool -= dt;
     this.dcool -= dt;
     if (this.talk()) return;
+    const skipName = document.querySelector<HTMLButtonElement>('.pg-name__btn:not(.pg-name__btn--ok)');
+    if (skipName) {
+      skipName.click(); // the scribe's name card: a sweep gives no name
+      this.say('name card: not now');
+    }
     const go = player.mode === 'play';
     const pos = player.controller.position;
-    const target = this.target(pos, dt);
+    if (this.stuck > 1.5 && this.unstick <= 0) {
+      this.unstick = 3; // wedged on a corner: follow the Way for a moment, and try a hop (stiles, ledges)
+      tap('Space');
+    }
+    this.unstick -= dt;
+    const target = this.unstick > 0 ? null : this.target(pos, dt);
     let dir = this.steer(pos, target);
     if (this.lanternAhead(pos)) dir = [];
     for (const k of ['KeyW', 'KeyA', 'KeyD']) this.hold(k, go && dir.includes(k));
@@ -154,7 +174,7 @@ export class Autopilot {
 
   private target(pos: THREE.Vector3, dt: number): THREE.Vector3 | null {
     const v = this.visits[0];
-    if (!v) return null;
+    if (!v) return this.plan.followGuide ? this.guideTarget() : null;
     const npc = services.tryGet('chapters')?.context?.npc(v.npc);
     if (!npc || !npc.character.root.visible) {
       this.visits.shift();
@@ -172,6 +192,14 @@ export class Autopilot {
     return spot;
   }
 
+  /** The HUD guide's goal when a chapter aims it somewhere (an NPC, a landmark), else null (the Way). */
+  private guideTarget(): THREE.Vector3 | null {
+    const g = services.tryGet('guide');
+    if (!g?.custom) return null;
+    const s = g.sample();
+    return s.target ? s.target.clone() : null;
+  }
+
   private next(): void {
     this.visits.shift();
     this.arrivedFor = 0;
@@ -182,7 +210,7 @@ export class Autopilot {
     if (target && Math.hypot(target.x - pos.x, target.z - pos.z) < 0.3) return [];
     if (target) want.set(target.x - pos.x, 0, target.z - pos.z).normalize();
     else {
-      const way = wayOf();
+      const way = wayOf(pos, this.plan.detours);
       if (!way) return [];
       const r = way.closest(pos.x, pos.z);
       way.tangent(Math.min(1, r.t + 0.01), tan);
@@ -238,6 +266,13 @@ export class Autopilot {
       this.cool = 1;
       return;
     }
+    if (focus && this.plan.useAll && !this.used.has(focus) && !(this.plan.skip ?? []).includes(focus)) {
+      this.used.add(focus);
+      tap('KeyE');
+      this.say(`E ${focus}`);
+      this.cool = 1;
+      return;
+    }
     const waystones = services.tryGet('waystones');
     if (focus && this.plan.waystones !== false && waystones?.ids.includes(focus)) {
       tap('KeyE');
@@ -280,8 +315,16 @@ export class Autopilot {
   }
 }
 
-function wayOf(): import('../gen/Way').Way | null {
-  return services.tryGet('chapters')?.session?.world.ways.main ?? null;
+function wayOf(pos?: THREE.Vector3, detours?: readonly string[]): import('../gen/Way').Way | null {
+  const ways = services.tryGet('chapters')?.session?.world.ways;
+  if (!ways) return null;
+  if (pos && detours)
+    for (const d of ways.detours) {
+      if (!detours.includes(d.id)) continue;
+      const r = d.closest(pos.x, pos.z);
+      if (r.dist < d.halfWidth + 1.5 && r.t < 0.97) return d;
+    }
+  return ways.main;
 }
 
 function key(code: string, down: boolean): void {

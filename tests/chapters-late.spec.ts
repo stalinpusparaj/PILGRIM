@@ -5,7 +5,7 @@ import { logged, waitSim } from './play-support';
 /**
  * CHAPTERS V–XIII and the EPILOGUE played through by script on `/?chapter=N&skipIntro=1`: Christian is stood on
  * every story trigger in Way order, every conversation is answered (first choice) and skipped through, and each
- * chapter's own key action is done (kneel at the Cross, reach for the sword in Apollyon's Phase 3, pray at the
+ * chapter's own key action is done (the Interpreter's six room puzzles, kneel at the Cross, reach for the sword in Apollyon's Phase 3, pray at the
  * smoking pit, the Key of Promise on Doubting Castle's three locks, show the Roll at the Gate). Each chapter must reach
  * 'chapter:complete' with a clean console: no missing dialogue, text key, recipe or trigger.
  */
@@ -26,11 +26,20 @@ const PLAN: Array<{ n: string; chapter: number; steps: Step[] }> = [
     steps: [
       'house_arrive',
       'room1_look',
+      { use: 'room1_lamp_0' },
+      { use: 'room1_lamp_1' },
+      { use: 'room1_lamp_2' },
       'room2_look',
+      { use: 'room2_sweep' },
+      { use: 'room2_jug' },
       'room3_look',
       'room4_look',
+      { use: 'room4_oil' },
       'room5_look',
+      { use: 'room5_name' },
+      { key: 'Escape' }, // no name for the scribe this time (tests/ch05.spec.ts writes one)
       'room6_look',
+      { use: 'room6_open' },
       'ch05_end',
     ],
   },
@@ -128,6 +137,8 @@ const PLAN: Array<{ n: string; chapter: number; steps: Step[] }> = [
       'river_reach',
       'stile_cross',
       'storm_trigger',
+      'shelter_reach',
+      { flag: 'ch11.carried' },
       'dungeon_door',
       { door: 'cell_door' },
       { door: 'outer_door' },

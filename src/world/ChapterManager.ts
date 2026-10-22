@@ -24,7 +24,7 @@ import type { GameState } from '../core/GameState';
 import { services } from '../core/Services';
 import { chapterKey, hasChapter, nextChapterKey } from '../chapters/index';
 import { ChapterRuntime } from '../chapters/context';
-import { catchUp } from '../game/chapter-progress';
+import { catchUp, recapLine } from '../game/chapter-progress';
 import type { ChapterScript } from '../chapters/types';
 import type { ChapterHandle, ChapterLauncher } from '../game/flow-types';
 import { chapterLoadingInfo } from '../ui/Loading';
@@ -253,7 +253,7 @@ export class ChapterManager {
         state: l.state,
         waystone: l.waystone ?? undefined,
         signal: abort.signal,
-        loading: chapterLoadingInfo(forced ? script.level : chapterKey(l.chapter)),
+        loading: { ...chapterLoadingInfo(forced ? script.level : chapterKey(l.chapter)), recap: recapLine(l.state, l.chapter) },
         onProgress: (p) => this.progressLog.push(p),
       });
       if (abort.signal.aborted) {

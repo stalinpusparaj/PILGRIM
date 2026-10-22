@@ -11,6 +11,7 @@ import { ChapterSelect, EPILOGUE } from '../ui/ChapterSelect';
 import { Credits } from '../ui/Credits';
 import { Title } from '../ui/Title';
 import { TitleScene } from '../ui/TitleScene';
+import { landProgress } from './chapter-progress';
 import type { ScreenFactory, ScreenHandle, ScreenId } from './flow-types';
 
 export interface TitleHubHandlers {
@@ -94,6 +95,9 @@ export class TitleHub {
       void furthestChapter().then((n) => {
         if (this.sub?.handle === select) select.setFurthest(n);
       });
+      void journeyFinds().then((f) => {
+        if (this.sub?.handle === select) select.setProgress((n) => landProgress(n, f.promises, f.achievements));
+      });
       return;
     }
     if (id === 'credits') {
@@ -130,6 +134,22 @@ export class TitleHub {
     this.sub = null;
     sub.handle.dispose();
     if (!this.disposed) this.title.setCovered(false);
+  }
+}
+
+/** Every Promise and badge found in any save slot (the CHAPTERS screen's finds lines). */
+export async function journeyFinds(): Promise<{ promises: string[]; achievements: string[] }> {
+  try {
+    const slots = await save.list();
+    const promises = new Set<string>();
+    const achievements = new Set<string>();
+    for (const s of slots) {
+      for (const id of s.data.promises) promises.add(id);
+      for (const id of s.data.achievements) achievements.add(id);
+    }
+    return { promises: [...promises], achievements: [...achievements] };
+  } catch {
+    return { promises: [], achievements: [] };
   }
 }
 

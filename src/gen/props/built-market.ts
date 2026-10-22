@@ -283,22 +283,25 @@ export function buildSign(rng: Rng, pal: Palette, p: PropParams): PropResult {
 }
 
 /** A small iron lantern with a glowing pane, centred on (x, y, z) (y = bottom plate). */
-function lantern(P: Parts, k: Kit, x: number, y: number, z: number): void {
+function lantern(P: Parts, k: Kit, x: number, y: number, z: number, lit = true): void {
   P.add(box(0.28, 0.04, 0.28, k.iron, { pos: [x, y, z] }));
   for (const cx of [-1, 1])
     for (const cz of [-1, 1])
       P.add(box(0.03, 0.32, 0.03, k.iron, { pos: [x + cx * 0.12, y + 0.17, z + cz * 0.12] }));
   P.add(xform(paint(cone(0.22, 0.18, 4), k.iron), { pos: [x, y + 0.32, z], rot: [0, Math.PI / 4, 0] }));
   P.add(gem(0.05, k.iron, { pos: [x, y + 0.53, z] }));
-  P.glow(box(0.2, 0.28, 0.2, k.windowGlow, { pos: [x, y + 0.17, z] }));
+  const glass = box(0.2, 0.28, 0.2, lit ? k.windowGlow : k.iron, { pos: [x, y + 0.17, z] });
+  if (lit) P.glow(glass);
+  else P.add(glass);
 }
 
-/** params: height (2.6), style ('post' | 'hang'). */
+/** params: height (2.6), style ('post' | 'hang'), lit (true: a dark lantern waits to be lit, Ch V). */
 export function buildLamp(rng: Rng, pal: Palette, p: PropParams): PropResult {
   const k = kit(pal);
   const P = new Parts();
   const H = num(p, 'height', 2.6, 1.2, 5);
   const hang = str(p, 'style', 'post') === 'hang';
+  const lit = bool(p, 'lit', true);
   P.add(box(0.4, 0.26, 0.4, tone(k.stone, 0.04, rng), { pos: [0, 0.1, 0] }, 0.04));
   P.add(
     rod(
@@ -318,9 +321,9 @@ export function buildLamp(rng: Rng, pal: Palette, p: PropParams): PropResult {
       beam([0.32, H + 0.32, 0], [0.6, H + 0.22, 0], 0.05, k.iron),
     );
     P.add(box(0.02, 0.2, 0.02, k.iron, { pos: [0.6, H + 0.1, 0] }));
-    lantern(P, k, 0.6, H - 0.48, 0);
+    lantern(P, k, 0.6, H - 0.48, 0, lit);
   } else {
-    lantern(P, k, 0, H + 0.2, 0);
+    lantern(P, k, 0, H + 0.2, 0, lit);
   }
   P.cylCol(0, 0, 0.2, H + 0.6);
   return P.done();
