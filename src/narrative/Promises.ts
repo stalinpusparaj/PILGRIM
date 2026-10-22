@@ -42,6 +42,8 @@ const PICKUP = {
 /** The scroll floats this far above its anchor (PromiseMarkers HOVER). */
 const SCROLL_HEIGHT = 0.95;
 const BURST = { count: 28, spread: 0.45 };
+/** Curiosity nudge: "Something glows nearby..." once per Promise when he passes within this distance (m). */
+const NEAR = 12;
 const BURST_MOTES = { count: 12, spread: 0.3 };
 
 export class Promises {
@@ -53,6 +55,7 @@ export class Promises {
   /** Anchors as x, y, z triples (static: scrolls never move). */
   private readonly anchors: Float32Array;
   private readonly taken: Uint8Array;
+  private readonly nudged: Uint8Array;
   private readonly tmp = new THREE.Vector3();
   private readonly burstOpts = { spread: BURST.spread };
   private readonly motesOpts = { spread: BURST_MOTES.spread };
@@ -67,6 +70,7 @@ export class Promises {
     this.ids = this.markers.ids;
     this.anchors = new Float32Array(this.ids.length * 3);
     this.taken = new Uint8Array(this.ids.length);
+    this.nudged = new Uint8Array(this.ids.length);
     this.ids.forEach((id, i) => {
       if (this.markers.positionOf(id, this.tmp)) this.tmp.toArray(this.anchors, i * 3);
     });
@@ -74,6 +78,12 @@ export class Promises {
     this.offs.push(
       events.on('state:reset', () => this.sync()),
       events.on('promise:collected', ({ id }) => this.hide(id)),
+      // Reading a waystone tells how many of this land's Promises are found (only while some are still hidden).
+      events.on('waystone:read', () => {
+        const found = this.taken.reduce((n, v) => n + v, 0);
+        if (this.ids.length > 0 && found < this.ids.length)
+          events.emit('hud:toast', { key: 'ui.toast.promisesHere', params: { found, total: this.ids.length } });
+      }),
     );
     const debug = services.tryGet('debug');
     if (debug) {
@@ -101,6 +111,7 @@ export class Promises {
     events.emit('sfx', { id: 'promise_chime', at: [x, y, z] });
     this.state.collectPromise(id);
     events.emit('hud:toast', { key: 'ui.toast.promise' });
+    if (this.taken.every((v) => v === 1)) events.emit('hud:toast', { key: 'ui.toast.allPromisesHere' });
     return true;
   }
 
@@ -112,11 +123,22 @@ export class Promises {
       if (this.taken[i] === 1) continue;
       const dx = this.anchors[i * 3]! - p.x;
       const dz = this.anchors[i * 3 + 2]! - p.z;
-      if (dx * dx + dz * dz > r2) continue;
+      const d2 = dx * dx + dz * dz;
+      if (d2 < NEAR * NEAR && this.nudged[i] === 0 && this.player.mode === 'play') this.nudge(i);
+      if (d2 > r2) continue;
       const dy = p.y - this.anchors[i * 3 + 1]!;
       if (dy < -PICKUP.below || dy > PICKUP.above) continue;
       this.collect(this.ids[i]!);
     }
+  }
+
+  /** A hidden Promise close by: a soft chime, a glint above it and a hint, once. */
+  private nudge(i: number): void {
+    this.nudged[i] = 1;
+    this.tmp.fromArray(this.anchors, i * 3);
+    this.tmp.y += SCROLL_HEIGHT;
+    this.particles.emit('sparkle', this.tmp, 10, this.burstOpts);
+    events.emit('hud:toast', { key: 'ui.toast.promiseNear' });
   }
 
   dispose(): void {

@@ -340,3 +340,17 @@ body.lang-ta .pg-satchel__nowLabel { letter-spacing: 0; }
   .pg-satchel__card, .pg-satchel__tab, .pg-satchel__sheet { border-color: ButtonText; }
   .pg-satchel__tab[aria-selected="true"] { outline: 3px solid Highlight; outline-offset: -6px; }
 }
+
+/* ------------------------------------------------------------------ badges (THE ROLL) */
+.pg-satchel__awardCount { margin-left: 0.5em; color: var(--ink-soft); font-family: var(--font-body, inherit); font-size: 0.8em; }
+.pg-satchel__awardList { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15em), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pg-satchel__award {
+  display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px; border-radius: 14px;
+  background: var(--panel); border: 2px solid var(--accent); box-shadow: 0 3px 0 var(--accent-deep);
+}
+.pg-satchel__award.is-locked { background: var(--panel-deep); border-style: dashed; border-color: var(--panel-edge); box-shadow: none; }
+.pg-satchel__awardIcon { display: inline-flex; color: var(--accent-deep); }
+.pg-satchel__award.is-locked .pg-satchel__awardIcon { color: var(--ink-soft); }
+.pg-satchel__awardText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pg-satchel__awardName { font-weight: 700; }
+.pg-satchel__awardLine { color: var(--ink-soft); font-size: 0.85em; overflow-wrap: anywhere; }

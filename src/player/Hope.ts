@@ -7,6 +7,7 @@
  *   strongest one counts. With the GameState flag `alone` set (Pliable has gone home; the Valley), those zones
  *   drain extra: the zone's `aloneDrain` (Hope/s) or half its `hopeDrain`. The Helmet halves 'shadow' zones
  *   (GDD 2.7.6 "whispers in dark places drain half as much Hope").
+ * - On Easy, drains stop at EASY_DRAIN_FLOOR: slow walking alone never ends in I SHALL ARISE.
  * - No drain while a cutscene or dialogue owns the camera (the 'cameraRig' is suspended), during I SHALL ARISE,
  *   with `?god=1`, or while `enabled` is false.
  * - Restoring is other systems calling `GameState.addHope` / `setHope` (waystones, Promises, prayer, companions).
@@ -49,6 +50,17 @@ export const HOPE_RECOVER = 40;
 export const ALONE_EXTRA = 0.5;
 /** Helmet: 'shadow' zones drain this share (GDD 2.7.6). */
 const HELMET_SHARE = 0.5;
+/**
+ * Easy (the default for kids): walking through sad places never puts the lantern out by itself; zone and shadow
+ * drains stop at this much Hope. Detours, bonks and sleep can still empty it, and the low-Hope look still shows.
+ */
+export const EASY_DRAIN_FLOOR = 10;
+
+/** The Hope that drains stop at right now (EASY_DRAIN_FLOOR on Easy, 0 on Normal). */
+export function drainFloor(): number {
+  return services.tryGet('settings')?.data.difficulty === 'normal' ? 0 : EASY_DRAIN_FLOOR;
+}
+
 /** Drains are applied to GameState in steps of this much Hope (fewer hope:changed events). */
 const HOPE_STEP = 0.5;
 
@@ -206,7 +218,8 @@ export class HopeSystem {
     if (this.rate > 0) {
       this.pending += this.rate * dt;
       if (this.pending >= HOPE_STEP) {
-        s.addHope(-this.pending);
+        const room = s.hope - drainFloor();
+        if (room > 0) s.addHope(-Math.min(this.pending, room));
         this.pending = 0;
       }
     } else {

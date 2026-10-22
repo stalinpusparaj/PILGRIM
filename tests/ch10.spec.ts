@@ -202,7 +202,7 @@ test('arrest, trial and jury, chariot of light, night sneak past the lanterns, H
   const caught = (): Promise<number> =>
     page.evaluate(
       () =>
-        (window as unknown as Win).__log.filter((e) => e.name === 'hud:toast' && (e.payload as { key: string }).key === 'ch10.toast.caught')
+        (window as unknown as Win).__log.filter((e) => e.name === 'hud:toast' && (e.payload as { key: string }).key.startsWith('ch10.toast.caught'))
           .length,
     );
   await page.evaluate(() => {

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "firstPromise",
+    "chapter": 0,
+    "points": 25,
+    "name": "badge.firstPromise.name",
+    "line": "badge.firstPromise.line",
+    "hint": "badge.firstPromise.hint"
+  },
+  {
+    "id": "arrowDodger",
+    "chapter": 4,
+    "points": 75,
+    "name": "badge.arrowDodger.name",
+    "line": "badge.arrowDodger.line",
+    "hint": "badge.arrowDodger.hint"
+  },
+  {
+    "id": "wideAwake",
+    "chapter": 7,
+    "points": 75,
+    "name": "badge.wideAwake.name",
+    "line": "badge.wideAwake.line",
+    "hint": "badge.wideAwake.hint"
+  },
+  {
+    "id": "unshaken",
+    "chapter": 8,
+    "points": 100,
+    "name": "badge.unshaken.name",
+    "line": "badge.unshaken.line",
+    "hint": "badge.unshaken.hint"
+  },
+  {
+    "id": "brightLantern",
+    "chapter": 9,
+    "points": 75,
+    "name": "badge.brightLantern.name",
+    "line": "badge.brightLantern.line",
+    "hint": "badge.brightLantern.hint"
+  },
+  {
+    "id": "prideTrip",
+    "chapter": 10,
+    "points": 50,
+    "name": "badge.prideTrip.name",
+    "line": "badge.prideTrip.line",
+    "hint": "badge.prideTrip.hint"
+  },
+  {
+    "id": "noThankYou",
+    "chapter": 10,
+    "points": 75,
+    "name": "badge.noThankYou.name",
+    "line": "badge.noThankYou.line",
+    "hint": "badge.noThankYou.hint"
+  },
+  {
+    "id": "unseen",
+    "chapter": 10,
+    "points": 75,
+    "name": "badge.unseen.name",
+    "line": "badge.unseen.line",
+    "hint": "badge.unseen.hint"
+  },
+  {
+    "id": "keyRemembered",
+    "chapter": 11,
+    "points": 100,
+    "name": "badge.keyRemembered.name",
+    "line": "badge.keyRemembered.line",
+    "hint": "badge.keyRemembered.hint"
+  },
+  {
+    "id": "sharpEyes",
+    "chapter": 12,
+    "points": 75,
+    "name": "badge.sharpEyes.name",
+    "line": "badge.sharpEyes.line",
+    "hint": "badge.sharpEyes.hint"
+  },
+  {
+    "id": "goodCompany",
+    "chapter": 0,
+    "points": 50,
+    "name": "badge.goodCompany.name",
+    "line": "badge.goodCompany.line",
+    "hint": "badge.goodCompany.hint"
+  },
+  {
+    "id": "promiseKeeper",
+    "chapter": 0,
+    "points": 200,
+    "name": "badge.promiseKeeper.name",
+    "line": "badge.promiseKeeper.line",
+    "hint": "badge.promiseKeeper.hint"
+  }
+]

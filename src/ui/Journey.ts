@@ -2,9 +2,15 @@
 import { events } from '../core/Events';
 import { services } from '../core/Services';
 import { t } from '../core/I18n';
+import { buildFlags } from '../core/Flags';
+import { badgeById } from '../game/badges';
 import { h } from './dom';
 import { focusedInteractable } from './hud-focus';
 import './journey.css';
+
+/** Chapters of the full game and of the demo (VITE_DEMO: Chapters I-IV). */
+const CHAPTERS = 13;
+const DEMO_CHAPTERS = 4;
 
 export class Journey {
   readonly el = h('div', { className: 'journey' });
@@ -26,6 +32,7 @@ export class Journey {
       on('friend:met', ({ id }) => this.award(`friend.${id}`, 25, 'friend')),
       on('waystone:read', ({ id }) => this.award(`waystone.${id}`, 20, 'waystone')),
       on('chapter:complete', ({ chapter }) => this.award(`chapter.${chapter}`, 100, 'chapter')),
+      on('achievement:unlocked', ({ id }) => this.award(`badge.${id}`, badgeById(id)?.points ?? 50, 'badge')),
       on('interact:use', () => {
         services.tryGet('state')?.setFlag('journey.used', true);
       }),
@@ -80,7 +87,10 @@ export class Journey {
     const state = services.tryGet('state');
     const input = services.tryGet('input');
     if (!state || !input) return;
-    this.stats.textContent = t('ui.journey.stats', { chapter: Math.min(4, state.chapter), score: this.score() });
+    const last = buildFlags.DEMO ? DEMO_CHAPTERS : CHAPTERS;
+    const stats = t('ui.journey.stats', { chapter: Math.min(last, state.chapter), total: last, score: this.score() });
+    const here = this.promisesHere(state.data.promises);
+    this.stats.textContent = here ? `${stats}  ·  ${t('ui.journey.promisesHere', here)}` : stats;
     const guide = services.tryGet('guide')?.sample();
     const focus = focusedInteractable();
     let key = 'follow';
@@ -107,6 +117,14 @@ export class Journey {
       this.hint.appendChild(distance);
     }
     if (this.rewardKey) this.reward.textContent = t(`ui.journey.reward.${this.rewardKey}`, { points: this.rewardPoints });
+  }
+
+  /** Promises of the level being played: how many are found (null when the level has none). */
+  private promisesHere(found: readonly string[]): { found: number; total: number } | null {
+    const level = services.tryGet('chapters')?.session?.world.level;
+    const ids = level?.promises.map((p) => p.id) ?? [];
+    if (ids.length === 0) return null;
+    return { found: ids.filter((id) => found.includes(id)).length, total: ids.length };
   }
 
   dispose(): void {

@@ -20,6 +20,7 @@ import type { Engine } from '../core/Engine';
 import { Rng } from '../gen/rng';
 import type { Combat } from '../player/Combat';
 import { PRAYER } from '../player/Prayer';
+import { drainFloor } from '../player/Hope';
 import type { LevelZone } from '../world/LevelTypes';
 import type { PlaySession } from '../world/PlaySession';
 import { PLAY_ORDER } from '../world/play-loop';
@@ -262,7 +263,8 @@ export class Shadows {
     if (this.pending >= HOPE_STEP) {
       const n = Math.floor(this.pending / HOPE_STEP) * HOPE_STEP;
       this.pending -= n;
-      s.state.addHope(-n);
+      const room = s.state.hope - drainFloor();
+      if (room > 0) s.state.addHope(-Math.min(n, room));
     }
   }
 

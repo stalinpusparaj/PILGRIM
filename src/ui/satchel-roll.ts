@@ -7,8 +7,11 @@
  *  - With the Roll: every earlier goal from `state.objectiveHistory()`, newest chapter first, ticked as done,
  *    and the name given to the scribe in Chapter V, if any.
  *  - Roll lost at the arbour (Ch VII): "Oh no, the Roll is gone!" and a gentle hint instead of the pages.
+ *  - Badges (src/game/badges.ts) at the bottom: earned ones with their line; locked ones as "???" with a teasing
+ *    hint and the chapter they belong to, so there is always something to go back and try.
  */
 import { i18n, t } from '../core/I18n';
+import { BADGES } from '../game/badges';
 import { h } from './dom';
 import { uiIcon } from './satchel-icons';
 import {
@@ -49,11 +52,13 @@ export function renderRoll(view: SatchelView): PageResult {
     else if (!nowKey) page.append(emptyNote(t('ui.satchel.roll.empty'), 'roll:empty'));
     const name = s.playerName.trim();
     if (name) page.append(h('p', { className: 'pg-satchel__rollName' }, t('ui.satchel.roll.name', { name })));
+    page.append(badgeSheet(view));
     return { el: page };
   }
 
   if (s.has('note')) page.append(notePage());
   else if (!nowKey) page.append(emptyNote(t('ui.satchel.roll.empty'), 'roll:empty'));
+  page.append(badgeSheet(view));
   return { el: page };
 }
 
@@ -123,5 +128,36 @@ function goalSheet(groups: GoalGroup[]): HTMLElement {
     }
     sheet.append(list);
   }
+  return sheet;
+}
+
+/** Every badge: earned ones bright with their line, the rest as "???" with a hint. */
+function badgeSheet(view: SatchelView): HTMLElement {
+  const earned = new Set(view.state.data.achievements);
+  const n = BADGES.filter((b) => earned.has(b.id)).length;
+  const sheet = h(
+    'div',
+    { className: 'pg-satchel__sheet pg-satchel__awards' },
+    sectionTitle(t('ui.satchel.badges.title'), h('span', { className: 'pg-satchel__awardCount' }, t('ui.satchel.badges.count', { n, total: BADGES.length }))),
+  );
+  const list = h('ul', { className: 'pg-satchel__awardList', role: 'list' });
+  for (const b of BADGES) {
+    const got = earned.has(b.id);
+    const where = b.chapter > 0 ? t('ui.satchel.badges.chapter', { n: b.chapter }) : '';
+    list.append(
+      h(
+        'li',
+        { className: `pg-satchel__award${got ? '' : ' is-locked'}`, tabIndex: 0, dataset: { key: `badge:${b.id}` } },
+        svgSpan('pg-satchel__awardIcon', uiIcon(got ? 'star' : 'locked', '1.3em')),
+        h(
+          'span',
+          { className: 'pg-satchel__awardText' },
+          h('span', { className: 'pg-satchel__awardName' }, got ? t(b.name) : t('ui.satchel.badges.locked')),
+          h('span', { className: 'pg-satchel__awardLine' }, got ? t(b.line) : [t(b.hint), where].filter(Boolean).join(' · ')),
+        ),
+      ),
+    );
+  }
+  sheet.append(list);
   return sheet;
 }

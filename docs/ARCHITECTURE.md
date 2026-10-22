@@ -1514,6 +1514,14 @@ function chapterLauncher(engine, opts?: { script?: string; onManager?(m: Chapter
   patrols, lantern pools: caught = back to 'sneak_start'), `ch10-kit.ts` (zone lookups, instanced crowds). Level
   zones it reads: types 'crowd' (count, face; `day: "cage"` = the square), 'jury', 'spot' ('cage_inside',
   'sneak_start', 'chariot_spot'), 'patrol' (npc, phase).
+- Engagement (Phase 5): `src/game/badges.ts` (`BADGES` from content/badges.json, `installBadges()` in main.ts:
+  detectors on events, per-chapter tracking reset on 'hud:chapterCard', `GameState.unlock` → toast 'ui.toast.badge',
+  bells; Journey adds `points`); THE ROLL lists badges (`pg-satchel__awards`); Promises nudge once within 12 m
+  ('ui.toast.promiseNear'), report on 'waystone:read' and on the last one; the journey line shows chapter / 13 (4 in
+  the demo) and this land's Promises. `drainFloor()` (Hope.ts): drains stop at 10 Hope on Easy.
+- Dev: `window.__autopilot` (src/dev/autopilot.ts, debug builds only): `start(plan)`, `status()`, `stop()`.
+- `tests/engagement.spec.ts`: journey line, Promise nudges, a badge's toast / points / Satchel card, the Ch X
+  badges, the Easy floor vs Normal.
 - `tests/ch10.spec.ts`: the pride trip by running, Talkative's pile and questions, a "Yes please" sack slowing him
   (No thank you does not), and arrest → jury cards → chariot → night (a lantern catches him) → Hopeful → day.
 - `tests/chapters-late.spec.ts`: Chapters V-XIII and the Epilogue played through by script (every trigger in Way

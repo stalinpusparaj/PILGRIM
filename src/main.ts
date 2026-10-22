@@ -22,6 +22,7 @@ import { Engine } from './core/Engine';
 import { Quality, type QualityPreset } from './core/Quality';
 import { Input } from './core/Input';
 import { createDebug, installCoreDebug, type Debug } from './core/Debug';
+import { installBadges } from './game/badges';
 import { AudioEngine } from './audio/AudioEngine';
 import { h, uiRoot } from './ui/dom';
 import { installJuice } from './ui/Juice';
@@ -297,9 +298,12 @@ async function boot(): Promise<void> {
   if (debug) {
     installCoreDebug(engine, quality, input, debug);
     installPhase0Debug(debug, engine, quality, rebuildScene);
+    // Dev-only browser play-through helper (window.__autopilot), its own chunk, never in a release build.
+    void import('./dev/autopilot').then((m) => m.installAutopilot(engine));
   }
 
   installJuice(); // sparkles, vignettes, button squash: event-driven, app-lifetime
+  installBadges(); // badges for curiosity and skill (content/badges.json), app-lifetime
 
   // Started before the loop so its first frame already shows the mode (the test world's loading scene).
   launch();

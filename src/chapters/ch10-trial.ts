@@ -11,6 +11,7 @@
 import * as THREE from 'three';
 import '../audio/events';
 import { events } from '../core/Events';
+import { services } from '../core/Services';
 import type { CutsceneDef } from '../narrative/cutscene-types';
 import { Chariot } from './ch10-chariot';
 import { buildCrowd, spot, zone, type CrowdSet } from './ch10-kit';
@@ -23,10 +24,13 @@ import type { ChapterContext } from './types';
 const PER_JUROR = 0.55;
 const CAGE_SIDE = 0.6;
 const CHARIOT = { down: 4, wait: 1.2, up: 5 } as const;
+/** The fixed view of the cage scenes: back from the pair (m), camera height, look height. */
+const VIEW = { back: 7.5, up: 2.6, look: 1.2 } as const;
 
 export class Trial {
   private jury: CrowdSet | null = null;
   private chariot: Chariot | null = null;
+  private holding = false;
 
   constructor(
     private readonly ctx: ChapterContext,
@@ -40,6 +44,7 @@ export class Trial {
     if (z) this.jury = buildCrowd(ctx, z, true, false);
     this.chariot = new Chariot(ctx.session.world.scene, ctx.session.world.particles);
     ctx.own(() => {
+      this.letGo();
       this.jury?.dispose();
       this.chariot?.dispose();
     });
@@ -58,6 +63,7 @@ export class Trial {
     ctx.music('vanity', 'tension');
     await ctx.cutscene(this.intoCage());
     if (ctx.session.isDisposed) return;
+    this.view('lord_hate_good'); // from now until the door opens, the camera stays outside the bars
     ctx.objective('ch10.objective.inCage');
     ctx.toast('ch10.toast.arrested');
     this.fair.setCrowds(true, true);
@@ -67,13 +73,16 @@ export class Trial {
     ctx.objective('ch10.objective.trial');
     this.jury?.setVisible(true);
     for (const id of ['lord_hate_good', 'envy', 'superstition', 'pickthank']) ctx.state.meet(ctx.npc(id)?.character.recipe.id ?? id);
+    this.view('lord_hate_good');
     await ctx.talk('ch10_trial', { with: 'lord_hate_good' });
     if (ctx.session.isDisposed) return;
     const cards = new JuryCards();
     ctx.own(() => cards.dispose());
+    this.letGo(); // a cutscene only gives back a follow rig it suspended itself: hand it back first
     await ctx.cutscene(this.juryPan(cards));
     cards.dispose();
     if (ctx.session.isDisposed) return;
+    this.view('lord_hate_good'); // the jury's cutscene gave the camera back to the follow rig
     await ctx.talk('ch10_verdict', { with: 'lord_hate_good' });
     if (ctx.session.isDisposed) return;
     await this.nightAndChariot();
@@ -158,17 +167,50 @@ export class Trial {
     const at = spot(ctx, 'chariot_spot');
     if (f && at) {
       f.teleport(at, Math.atan2(ctx.session.player.renderPosition.x - at.x, ctx.session.player.renderPosition.z - at.z));
+      this.view('faithful');
       await ctx.talk('ch10_farewell', { with: 'faithful' });
       if (ctx.session.isDisposed) return;
+      this.letGo();
       await ctx.cutscene(this.chariotScene(at, f.character.root));
       if (ctx.session.isDisposed) return;
       f.character.root.visible = false;
     }
+    this.letGo();
     ctx.music('pilgrim', 'sad');
     ctx.toast('ch10.toast.doorOpen');
     events.emit('sfx', { id: 'gate_grind', at: [at?.x ?? 0, at?.y ?? 0, at?.z ?? 0], pitch: 1.4, volume: 0.6 });
     ctx.state.setFlag('ch10.faithfulGone', true);
     this.night.begin();
+  }
+
+  /**
+   * A fixed camera outside the cage, framing the caged pilgrims and `npcId` from the side (the follow camera would
+   * be squeezed between the bars). Held until `letGo()` or a cutscene hands the camera back.
+   */
+  private view(npcId: string): void {
+    const ctx = this.ctx;
+    const cage = spot(ctx, 'cage_inside');
+    const other = ctx.npc(npcId)?.position;
+    if (!cage || !other) return;
+    const mid = cage.clone().add(other).multiplyScalar(0.5);
+    const across = new THREE.Vector3(other.x - cage.x, 0, other.z - cage.z);
+    if (across.lengthSq() < 1e-4) across.set(1, 0, 0);
+    across.normalize();
+    // Of the two sides square to the line between them, the one nearer the road (the open square).
+    const road = spot(ctx, 'sneak_start') ?? cage;
+    const side = new THREE.Vector3(-across.z, 0, across.x);
+    if (side.dot(new THREE.Vector3(road.x - cage.x, 0, road.z - cage.z)) < 0) side.negate();
+    const cam = ctx.session.view;
+    cam.position.copy(mid).addScaledVector(side, VIEW.back).setY(mid.y + VIEW.up);
+    cam.lookAt(mid.x, mid.y + VIEW.look, mid.z);
+    if (!this.holding) services.tryGet('cameraRig')?.suspend();
+    this.holding = true;
+  }
+
+  private letGo(): void {
+    if (!this.holding) return;
+    this.holding = false;
+    if (!this.ctx.session.isDisposed) services.tryGet('cameraRig')?.resume(0.8);
   }
 
   private chariotScene(at: THREE.Vector3, rider: THREE.Object3D): CutsceneDef {

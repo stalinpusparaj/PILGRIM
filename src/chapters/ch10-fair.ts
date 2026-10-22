@@ -23,6 +23,8 @@ export type Stall = (typeof STALLS)[number];
 /** Each sack takes this share of his speed (the most: MAX_BAGS of them). */
 export const BAG_SLOW = 0.1;
 const MAX_BAGS = 4;
+/** "[E] Look" reaches the keeper from this far (m): generous, he stands in front of his counter. */
+const LOOK_REACH = 3.4;
 /** A keeper calls out once when Christian comes this close (m). */
 const CALL_NEAR = 7;
 
@@ -86,7 +88,7 @@ export class Fair {
     const off = ctx.onInteract({
       id: `stall_${id}`,
       pos,
-      radius: 2.6,
+      radius: LOOK_REACH,
       height: 1.6,
       verb: 'ui.verb.look',
       enabled: true,
