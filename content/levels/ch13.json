@@ -40,7 +40,7 @@
     { "type": "bush", "density": 0.12, "minDist": 3 }
   ],
   "landmarks": [
-    { "type": "gate", "id": "celestial_gate", "at": [120, 0, -4], "params": { "clear": 12 } },
+    { "type": "gate", "id": "celestial_gate", "at": [119.9, 0, -3.2], "rotY": 1.494, "params": { "clear": 12 } },
     { "type": "sign", "id": "beulah_sign", "at": [-90, 0, 12] },
     { "type": "waystone", "id": "ch13_ws1_stone", "at": [-70, 0, 4] },
     { "type": "waystone", "id": "ch13_ws2_stone", "at": [70, 0, -4] }

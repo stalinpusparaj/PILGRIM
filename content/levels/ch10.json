@@ -44,9 +44,9 @@
     { "type": "stall", "id": "stall_4", "at": [40, 0, 14], "rotY": 1.5 },
     { "type": "stall", "id": "stall_5", "at": [16, 0, -12], "rotY": -1.5 },
     { "type": "stall", "id": "stall_6", "at": [30, 0, -12], "rotY": -1.5 },
-    { "type": "cage", "id": "fair_cage", "at": [50, 0, 4] },
-    { "type": "gate", "id": "fair_gate_in", "at": [0, 0, 2] },
-    { "type": "gate", "id": "fair_gate_out", "at": [70, 0, 0] },
+    { "type": "cage", "id": "fair_cage", "at": [50, 0, 11], "rotY": 3.14 },
+    { "type": "gate", "id": "fair_gate_in", "at": [0.1, 0, 0.52], "rotY": 1.504 },
+    { "type": "gate", "id": "fair_gate_out", "at": [70.26, 0, 2.94], "rotY": 1.66 },
     { "type": "sign", "id": "vanity_sign", "at": [-4, 0, 6] },
     { "type": "waystone", "id": "ch10_ws1_stone", "at": [-80, 0, 6] },
     { "type": "waystone", "id": "ch10_ws2_stone", "at": [118, 0, -4] }
@@ -55,7 +55,7 @@
     { "id": "faithful", "recipe": "faithful", "role": "companion", "at": [-80, 0, 6] },
     { "id": "talkative", "recipe": "talkative", "role": "story", "at": [-50, 0, 4] },
     { "id": "evangelist_brief", "recipe": "evangelist", "role": "story", "at": [0, 0, 6] },
-    { "id": "lord_hate_good", "recipe": "hate_good", "role": "story", "at": [52, 0, 4] },
+    { "id": "lord_hate_good", "recipe": "hate_good", "role": "story", "at": [55, 0, 9.5], "rotY": 3.4 },
     { "id": "hopeful", "recipe": "hopeful", "role": "story", "at": [100, 0, -2] }
   ],
   "triggers": [
