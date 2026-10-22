@@ -208,6 +208,43 @@ test('Chapter VIII: Apollyon is beaten with shield blocks, perfect blocks and sw
   expect(problems, problems.join('\n')).toEqual([]);
 });
 
+test('Phase 3: the thrown sword always lands on open ground, never in a boulder', async ({ page }) => {
+  test.setTimeout(150_000);
+  const problems = watchConsole(page);
+  await open(page, '8');
+  await startFight(page);
+  const rocks = await page.evaluate(() => {
+    const lv = (window as unknown as { __pilgrim: { play: { world: { level: { landmarks: Array<{ id: string; at?: number[] }> } } } } })
+      .__pilgrim.play.world.level;
+    return lv.landmarks.filter((l) => l.id.startsWith('arena_cover')).map((l) => [l.at![0]!, l.at![2]!]);
+  });
+  expect(rocks.length).toBeGreaterThan(0);
+  for (const [rx, rz] of rocks) {
+    for (const [dx, dz] of [[-2.2, 0], [0, 2.2], [0, -2.2]] as const) {
+      await page.evaluate(
+        ({ x, z }) => {
+          const win = window as unknown as Win;
+          win.__pilgrim.play!.teleport(x, z, Math.PI / 2);
+          (win.__pilgrim.services.get('apollyon') as Fight).skipTo('fall');
+        },
+        { x: rx! + dx, z: rz! + dz },
+      );
+      await expect.poll(async () => (await probe(page)).sub, { timeout: 15_000 }).toBe('reach');
+      const clear = await page.evaluate(() => {
+        const win = window as unknown as Win;
+        const f = win.__pilgrim.services.get('apollyon') as Fight & { sword: { landing: V } };
+        const col = (win.__pilgrim.play as unknown as {
+          col: { overlaps(x: number, y: number, z: number, r: number, h: number, s: number): boolean };
+        }).col;
+        const l = f.sword.landing;
+        return !col.overlaps(l.x, l.y, l.z, 0.6, 1.6, 0);
+      });
+      expect(clear, `sword landing near the rock at ${rx}, ${rz}`).toBe(true);
+    }
+  }
+  expect(problems, problems.join('\n')).toEqual([]);
+});
+
 test('0 hearts: I SHALL ARISE and the same phase starts again with full hearts', async ({ page }) => {
   test.setTimeout(120_000);
   const problems = watchConsole(page);

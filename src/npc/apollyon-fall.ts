@@ -1,7 +1,7 @@
 /**
  * Phase 3 of the Apollyon fight, "The fall" (GDD 2.9): he swoops in, grabs and throws Christian down; the sword
- * spins away and lands 4 m off in slow motion; "[E] Reach for the sword" for 5 s (no limit with Timed prompts
- * off). Letting the prompt run out costs a hit (he stomps) and the prompt starts again. Reaching it gives the sword
+ * spins away in slow motion and lands 4 m off on open ground; "[E] Reach for the sword" for 5 s (no limit with
+ * Timed prompts off). Letting the prompt run out costs a hit (he stomps) and the prompt starts again. Reaching it gives the sword
  * back and tells the fight (`swordReached`); the chapter then plays the Micah 7:8 line and his flight.
  */
 import * as THREE from 'three';
@@ -20,6 +20,11 @@ export const FALL = {
   slowFor: 0.55,
   prompt: 5,
 } as const;
+
+/** Sword landing search: turns off the line away from him (rad), distances (m), and the open radius needed. */
+const SWORD_TURNS = [0.6, -0.6, 1.1, -1.1, 0, 1.6, -1.6, 2.2, -2.2] as const;
+const SWORD_DISTS = [FALL.sword, FALL.sword - 1, FALL.sword + 1] as const;
+const SWORD_CLEAR = 0.9;
 
 const tmp = new THREE.Vector3();
 const tmp2 = new THREE.Vector3();
@@ -105,13 +110,7 @@ export class FallPhase {
     player.character.animator.play('fall', { fade: 0.08 });
     events.emit('sfx', { id: 'shield_clang', at: [p.x, p.y + 1, p.z], pitch: 0.6 });
     s.camera.bump(0.9);
-    // Away from him, a little to one side, 4 m off; always inside the arena.
-    tmp.set(p.x - f.pos.x, 0, p.z - f.pos.z);
-    if (tmp.lengthSq() < 1e-4) tmp.set(-1, 0, 0);
-    tmp.normalize().applyAxisAngle(THREE.Object3D.DEFAULT_UP, 0.6);
-    tmp2.copy(p).addScaledVector(tmp, FALL.sword);
-    f.o.arena.clamp(tmp2, 1.5);
-    tmp2.y = f.ground(tmp2.x, tmp2.z);
+    this.swordSpot(tmp2);
     const hand = player.character.bones['handR'];
     const from = hand ? hand.getWorldPosition(new THREE.Vector3()) : p.clone().setY(p.y + 1);
     f.sword.throw(player.character, from, tmp2);
@@ -124,6 +123,33 @@ export class FallPhase {
     if (this.slowPrev === null) this.slowPrev = loop.timeScale;
     loop.timeScale = this.slowPrev * FALL.slowScale;
     this.slowLeft = FALL.slowFor;
+  }
+
+  /**
+   * Where the sword lands: 4 m off, away from him and a little to one side, on open ground (clear of the arena's
+   * rocks and every other collider, inside the arena, out of his reach). Tries a ring of turns and distances;
+   * when nothing is clear, the first spot clamped into the arena.
+   */
+  private swordSpot(out: THREE.Vector3): THREE.Vector3 {
+    const f = this.f;
+    const col = f.o.session.col;
+    const p = f.playerPos;
+    tmp.set(p.x - f.pos.x, 0, p.z - f.pos.z);
+    if (tmp.lengthSq() < 1e-4) tmp.set(-1, 0, 0);
+    tmp.normalize();
+    for (const dist of SWORD_DISTS) {
+      for (const turn of SWORD_TURNS) {
+        out.copy(tmp).applyAxisAngle(THREE.Object3D.DEFAULT_UP, turn).multiplyScalar(dist).add(p);
+        if (!f.o.arena.contains(out.x, out.z, -1.5)) continue;
+        if (Math.hypot(out.x - f.pos.x, out.z - f.pos.z) < FALL.grab + 1.5) continue;
+        out.y = f.ground(out.x, out.z);
+        if (!col.overlaps(out.x, out.y, out.z, SWORD_CLEAR, 1.6, 0)) return out;
+      }
+    }
+    out.copy(tmp).applyAxisAngle(THREE.Object3D.DEFAULT_UP, SWORD_TURNS[0]!).multiplyScalar(FALL.sword).add(p);
+    f.o.arena.clamp(out, 1.5);
+    out.y = f.ground(out.x, out.z);
+    return out;
   }
 
   private prompt(): void {
