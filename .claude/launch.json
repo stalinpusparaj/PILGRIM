@@ -23,6 +23,17 @@
         "--strictPort"
       ],
       "port": 5321
+    },
+    {
+      "name": "pilgrim-combat",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "--port",
+        "5334",
+        "--strictPort"
+      ],
+      "port": 5334
     }
   ]
 }
