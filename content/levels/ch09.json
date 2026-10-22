@@ -24,12 +24,12 @@
   ],
   "detours": [],
   "zones": [
-    { "id": "shadow_valley", "type": "shadowValley", "shape": "way", "from": 0.1, "to": 0.9, "hopeDrain": 2.5 },
+    { "id": "shadow_valley", "type": "shadowValley", "shape": "way", "from": 0.1, "to": 0.9, "hopeDrain": 1.2 },
     { "id": "ditch_right", "type": "ditch", "shape": "box", "x": 15, "z": 7.5, "size": [190, 4] },
     { "id": "bog_left", "type": "bogHole", "shape": "box", "x": 15, "z": -8, "size": [190, 4] },
     { "id": "shadows_west", "type": "shadows", "shape": "way", "from": 0.18, "to": 0.47, "r": 8, "count": 4 },
     { "id": "shadows_east", "type": "shadows", "shape": "way", "from": 0.58, "to": 0.72, "r": 8, "count": 3 },
-    { "id": "ember_pit", "type": "smoke", "shape": "circle", "x": 10, "z": 0, "r": 10, "hopeDrain": 3.0 },
+    { "id": "ember_pit", "type": "smoke", "shape": "circle", "x": 10, "z": 0, "r": 10, "hopeDrain": 1.5 },
     { "id": "dawn_zone", "type": "meadow", "shape": "circle", "x": 100, "z": 0, "r": 30 }
   ],
   "scatter": [

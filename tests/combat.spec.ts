@@ -407,3 +407,86 @@ test('restarting Chapters VIII and IX mid-fight keeps GPU memory and listeners f
   }
   expect(problems, problems.join('\n')).toEqual([]);
 });
+
+test('Chapter IX is survivable: no bonk loops, prayer reach at the pit, a real dawn, Hope left at the pit', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  const problems = watchConsole(page);
+  await open(page, '9');
+  await page.evaluate(() => {
+    const win = window as unknown as Win;
+    for (const name of ['player:bonk', 'trigger:enter'])
+      win.__pilgrim.events.on(name, (payload) => win.__log.push({ name, payload }));
+  });
+  const hope = (): Promise<number> => page.evaluate(() => (window as unknown as Win).__pilgrim.play!.state.hope);
+  const pos = (): Promise<V> =>
+    page.evaluate(() => {
+      const p = (window as unknown as Win).__pilgrim.play!.player.controller.position;
+      return { x: p.x, y: p.y, z: p.z, toArray: () => [] };
+    });
+
+  // 1. A shadow beside a pilgrim who stands still never pushes him into the bog.
+  await teleportTo(page, 'whisper_zone_1');
+  await settle(page);
+  await page.evaluate(() => {
+    const s = (window as unknown as Win).__pilgrim.services.get('shadows') as { summon(i: number): void };
+    s.summon(0);
+  });
+  await waitSim(page, 8);
+  expect(await count(page, 'player:bonk'), 'bonks while standing still beside a shadow').toBe(0);
+
+  // 2. Walking from the waystone to the smoking pit (W held, praying when it is ready) keeps Hope above 0.
+  await page.evaluate(() => {
+    const win = window as unknown as Win & {
+      __pilgrim: { services: { get(k: 'waystones'): { spot(id: string): { pos: V; facing: number } | null } } };
+    };
+    const sp = win.__pilgrim.services.get('waystones').spot('ch09_w1')!;
+    win.__pilgrim.play!.teleport(sp.pos.x, sp.pos.z, Math.PI / 2);
+    win.__pilgrim.play!.state.setHope(60); // what reading the waystone gives at least
+    (win.__pilgrim.services.get('prayer') as { resetCooldown(): void }).resetCooldown();
+  });
+  await waitSim(page, 0.5);
+  await page.keyboard.down('KeyW');
+  let lowest = 100;
+  for (let i = 0; i < 120; i++) {
+    await waitSim(page, 0.25);
+    await page.keyboard.press('KeyQ'); // does nothing while the prayer rests
+    lowest = Math.min(lowest, await hope());
+    if ((await pos()).x >= -12) break;
+  }
+  await page.keyboard.up('KeyW');
+  expect((await pos()).x, 'walked to the pit').toBeGreaterThanOrEqual(-12);
+  expect(lowest, 'Hope on the way to the pit').toBeGreaterThan(10);
+
+  // 3. A prayer where the objective first asks for one (the edge of 'ember_pit_near') clears the smoke.
+  await page.evaluate(() => {
+    const win = window as unknown as Win;
+    const play = win.__pilgrim.play!;
+    const t = play.world.level.triggers.find((x) => x.id === 'ember_pit_near')!;
+    play.teleport(t.at[0]! - 13, t.at[2]!, Math.PI / 2);
+    (win.__pilgrim.services.get('prayer') as { resetCooldown(): void }).resetCooldown();
+  });
+  await waitSim(page, 0.4);
+  await page.keyboard.press('KeyQ');
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as Win).__pilgrim.play!.state.flag('ch09.pitDone')))
+    .toBe(true);
+
+  // 4. Dawn: the sun and sky light come up, the fog draws back.
+  const light = (): Promise<{ sun: number; far: number }> =>
+    page.evaluate(() => {
+      const w = (window as unknown as { __pilgrim: { play: { world: { sun: { intensity: number }; scene: { fog: { far: number } } } } } })
+        .__pilgrim.play.world;
+      return { sun: w.sun.intensity, far: w.scene.fog.far };
+    });
+  const night = await light();
+  await teleportTo(page, 'dawn_breaks');
+  await settle(page);
+  await waitSim(page, 6);
+  const dawn = await light();
+  expect(dawn.sun).toBeGreaterThan(night.sun * 3);
+  expect(dawn.far).toBeGreaterThan(night.far * 2);
+  await page.screenshot({ path: `${SHOTS}/ch09-dawn.png` });
+  expect(problems, problems.join('\n')).toEqual([]);
+});

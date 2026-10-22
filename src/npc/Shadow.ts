@@ -1,7 +1,8 @@
 /**
  * The shadows of the Valley of the Shadow (GDD 2.9 "Shadows (Chapter IX)"): smoky blobs with two ember eyes that
  * lurk beside the dark path, drift up to Christian, drain Hope while close and nudge him toward the path's edge
- * (the ditch and the bog). They never touch his hearts and can never be destroyed:
+ * (the ditch and the bog) while he walks. After a bonk they back off for 4 s, so a pilgrim who stops is never
+ * knocked in again and again. They never touch his hearts and can never be destroyed:
  * - Prayer (`prayer:burst`, src/player/Prayer.ts) within its ring makes them flee squeaking for 8 s.
  * - The Sword (Combat target) scatters one into a puff for 3 s; then it gathers itself again.
  * - `setActive(false)` (dawn) sends them away into the dark; they melt out of sight, and come back with true.
@@ -46,12 +47,17 @@ export const SHADOW = {
   keep: 1.1,
   speed: 1.5,
   drainNear: 3.2,
-  drain: 3,
+  drain: 1.5,
   nudgeNear: 2.4,
   nudge: 0.7,
   flee: 4.5,
   fleeFor: PRAYER.fleeSeconds,
   scatterFor: 3,
+  /** After a bonk, shadows this close back off for `backOff` s (no bonk loops). */
+  backOffNear: 12,
+  backOff: 4,
+  /** The edge push only works on a pilgrim who is walking (m/s). */
+  nudgeMinSpeed: 0.5,
 } as const;
 const HOPE_STEP = 0.5;
 
@@ -124,6 +130,7 @@ export class Shadows {
       loop.add({ update: (dt) => this.update(dt) }, NPC_ORDER + 3),
       loop.add({ render: (a) => this.render(a) }, PLAY_ORDER.world + 3),
       events.on('prayer:burst', (b) => this.onPrayer(b.x, b.z, b.radius)),
+      events.on('player:bonk', () => this.backOff()),
     );
     for (const s of this.list) {
       const off = o.combat?.addTarget({
@@ -193,7 +200,7 @@ export class Shadows {
       this.move(sh, dt, p);
       if (sh.state === 'chase' && free) {
         if (d < SHADOW.drainNear) drain = SHADOW.drain;
-        if (d < SHADOW.nudgeNear) this.nudge(sh, dt);
+        if (d < SHADOW.nudgeNear && s.player.speed > SHADOW.nudgeMinSpeed) this.nudge(sh, dt);
       }
     }
     this.drain(drain, dt);
@@ -271,6 +278,16 @@ export class Shadows {
     const p = this.o.session.player.controller.position;
     events.emit('sfx', { id: 'shadow_squeak', at: [p.x, p.y + 1, p.z] });
     events.emit('shadow:flee', { count: n });
+  }
+
+  /** He was bonked: every shadow near him drifts back for a moment, so he is never knocked in twice in a row. */
+  private backOff(): void {
+    const p = this.o.session.player.controller.position;
+    for (const sh of this.list) {
+      if (sh.state === 'gone' || Math.hypot(sh.pos.x - p.x, sh.pos.z - p.z) > SHADOW.backOffNear) continue;
+      sh.state = 'flee';
+      sh.timer = Math.max(sh.timer, SHADOW.backOff);
+    }
   }
 
   private scatter(sh: Shade, from: THREE.Vector3): void {

@@ -1249,9 +1249,12 @@ export class Shadows {                                 // service 'shadows' (tes
   darkens per phase: `apollyon-sky.ts`. Christian is held inside the arena and outside Apollyon's body. Events
   `apollyon:phase` {phase}, `apollyon:hit` {phase, hits}. `hearts:empty` → I SHALL ARISE → the same phase again.
 - Shadows (GDD 2.9, Ch IX): placed along each 'shadows' way zone (`count`, default 4), 2 instanced meshes for the
-  swarm. lurk → chase within 11 m; within 3.2 m drain 3 Hope/s (Helmet half), within 2.4 m push him toward the
-  Way's edge; `prayer:burst` → flee 8 s (`shadow:flee` {count}); a sword hit → scatter 3 s (`shadow:scatter`);
-  never destroyed; `setActive(false)` at dawn.
+  swarm. lurk → chase within 11 m; within 3.2 m drain 1.5 Hope/s (Helmet half), within 2.4 m push him toward the
+  Way's edge while he walks; after a bonk, shadows within 12 m back off 4 s; `prayer:burst` → flee 8 s
+  (`shadow:flee` {count}); a sword hit → scatter 3 s (`shadow:scatter`); never destroyed; `setActive(false)` at dawn.
+- `LookShift` (src/gen/fx/LookShift.ts): `new LookShift(world, look, seconds)`, `update(dt)`, `snap()`, `dispose()`
+  eases the sky dome colours, the scene fog (colour, near, far) and the sun / sky lights toward a `Look` and restores
+  them on dispose. Ch IX's dawn uses it.
 
 New events, all declared in their modules: `zone:enter/exit/hazard`, `player:bonk/landed/jump/recipe/arise`,
 `hope:low`, `burden:grew/joyJump`, `slough:steps`, `interact:focus/use/hold`, `satchel:closed`; core ones used:
@@ -1506,7 +1509,8 @@ function chapterLauncher(engine, opts?: { script?: string; onManager?(m: Chapter
   for the sword, Ch IX prays with Q at the smoking pit), each reaching 'chapter:complete' with a clean console.
 - Chapters VIII and IX (Phase 5): `ensureArmour(ctx)` (src/chapters/armour-kit.ts) first; Ch VIII builds the Arena,
   Hearts and ApollyonFight when 'apollyon_approach' fires and plays the claim, the fight, the Micah 7:8 line, his
-  flight and the healing leaves; Ch IX builds the Shadows and clears the smoking pit on a `prayer:burst` near it.
+  flight and the healing leaves; Ch IX builds the Shadows, clears the smoking pit on a `prayer:burst` inside
+  'ember_pit_near' or near the smoke, and eases the valley to dawn at 'dawn_breaks' (LookShift).
 - `tests/chapters.spec.ts`: the Evangelist talk by keyboard in English and Tamil (third answer: Hope +10, cuts,
   babble, Tamil panel text; screenshots `test-results/phase3/chapter-talk-<lang>.png`), 5 builds with flat
   memory and listeners, title → START → opening → Chapter I (the test chapter in its place), clean consoles.
