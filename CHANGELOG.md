@@ -2,6 +2,14 @@
 
 All notable changes to PILGRIM: THE NARROW WAY. Dates are release dates.
 
+## 0.1.5 — 2026-10-23 — Curious pilgrims (versionCode 6)
+
+- Chapter V: the Interpreter's six rooms are toy-puzzles, and your name can be written on the Roll.
+- Chapter XI: the storm, shelter, sleep and Giant Despair carrying the pilgrims off.
+- Chapter XII: five runaway lambs to bring home, the looking glass with a glimpse of the Celestial Gate, and the Enchanted Ground's sleepy meter.
+- Badges with medal cards (15 in all), Promise nudges, a land recap on the loading screen and finds on CHAPTERS.
+- Every chapter's road walkable end to end; Chapter X's missing beats; phone fixes (lighter scatter, readable toasts).
+
 ## 0.1.4 — 2026-10-15 — Spoken journey (versionCode 5)
 
 - Offline spoken dialogue, story narration and optional objective guidance, with persistent voice settings.
