@@ -15,3 +15,14 @@
 .hud.is-touch .journey { left:16px; transform:none; width:calc(100% - 190px); max-width:360px; bottom:calc(238px + var(--safe-bottom)); }
 @media(max-width:600px) { .hud:not(.is-touch) .journey { left:16px; transform:none; width:calc(100% - 208px); } }
 @media(max-height:500px) { .hud.is-touch .hud-minimap { width:108px; right:calc(330px + var(--safe-right)); bottom:calc(16px + var(--safe-bottom)); padding:5px; } .hud.is-touch .hud-minimap__title { font-size:10px; } .hud.is-touch .hud-minimap__legend { display:none; } .hud.is-touch .journey { left:50%; transform:translateX(-50%); width:min(340px,48vw); bottom:auto; } }
+/* Narrow phones (360-420 px wide, e.g. 720p Android): a smaller map and journey line that keep the middle of
+   the screen, where Christian walks, clear. */
+@media(max-width:420px) and (min-height:501px) {
+  .hud.is-touch .hud-minimap { width:96px; padding:5px; border-radius:14px; bottom:calc(196px + var(--safe-bottom)); }
+  .hud.is-touch .hud-minimap__title { font-size:10px; margin-bottom:3px; }
+  .hud.is-touch .hud-minimap__north { font-size:10px; }
+  .hud.is-touch .hud-minimap__legend { display:none; }
+  .hud.is-touch .journey { left:12px; width:calc(100% - 132px); bottom:calc(196px + var(--safe-bottom)); }
+  .hud.is-touch .journey-stats { font-size:11px; padding:3px 10px; }
+  .hud.is-touch .journey-hint { font-size:12px; line-height:1.35; padding:5px 8px; margin-top:4px; }
+}

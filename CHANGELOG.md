@@ -2,6 +2,10 @@
 
 All notable changes to PILGRIM: THE NARROW WAY. Dates are release dates.
 
+## 0.1.6 — 2026-10-24 — Small phones (versionCode 7)
+
+- Narrow phones (360-420 px wide, e.g. 720p Android): a smaller objective banner, route map and journey line that keep the middle of the screen clear; the idle joystick ghost no longer sits under USE.
+
 ## 0.1.5 — 2026-10-23 — Curious pilgrims (versionCode 6)
 
 - Chapter V: the Interpreter's six rooms are toy-puzzles, and your name can be written on the Roll.

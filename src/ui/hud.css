@@ -328,3 +328,8 @@ body.lang-ta .hud-card.is-in-a .hud-card__number, body.lang-ta .hud-card.is-in-b
   .hud-objective { font-size: var(--fs-body); }
   .hud-lantern__body { width: calc(var(--fs-body) * 3.3); }
 }
+
+/* Narrow phones: the objective banner drops to body size so it stays one or two short lines. */
+@media (max-width: 420px) {
+  .hud.is-touch .hud-objective { font-size: var(--fs-body); padding: 0.3em 0.8em 0.35em 0.35em; }
+}

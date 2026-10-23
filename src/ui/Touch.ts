@@ -64,6 +64,7 @@ const CSS = `
   transition:opacity 120ms}
 .pg-touch-stick:not(.on){left:92px;top:auto;bottom:32px;opacity:.38;margin:0;transform:none!important}
 .pg-touch-stick.on{opacity:1}
+@media(max-width:420px){.pg-touch-stick:not(.on){display:none}}
 .pg-touch-knob{position:absolute;left:50%;top:50%;width:60px;height:60px;margin:-30px 0 0 -30px;
   border-radius:50%;background:rgba(255,248,234,.9);box-shadow:0 3px 10px rgba(28,20,34,.35)}
 .pg-touch-stick.run .pg-touch-knob{background:#ffd27a}

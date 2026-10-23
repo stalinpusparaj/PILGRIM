@@ -1,0 +1,1 @@
+Fits small phones: on narrow screens the objective, route map and journey hints are smaller, so you can see your pilgrim and the road.
