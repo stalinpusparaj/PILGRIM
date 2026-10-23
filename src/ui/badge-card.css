@@ -1,0 +1,59 @@
+/* New-badge card (src/ui/BadgeCard.ts): under the toasts, top centre. Tokens from styles.css. */
+
+.pg-badge-card {
+  position: absolute;
+  top: calc(var(--gap) + var(--safe-top) + 4.6em);
+  left: 50%;
+  z-index: 26; /* over the HUD and bubbles, under the dialogue layer (30) */
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  width: max-content;
+  max-width: min(440px, calc(100vw - 32px));
+  padding: 0.55em 1.1em 0.55em 0.6em;
+  border: 3px solid var(--accent-deep);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  color: var(--ink);
+  font-family: var(--font-body);
+  box-shadow: 0 5px 0 var(--accent-deep), 0 12px 26px var(--shadow);
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: pg-badge-in 0.6s var(--ease-bounce) both;
+}
+.pg-badge-card.is-leaving { animation: pg-badge-out 0.32s ease-in both; }
+.pg-badge-card__medal {
+  flex: none;
+  width: 3.6em;
+  height: 3.6em;
+  animation: pg-badge-medal 1.2s ease-out 0.2s both;
+}
+.pg-badge-card__text { display: flex; flex-direction: column; line-height: 1.2; }
+.pg-badge-card__kicker {
+  color: #8a5a10; /* >= 4.5:1 on the cream panel */
+  font-size: var(--fs-small);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.pg-badge-card__name { font-family: var(--font-title); font-size: var(--fs-large); font-weight: 700; }
+.pg-badge-card__line { color: var(--ink-soft); font-size: var(--fs-body); font-weight: 700; }
+@keyframes pg-badge-in {
+  from { opacity: 0; transform: translate(-50%, -12px) scale(0.7); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+@keyframes pg-badge-out {
+  to { opacity: 0; transform: translate(-50%, -10px) scale(0.92); }
+}
+@keyframes pg-badge-medal {
+  0% { transform: rotate(-30deg) scale(0.4); }
+  60% { transform: rotate(12deg) scale(1.15); }
+  100% { transform: rotate(0) scale(1); }
+}
+/* Phones: the top of the screen holds the objective, toasts and corner icons; the card takes the middle. */
+@media (max-width: 640px), (max-height: 500px) {
+  .pg-badge-card { top: 34%; }
+}
+body.reduce-motion .pg-badge-card,
+body.reduce-motion .pg-badge-card.is-leaving,
+body.reduce-motion .pg-badge-card__medal { animation: none; }
+body.lang-ta .pg-badge-card { font-family: var(--font-tamil); }

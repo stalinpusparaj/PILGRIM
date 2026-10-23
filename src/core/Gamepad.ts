@@ -98,9 +98,14 @@ export function radialDeadzone(out: { x: number; y: number }, x: number, y: numb
   out.y = y * scale;
 }
 
+/** Browsers only offer gamepads to secure pages (https, localhost); elsewhere asking just logs a warning. */
+function padsAvailable(): boolean {
+  return typeof navigator.getGamepads === 'function' && (typeof isSecureContext === 'undefined' || isSecureContext);
+}
+
 /** The connected pad used most recently (highest timestamp), or null. */
 function latestPad(): Gamepad | null {
-  if (typeof navigator.getGamepads !== 'function') return null;
+  if (!padsAvailable()) return null;
   let pads: ReturnType<Navigator['getGamepads']>;
   try {
     pads = navigator.getGamepads();
@@ -116,7 +121,7 @@ function latestPad(): Gamepad | null {
 }
 
 function connectedPads(): Gamepad[] {
-  if (typeof navigator.getGamepads !== 'function') return [];
+  if (!padsAvailable()) return [];
   try {
     return navigator.getGamepads().filter((p): p is Gamepad => p !== null && p.connected);
   } catch {

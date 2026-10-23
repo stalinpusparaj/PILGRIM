@@ -13,8 +13,8 @@ import raw from '../../content/badges.json';
 import '../audio/events';
 import { events } from '../core/Events';
 import { services } from '../core/Services';
-import { t } from '../core/I18n';
 import { PROMISE_TOTAL } from '../core/GameState';
+import { BadgeCard } from '../ui/BadgeCard';
 
 export interface Badge {
   id: string;
@@ -57,6 +57,7 @@ const fresh = (chapter: number): Track => ({
 /** Starts watching; returns the remover (tests, HMR). */
 export function installBadges(): () => void {
   let track = fresh(0);
+  const card = new BadgeCard();
   const state = (): ReturnType<typeof services.tryGet<'state'>> => services.tryGet('state');
   const unlock = (id: string): void => {
     if (badgeById(id)) state()?.unlock(id);
@@ -66,7 +67,7 @@ export function installBadges(): () => void {
       track = fresh(chapter);
       track.minHope = state()?.hope ?? 100;
     }),
-    events.on('achievement:unlocked', ({ id }) => celebrate(id)),
+    events.on('achievement:unlocked', ({ id }) => celebrate(id, card)),
     events.on('player:bonk', ({ reason }) => {
       if (reason === 'arrow') track.arrowHit = true;
     }),
@@ -110,15 +111,20 @@ export function installBadges(): () => void {
   ];
   return () => {
     for (const off of offs) off();
+    card.dispose();
   };
 }
 
-/** A badge's moment: toast, bells, sparkles over Christian. */
-function celebrate(id: string): void {
+/** A badge's moment: the medal card, bells, a burst of sparkles round Christian. */
+function celebrate(id: string, card: BadgeCard): void {
   const b = badgeById(id);
   if (!b) return;
-  events.emit('hud:toast', { key: 'ui.toast.badge', params: { name: t(b.name) } });
+  card.show(b.name, b.line, b.points);
   events.emit('sfx', { id: 'bells', volume: 0.6 });
   const p = services.tryGet('player')?.renderPosition;
-  if (p) events.emit('sfx', { id: 'sparkle', at: [p.x, p.y + 1.5, p.z] });
+  if (!p) return;
+  events.emit('sfx', { id: 'sparkle', at: [p.x, p.y + 1.5, p.z] });
+  const particles = services.tryGet('chapters')?.session?.world.particles;
+  particles?.emit('sparkle', p.clone().setY(p.y + 1.2), 36, { spread: 1.2 });
+  particles?.emit('motes', p.clone().setY(p.y + 0.4), 14, { spread: 1.6 });
 }

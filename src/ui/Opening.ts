@@ -378,7 +378,7 @@ function padBackHeld(pad: Gamepad | null): boolean {
 }
 
 function latestPad(): Gamepad | null {
-  if (typeof navigator === 'undefined' || typeof navigator.getGamepads !== 'function') return null;
+  if (typeof navigator === 'undefined' || typeof navigator.getGamepads !== 'function' || !isSecureContext) return null; // gamepads only on secure pages
   try {
     let best: Gamepad | null = null;
     for (const p of navigator.getGamepads())

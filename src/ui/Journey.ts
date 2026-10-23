@@ -32,7 +32,8 @@ export class Journey {
       on('friend:met', ({ id }) => this.award(`friend.${id}`, 25, 'friend')),
       on('waystone:read', ({ id }) => this.award(`waystone.${id}`, 20, 'waystone')),
       on('chapter:complete', ({ chapter }) => this.award(`chapter.${chapter}`, 100, 'chapter')),
-      on('achievement:unlocked', ({ id }) => this.award(`badge.${id}`, badgeById(id)?.points ?? 50, 'badge')),
+      // A badge's points show on its own medal card (src/ui/BadgeCard.ts), so no second popup here.
+      on('achievement:unlocked', ({ id }) => this.award(`badge.${id}`, badgeById(id)?.points ?? 50, 'badge', true)),
       on('interact:use', () => {
         services.tryGet('state')?.setFlag('journey.used', true);
       }),
@@ -45,11 +46,12 @@ export class Journey {
     this.refresh();
   }
 
-  private award(id: string, points: number, key: string): void {
+  private award(id: string, points: number, key: string, quiet = false): void {
     const state = services.tryGet('state');
     if (!state || state.flag(`journey.reward.${id}`)) return;
     state.setFlag(`journey.reward.${id}`, true);
     state.setFlag('journey.score', this.score() + points);
+    if (quiet) return this.refresh();
     this.rewardKey = key;
     this.rewardPoints = points;
     this.rewardTime = 3.5;

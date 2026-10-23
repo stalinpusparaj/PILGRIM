@@ -96,6 +96,15 @@
   --hud-toast-w: max(160px, min(560px, calc(100vw - 2 * var(--hud-touch-side) - var(--safe-left) - var(--safe-right))));
   top: calc(14px + var(--safe-top));
 }
+/* Phones in portrait: the gap between the icons is too narrow for a sentence, so toasts drop just below the icons
+   at nearly full width (over the objective for their few seconds) and become rounded panels, not tall pills. */
+@media (max-width: 640px) {
+  .hud.is-touch .hud-toasts {
+    --hud-toast-w: calc(100vw - 28px - var(--safe-left) - var(--safe-right));
+    top: calc(var(--hud-touch-top) + var(--safe-top)); z-index: 1;
+  }
+  .hud.is-touch .hud-toast { border-radius: var(--radius); }
+}
 .hud-toast {
   display: inline-flex; align-items: center; gap: 0.5em; max-width: 100%; padding: 0.38em 1.05em 0.42em 0.42em;
   border-color: var(--accent-deep); border-radius: 999px;

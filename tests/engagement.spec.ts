@@ -81,10 +81,10 @@ test('journey line, Promise nudges and badges with their toast, points and Satch
   const score = (): Promise<unknown> => page.evaluate(() => (window as unknown as Win).__pilgrim.play!.state.flag('journey.score'));
   const before = Number((await score()) ?? 0);
   await page.evaluate(() => (window as unknown as Win).__pilgrim.play!.state.unlock('brightLantern'));
-  await expect.poll(() => toasts(page)).toContain('ui.toast.badge');
+  await expect(page.locator('.pg-badge-card')).toContainText('Bright Lantern');
   await expect.poll(async () => Number(await score())).toBeGreaterThanOrEqual(before + 75);
   await page.keyboard.press('Tab');
-  await expect(page.locator('.pg-satchel__awards')).toContainText('1 of 13');
+  await expect(page.locator('.pg-satchel__awards')).toContainText('1 of 15');
   await expect(page.locator('[data-key="badge:brightLantern"]')).not.toHaveClass(/is-locked/);
   await expect(page.locator('[data-key="badge:unshaken"]')).toHaveClass(/is-locked/);
   expect(problems, problems.join('\n')).toEqual([]);

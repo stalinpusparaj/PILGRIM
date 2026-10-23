@@ -112,7 +112,7 @@ function readDir(pad: Gamepad, mask: number): PadDir | null {
 
 /** The connected pad used most recently, or null (no API, blocked by a permissions policy, none connected). */
 function latestPad(): Gamepad | null {
-  if (typeof navigator === 'undefined' || typeof navigator.getGamepads !== 'function') return null;
+  if (typeof navigator === 'undefined' || typeof navigator.getGamepads !== 'function' || !isSecureContext) return null; // gamepads only on secure pages
   let pads: ReturnType<Navigator['getGamepads']>;
   try {
     pads = navigator.getGamepads();

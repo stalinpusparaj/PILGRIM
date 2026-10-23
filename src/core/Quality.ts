@@ -122,13 +122,20 @@ export function isSmallTouchScreen(): boolean {
   return shortest <= SMALL_SCREEN_MAX_PX;
 }
 
-/** Touch devices: shadow map at most 512 (1024 on High) and the mobile draw-call budget. */
+/** Phones (small touch screens): grass thinned and props hidden sooner, so the visible triangles stay under the
+ *  GDD 2.15 budget-Android 120k (measured on an Android emulator: 110-125k on Medium before, DECISIONS). */
+const PHONE = { grass: 0.6, drawDistance: 160 } as const;
+
+/** Touch devices: shadow map at most 512 (1024 on High) and the mobile draw-call budget; phones a lighter scatter. */
 function adapt(base: QualityPreset, coarse: boolean): QualityPreset {
   if (!coarse) return base;
+  const phone = isSmallTouchScreen();
   return Object.freeze({
     ...base,
     shadowMapSize: Math.min(base.shadowMapSize, base.level === 'high' ? 1024 : 512),
     maxDrawCalls: Math.min(base.maxDrawCalls, MOBILE_MAX_DRAW_CALLS),
+    grassDensity: phone ? base.grassDensity * PHONE.grass : base.grassDensity,
+    drawDistance: phone ? Math.min(base.drawDistance, PHONE.drawDistance) : base.drawDistance,
   });
 }
 

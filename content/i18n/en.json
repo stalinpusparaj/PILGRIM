@@ -1195,5 +1195,22 @@
   "ch11.toast.asleep": "Under the tree they rest... and fall fast asleep.",
   "ch11.toast.carried": "Hm! Giant Despair found them and carried them off!",
   "ui.chapters.promises": "Promises {found}/{total}",
-  "ui.chapters.badges": "Badges {n}/{total}"
+  "ui.chapters.badges": "Badges {n}/{total}",
+  "ch12.toast.lostLambs": "Five little lambs ran off! Can you bring them home to the fold?",
+  "ch12.toast.lambFound": "A lamb! It follows you. ({n} of {total})",
+  "ch12.toast.lambsHome": "Safe in the fold: {n} of {total}",
+  "ch12.toast.flockHome": "Every lamb is home! The shepherds cheer.",
+  "ch12.glass.hold": "Your hands are wobbly! Hold still...",
+  "ch12.glass.seen": "Look! The Celestial Gate, shining far away!",
+  "ch12.sleepy.label": "Sleepy",
+  "ch12.toast.tooSleepy": "So sleepy... Talk with Hopeful to stay awake!",
+  "badge.goodShepherd.name": "Good Shepherd",
+  "badge.goodShepherd.line": "You brought all five lambs home.",
+  "badge.goodShepherd.hint": "Listen for little bleats in the mountains.",
+  "badge.farSight.name": "Far Sight",
+  "badge.farSight.line": "You saw the Celestial Gate through the looking glass.",
+  "badge.farSight.hint": "Hold very still on a high hill.",
+  "ui.badge.new": "NEW BADGE!",
+  "ch12.glass.holdTouch": "Wobbly hands! Hold your finger on the screen to keep it still.",
+  "ui.badge.points": "+{points} points"
 }

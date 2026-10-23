@@ -172,7 +172,7 @@ function isDir(k: PadKey): k is NavDir {
 }
 
 function latestPad(): Gamepad | null {
-  if (typeof navigator.getGamepads !== 'function') return null;
+  if (typeof navigator.getGamepads !== 'function' || !isSecureContext) return null; // gamepads only on secure pages
   let pads: ReturnType<Navigator['getGamepads']>;
   try {
     pads = navigator.getGamepads();

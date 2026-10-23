@@ -88,6 +88,22 @@
     "hint": "badge.sharpEyes.hint"
   },
   {
+    "id": "goodShepherd",
+    "chapter": 12,
+    "points": 50,
+    "name": "badge.goodShepherd.name",
+    "line": "badge.goodShepherd.line",
+    "hint": "badge.goodShepherd.hint"
+  },
+  {
+    "id": "farSight",
+    "chapter": 12,
+    "points": 50,
+    "name": "badge.farSight.name",
+    "line": "badge.farSight.line",
+    "hint": "badge.farSight.hint"
+  },
+  {
     "id": "goodCompany",
     "chapter": 0,
     "points": 50,

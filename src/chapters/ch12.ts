@@ -7,6 +7,9 @@
  */
 import '../audio/events';
 import { events } from '../core/Events';
+import { LookingGlass } from './ch12-glass';
+import { Flock } from './ch12-sheep';
+import { SleepyMeter } from './ch12-sleepy';
 import type { ChapterContext, ChapterScript } from './types';
 
 /** Sitting on a sleepy couch costs this much Hope and wakes him at the last waystone (GDD 2.7.8). */
@@ -19,8 +22,21 @@ class Chapter12 {
   private enchanted = false;
   private ending = false;
   private removeHopefulTalk: (() => void) | null = null;
+  private readonly flock: Flock;
+  private readonly glass: LookingGlass;
+  private readonly sleepy: SleepyMeter;
 
-  constructor(private readonly ctx: ChapterContext) {}
+  constructor(private readonly ctx: ChapterContext) {
+    this.flock = new Flock(ctx);
+    this.glass = new LookingGlass(ctx);
+    this.sleepy = new SleepyMeter(ctx, () => this.couch());
+  }
+
+  update(dt: number): void {
+    this.flock.update(dt);
+    this.glass.update(dt);
+    this.sleepy.update(dt);
+  }
 
   start(): void {
     const ctx = this.ctx;
@@ -51,6 +67,7 @@ class Chapter12 {
         .then(() => {
           ctx.objective('ch12.objective.lookGlass');
           ctx.toast('ch12.toast.shepherdWarning');
+          if (this.flock.counts.home < this.flock.counts.total) ctx.toast('ch12.toast.lostLambs');
         });
     });
 
@@ -63,10 +80,7 @@ class Chapter12 {
         radius: 3,
         verb: 'ui.verb.look',
         enabled: true,
-        onUse: () => {
-          ctx.toast('ch12.toast.lookingGlass');
-          ctx.objective('ch12.objective.followWay');
-        },
+        onUse: () => void this.glass.use(),
       });
     }
     ctx.onTrigger('viewpoint_reach', () => ctx.objective('ch12.objective.lookGlass'));
@@ -114,7 +128,11 @@ class Chapter12 {
         ctx.objective('ch12.objective.stayAwake');
         this.removeHopefulTalk ??= ctx.onTalk(
           'hopeful',
-          () => ctx.talk('ch12_hopeful_talk', { with: 'hopeful' }).then(() => ctx.state.addHope(15)),
+          () =>
+            ctx.talk('ch12_hopeful_talk', { with: 'hopeful' }).then(() => {
+              ctx.state.addHope(15);
+              this.sleepy.pushBack();
+            }),
           { once: false },
         );
       },
@@ -180,12 +198,20 @@ class Chapter12 {
   }
 }
 
+let running: Chapter12 | null = null;
+
 const script: ChapterScript = {
   id: 'ch12',
   level: 'ch12',
   start(ctx: ChapterContext) {
-    const ch = new Chapter12(ctx);
-    ch.start();
+    running = new Chapter12(ctx);
+    running.start();
+  },
+  update(dt) {
+    running?.update(dt);
+  },
+  dispose() {
+    running = null;
   },
 };
 

@@ -157,6 +157,7 @@ const PLAN: Array<{ n: string; chapter: number; steps: Step[] }> = [
       'shepherds_meet',
       'viewpoint_reach',
       { use: 'looking_glass_use' },
+      { flag: 'ch12.glassDone' }, // the glass settles by itself (tests/ch12.spec.ts holds Pray)
       'ignorance_meets',
       'fork_flatterer',
       'fork_correct',

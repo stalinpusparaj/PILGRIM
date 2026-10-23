@@ -5,90 +5,583 @@
   "size": 300,
   "terrain": {
     "base": 0,
-    "noise": { "scale": 0.02, "height": 5, "octaves": 4 },
+    "noise": {
+      "scale": 0.02,
+      "height": 5,
+      "octaves": 4
+    },
     "stamps": [
-      { "type": "hill", "x": -80, "z": -20, "r": 50, "height": 12 },
-      { "type": "hill", "x": 20, "z": 30, "r": 40, "height": 10 },
-      { "type": "hill", "x": 100, "z": -10, "r": 45, "height": 8 },
-      { "type": "plateau", "x": -20, "z": 10, "r": 30, "height": 4 },
-      { "type": "valley", "x": 60, "z": 0, "r": 30, "depth": 2 }
+      {
+        "type": "hill",
+        "x": -80,
+        "z": -20,
+        "r": 50,
+        "height": 12
+      },
+      {
+        "type": "hill",
+        "x": 20,
+        "z": 30,
+        "r": 40,
+        "height": 10
+      },
+      {
+        "type": "hill",
+        "x": 100,
+        "z": -10,
+        "r": 45,
+        "height": 8
+      },
+      {
+        "type": "plateau",
+        "x": -20,
+        "z": 10,
+        "r": 30,
+        "height": 4
+      },
+      {
+        "type": "valley",
+        "x": 60,
+        "z": 0,
+        "r": 30,
+        "depth": 2
+      }
     ]
   },
   "way": [
-    [-130, 0, 10],
-    [-100, 0, 4],
-    [-70, 0, -2],
-    [-40, 0, -6],
-    [-10, 0, -4],
-    [20, 0, 0],
-    [50, 0, 4],
-    [80, 0, 2],
-    [110, 0, -2],
-    [136, 0, -4]
+    [
+      -130,
+      0,
+      10
+    ],
+    [
+      -100,
+      0,
+      4
+    ],
+    [
+      -70,
+      0,
+      -2
+    ],
+    [
+      -40,
+      0,
+      -6
+    ],
+    [
+      -10,
+      0,
+      -4
+    ],
+    [
+      20,
+      0,
+      0
+    ],
+    [
+      50,
+      0,
+      4
+    ],
+    [
+      80,
+      0,
+      2
+    ],
+    [
+      110,
+      0,
+      -2
+    ],
+    [
+      136,
+      0,
+      -4
+    ]
   ],
   "detours": [
     {
       "id": "flatterer_road",
       "points": [
-        [20, 0, 0],
-        [30, 0, 14],
-        [40, 0, 28],
-        [46, 0, 40]
+        [
+          20,
+          0,
+          0
+        ],
+        [
+          30,
+          0,
+          14
+        ],
+        [
+          40,
+          0,
+          28
+        ],
+        [
+          46,
+          0,
+          40
+        ]
       ],
       "width": 3
     }
   ],
   "zones": [
-    { "id": "orchards", "type": "meadow", "shape": "circle", "x": -60, "z": -4, "r": 50 },
-    { "id": "sheep_meadow", "type": "meadow", "shape": "circle", "x": 10, "z": 0, "r": 40 },
-    { "id": "enchanted_ground", "type": "sleepy", "shape": "way", "from": 0.65, "to": 0.95, "hopeDrain": 1.5 },
-    { "id": "flatterer_zone", "type": "detour", "shape": "way", "path": "flatterer_road", "from": 0.1, "to": 1.0, "hopeDrain": 1.0 }
+    {
+      "id": "orchards",
+      "type": "meadow",
+      "shape": "circle",
+      "x": -60,
+      "z": -4,
+      "r": 50
+    },
+    {
+      "id": "sheep_meadow",
+      "type": "meadow",
+      "shape": "circle",
+      "x": 10,
+      "z": 0,
+      "r": 40
+    },
+    {
+      "id": "enchanted_ground",
+      "type": "sleepy",
+      "shape": "way",
+      "from": 0.65,
+      "to": 0.95
+    },
+    {
+      "id": "flatterer_zone",
+      "type": "detour",
+      "shape": "way",
+      "path": "flatterer_road",
+      "from": 0.1,
+      "to": 1.0,
+      "hopeDrain": 1.0
+    },
+    {
+      "id": "lamb_1",
+      "type": "spot",
+      "shape": "circle",
+      "x": -104,
+      "z": 20,
+      "r": 1
+    },
+    {
+      "id": "lamb_2",
+      "type": "spot",
+      "shape": "circle",
+      "x": -88,
+      "z": -24,
+      "r": 1
+    },
+    {
+      "id": "lamb_3",
+      "type": "spot",
+      "shape": "circle",
+      "x": -44,
+      "z": 18,
+      "r": 1
+    },
+    {
+      "id": "lamb_4",
+      "type": "spot",
+      "shape": "circle",
+      "x": -34,
+      "z": -22,
+      "r": 1
+    },
+    {
+      "id": "lamb_5",
+      "type": "spot",
+      "shape": "circle",
+      "x": -118,
+      "z": -8,
+      "r": 1
+    },
+    {
+      "id": "sheep_fold",
+      "type": "spot",
+      "shape": "circle",
+      "x": -64,
+      "z": -14,
+      "r": 1
+    },
+    {
+      "id": "celestial_glimpse",
+      "type": "spot",
+      "shape": "circle",
+      "x": 146,
+      "z": -40,
+      "r": 1,
+      "lift": 26
+    }
   ],
   "scatter": [
-    { "type": "grass", "density": 1.8, "minDist": 0.8 },
-    { "type": "flower", "density": 0.5, "minDist": 1.1 },
-    { "type": "tree_fruit", "zone": "orchards", "density": 0.5, "minDist": 5 },
-    { "type": "tree_round", "density": 0.08, "minDist": 6, "keepClear": 3 },
-    { "type": "vine_row", "zone": "orchards", "density": 0.14, "minDist": 4 },
-    { "type": "bush", "density": 0.18, "minDist": 3 },
-    { "type": "rock", "density": 0.04, "minDist": 5 }
+    {
+      "type": "grass",
+      "density": 1.8,
+      "minDist": 0.8
+    },
+    {
+      "type": "flower",
+      "density": 0.5,
+      "minDist": 1.1
+    },
+    {
+      "type": "tree_fruit",
+      "zone": "orchards",
+      "density": 0.5,
+      "minDist": 5
+    },
+    {
+      "type": "tree_round",
+      "density": 0.08,
+      "minDist": 6,
+      "keepClear": 3
+    },
+    {
+      "type": "vine_row",
+      "zone": "orchards",
+      "density": 0.14,
+      "minDist": 4
+    },
+    {
+      "type": "bush",
+      "density": 0.18,
+      "minDist": 3
+    },
+    {
+      "type": "rock",
+      "density": 0.04,
+      "minDist": 5
+    }
   ],
   "landmarks": [
-    { "type": "bench", "id": "sleepy_couch_1", "at": [60, 0, 10] },
-    { "type": "bench", "id": "sleepy_couch_2", "at": [80, 0, 8] },
-    { "type": "sign", "id": "viewpoint_sign", "at": [-20, 0, -6] },
-    { "type": "sign", "id": "flatterer_fork", "at": [18, 0, 2] },
-    { "type": "waystone", "id": "ch12_ws1_stone", "at": [-78, 0, -2] },
-    { "type": "waystone", "id": "ch12_ws2_stone", "at": [120, 0, -4] }
+    {
+      "type": "bench",
+      "id": "sleepy_couch_1",
+      "at": [
+        60,
+        0,
+        10
+      ]
+    },
+    {
+      "type": "bench",
+      "id": "sleepy_couch_2",
+      "at": [
+        80,
+        0,
+        8
+      ]
+    },
+    {
+      "type": "sign",
+      "id": "viewpoint_sign",
+      "at": [
+        -20,
+        0,
+        -6
+      ]
+    },
+    {
+      "type": "sign",
+      "id": "flatterer_fork",
+      "at": [
+        18,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "waystone",
+      "id": "ch12_ws1_stone",
+      "at": [
+        -78,
+        0,
+        -2
+      ]
+    },
+    {
+      "type": "waystone",
+      "id": "ch12_ws2_stone",
+      "at": [
+        120,
+        0,
+        -4
+      ]
+    },
+    {
+      "type": "fence",
+      "id": "fold_back",
+      "at": [
+        -64,
+        0,
+        -17.5
+      ],
+      "rotY": 0,
+      "params": {
+        "length": 6,
+        "clear": 5
+      }
+    },
+    {
+      "type": "fence",
+      "id": "fold_left",
+      "at": [
+        -67,
+        0,
+        -14.5
+      ],
+      "rotY": 1.5708,
+      "params": {
+        "length": 6
+      }
+    },
+    {
+      "type": "fence",
+      "id": "fold_right",
+      "at": [
+        -61,
+        0,
+        -14.5
+      ],
+      "rotY": 1.5708,
+      "params": {
+        "length": 6
+      }
+    }
   ],
   "npcs": [
-    { "id": "hopeful", "recipe": "hopeful", "role": "companion", "at": [-130, 0, 10] },
-    { "id": "knowledge", "recipe": "knowledge", "role": "story", "at": [-60, 0, -2] },
-    { "id": "experience", "recipe": "experience", "role": "story", "at": [-54, 0, 4] },
-    { "id": "watchful_s", "recipe": "shepherd_watchful", "role": "story", "at": [-56, 0, -6] },
-    { "id": "sincere", "recipe": "sincere", "role": "story", "at": [-48, 0, 2] },
-    { "id": "ignorance", "recipe": "ignorance", "role": "story", "at": [40, 0, -4] },
-    { "id": "flatterer", "recipe": "flatterer", "role": "story", "at": [22, 0, 4] },
-    { "id": "atheist", "recipe": "atheist", "role": "story", "at": [90, 0, 0] }
+    {
+      "id": "hopeful",
+      "recipe": "hopeful",
+      "role": "companion",
+      "at": [
+        -130,
+        0,
+        10
+      ]
+    },
+    {
+      "id": "knowledge",
+      "recipe": "knowledge",
+      "role": "story",
+      "at": [
+        -60,
+        0,
+        -2
+      ]
+    },
+    {
+      "id": "experience",
+      "recipe": "experience",
+      "role": "story",
+      "at": [
+        -54,
+        0,
+        4
+      ]
+    },
+    {
+      "id": "watchful_s",
+      "recipe": "shepherd_watchful",
+      "role": "story",
+      "at": [
+        -56,
+        0,
+        -6
+      ]
+    },
+    {
+      "id": "sincere",
+      "recipe": "sincere",
+      "role": "story",
+      "at": [
+        -48,
+        0,
+        2
+      ]
+    },
+    {
+      "id": "ignorance",
+      "recipe": "ignorance",
+      "role": "story",
+      "at": [
+        40,
+        0,
+        -4
+      ]
+    },
+    {
+      "id": "flatterer",
+      "recipe": "flatterer",
+      "role": "story",
+      "at": [
+        22,
+        0,
+        4
+      ]
+    },
+    {
+      "id": "atheist",
+      "recipe": "atheist",
+      "role": "story",
+      "at": [
+        90,
+        0,
+        0
+      ]
+    }
   ],
   "triggers": [
-    { "id": "shepherds_meet", "shape": "circle", "at": [-60, 0, -2], "r": 10, "script": "shepherdsMeet", "once": true },
-    { "id": "viewpoint_reach", "shape": "circle", "at": [-20, 0, -6], "r": 7, "script": "viewpointReach", "once": true },
-    { "id": "ignorance_meets", "shape": "circle", "at": [40, 0, -4], "r": 8, "script": "ignoranceMeets", "once": true },
-    { "id": "fork_correct", "shape": "circle", "at": [18, 0, -4], "r": 5, "script": "forkCorrect", "once": true },
-    { "id": "fork_flatterer", "shape": "circle", "at": [22, 0, 6], "r": 5, "script": "forkFlatterer", "once": true },
-    { "id": "net_trap", "shape": "circle", "at": [40, 0, 32], "r": 6, "script": "netTrap", "once": true },
-    { "id": "atheist_near", "shape": "circle", "at": [90, 0, 0], "r": 8, "script": "atheistNear", "once": true },
-    { "id": "enchanted_warning", "shape": "circle", "at": [60, 0, 4], "r": 8, "script": "enchantedWarning", "once": true },
-    { "id": "ch12_end", "shape": "circle", "at": [128, 0, -4], "r": 8, "script": "chapterEnd", "once": false }
+    {
+      "id": "shepherds_meet",
+      "shape": "circle",
+      "at": [
+        -60,
+        0,
+        -2
+      ],
+      "r": 10,
+      "script": "shepherdsMeet",
+      "once": true
+    },
+    {
+      "id": "viewpoint_reach",
+      "shape": "circle",
+      "at": [
+        -20,
+        0,
+        -6
+      ],
+      "r": 7,
+      "script": "viewpointReach",
+      "once": true
+    },
+    {
+      "id": "ignorance_meets",
+      "shape": "circle",
+      "at": [
+        40,
+        0,
+        -4
+      ],
+      "r": 8,
+      "script": "ignoranceMeets",
+      "once": true
+    },
+    {
+      "id": "fork_correct",
+      "shape": "circle",
+      "at": [
+        18,
+        0,
+        -4
+      ],
+      "r": 5,
+      "script": "forkCorrect",
+      "once": true
+    },
+    {
+      "id": "fork_flatterer",
+      "shape": "circle",
+      "at": [
+        22,
+        0,
+        6
+      ],
+      "r": 5,
+      "script": "forkFlatterer",
+      "once": true
+    },
+    {
+      "id": "net_trap",
+      "shape": "circle",
+      "at": [
+        40,
+        0,
+        32
+      ],
+      "r": 6,
+      "script": "netTrap",
+      "once": true
+    },
+    {
+      "id": "atheist_near",
+      "shape": "circle",
+      "at": [
+        90,
+        0,
+        0
+      ],
+      "r": 8,
+      "script": "atheistNear",
+      "once": true
+    },
+    {
+      "id": "enchanted_warning",
+      "shape": "circle",
+      "at": [
+        60,
+        0,
+        4
+      ],
+      "r": 8,
+      "script": "enchantedWarning",
+      "once": true
+    },
+    {
+      "id": "ch12_end",
+      "shape": "circle",
+      "at": [
+        128,
+        0,
+        -4
+      ],
+      "r": 8,
+      "script": "chapterEnd",
+      "once": false
+    }
   ],
   "waystones": [
-    { "id": "ch12_w1", "at": [-78, 0, -2] },
-    { "id": "ch12_w2", "at": [120, 0, -4] }
+    {
+      "id": "ch12_w1",
+      "at": [
+        -78,
+        0,
+        -2
+      ]
+    },
+    {
+      "id": "ch12_w2",
+      "at": [
+        120,
+        0,
+        -4
+      ]
+    }
   ],
   "promises": [
-    { "id": "p21", "at": [-40, 0.8, -14] },
-    { "id": "p22", "at": [8, 0.8, 16] }
+    {
+      "id": "p21",
+      "at": [
+        -40,
+        0.8,
+        -14
+      ]
+    },
+    {
+      "id": "p22",
+      "at": [
+        8,
+        0.8,
+        16
+      ]
+    }
   ],
   "ambience": "birdsong",
   "music": "mountains"

@@ -1531,12 +1531,18 @@ function chapterLauncher(engine, opts?: { script?: string; onManager?(m: Chapter
 - Chapter XI storm (`src/chapters/ch11-storm.ts`): storm LookShift + rain round Christian from 'storm_trigger', the
   guide on the 'shelter' spot; 'shelter_reach' → sit, nap, `fadeOut` / `fadeIn` (src/ui/Fade.ts, z-index 390),
   teleport to 'dungeon_door', flag 'ch11.carried'.
+- Chapter XII activities: `Flock` (src/chapters/ch12-sheep.ts; spot zones 'lamb_1'..'lamb_5', 'sheep_fold';
+  `buildSheepGeometry` in src/gen/sheep.ts), `LookingGlass` (ch12-glass.ts; spot zone 'celestial_glimpse' with `lift`;
+  flag 'ch12.glassDone'), `SleepyMeter` (ch12-sleepy.ts; the 'sleepy' zone). Badge unlocks show `BadgeCard`
+  (src/ui/BadgeCard.ts, z-index 26) from the badge watcher.
 - Dev: `window.__autopilot` (src/dev/autopilot.ts, debug builds only): `start(plan)`, `status()`, `stop()`. Plan
   options: `choices`, `visit`, `run`, `waystones`, `fight`, `useAll` (+ `skip`), `followGuide`, `detours` (detour ids
   to walk along when on them); wedged for 1.5 s it follows the Way for 3 s and hops; it dismisses the name card.
 - `tests/way-clear.spec.ts`: every chapter's main Way is walkable end to end for the player's capsule (story locks
   listed). `tests/ch05.spec.ts`: the six room puzzles (a typed name kept). `tests/ch11-storm.spec.ts`: storm →
-  shelter → sleep → the dungeon.
+  shelter → sleep → the dungeon. `tests/ch12.spec.ts`: lambs, looking glass, sleepy meter.
+  `tests/mobile.spec.ts`: every chapter on Pixel 7 and iPhone 13 sized touch screens (phone preset, <= 80 draw
+  calls, clean console), Ch XII by touch and the phone layout of the badge card, sleepy meter and name card.
 - `tests/engagement.spec.ts`: journey line, Promise nudges, a badge's toast / points / Satchel card, the Ch X
   badges, the Easy floor vs Normal, CHAPTERS finds lines.
 - `tests/ch10.spec.ts`: the pride trip by running, Talkative's pile and questions, a "Yes please" sack slowing him
