@@ -2,6 +2,13 @@
 
 All notable changes to PILGRIM: THE NARROW WAY. Dates are release dates.
 
+## 0.2.0 — 2026-10-24 — A richer journey (versionCode 11)
+
+- Premium look: frosted-glass menus, glossy buttons with icons, glass-orb game buttons.
+- Every land's picture is a 3D scene drawn by the game; glossy chapter cards with a light sweep.
+- 12 languages: English, Tamil, Hindi, Telugu, Malayalam, Kannada, Spanish, French, Portuguese, German, Indonesian, Russian.
+- Settings reorganised (General, Sound, Controls, Advanced, About); rate, share, more games, update notice.
+
 ## 0.1.9 — 2026-10-24 — Follow the Way (versionCode 10)
 
 - Hold your thumb on the screen and Christian walks the Way by himself; drag to explore.
