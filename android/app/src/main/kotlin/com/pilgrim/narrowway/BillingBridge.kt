@@ -21,7 +21,7 @@ import org.json.JSONObject
 
 /**
  * Purchases through RevenueCat (src/core/Entitlement.ts, DECISIONS #402). Chapters I-IV are free; the RevenueCat
- * entitlement `full` unlocks the rest. The current offering holds three packages: Monthly and Annual (Google
+ * entitlement `pilgrim_the_narrow_way_pro` unlocks the rest. The current offering holds three packages: Monthly and Annual (Google
  * Play subscription base plans with a free trial offer) and Lifetime (a one-time product). The game asks for
  * state with `billingState()` and is told of every change through `window.__pilgrimNative.billing(json)`:
  * whether the journey is owned, and each plan's store-formatted price and trial. RevenueCat validates and
@@ -152,6 +152,6 @@ class BillingBridge(private val activity: Activity, private val webView: WebView
 
     private companion object {
         /** The RevenueCat entitlement every package grants. */
-        const val ENTITLEMENT = "full"
+        const val ENTITLEMENT = "pilgrim_the_narrow_way_pro"
     }
 }
