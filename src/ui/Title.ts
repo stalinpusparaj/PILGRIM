@@ -62,12 +62,12 @@ export class Title {
     );
     const credit = tx.text(h('p', { className: 'pg-title__credit' }), 'ui.title.credit');
 
-    const start = menuButton(tx, 'ui.title.start', { primary: true, onClick: () => handlers.start() });
-    this.continueBtn = menuButton(tx, 'ui.title.continue', { onClick: () => handlers.continue() });
+    const start = menuButton(tx, 'ui.title.start', { primary: true, icon: 'play', onClick: () => handlers.start() });
+    this.continueBtn = menuButton(tx, 'ui.title.continue', { icon: 'play', onClick: () => handlers.continue() });
     this.continueBtn.hidden = true; // shown once a save is found
-    const chapters = menuButton(tx, 'ui.title.chapters', { onClick: () => handlers.chapters() });
-    const settings = menuButton(tx, 'ui.title.settings', { onClick: () => handlers.settings() });
-    const credits = menuButton(tx, 'ui.title.credits', { onClick: () => handlers.credits() });
+    const chapters = menuButton(tx, 'ui.title.chapters', { icon: 'book', onClick: () => handlers.chapters() });
+    const settings = menuButton(tx, 'ui.title.settings', { icon: 'gear', onClick: () => handlers.settings() });
+    const credits = menuButton(tx, 'ui.title.credits', { icon: 'star', onClick: () => handlers.credits() });
     this.menuButtons = [start, this.continueBtn, chapters, settings, credits];
     const nav = tx.attr(
       h('nav', { className: 'pg-title__menu' }, ...this.menuButtons),

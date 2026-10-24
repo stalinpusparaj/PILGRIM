@@ -12,6 +12,7 @@
  */
 import './ui/styles.css';
 import './ui/phone-fit.css';
+import './ui/gloss.css';
 import './ui/art';
 import { events } from './core/Events';
 import { services } from './core/Services';

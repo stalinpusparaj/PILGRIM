@@ -21,7 +21,12 @@ export type IconName =
   | 'mouseRight'
   | 'mouseMiddle'
   | 'view'
-  | 'menu';
+  | 'menu'
+  | 'gear'
+  | 'home'
+  | 'pad'
+  | 'book'
+  | 'star';
 
 const MOUSE_BODY = '<rect x="12" y="5" width="24" height="38" rx="12"/><path d="M24 5v14M12 19h24"/>';
 
@@ -57,6 +62,21 @@ const ICON_BODIES: Record<IconName, string> = {
     MOUSE_BODY + '<rect x="21" y="9" width="6" height="9" rx="3" fill="currentColor" stroke="none"/>',
   view: '<rect x="7" y="11" width="21" height="17" rx="4"/><rect x="20" y="20" width="21" height="17" rx="4"/>',
   menu: '<path d="M11 15h26M11 24h26M11 33h26"/>',
+  // Settings: a round cog with eight teeth around a hollow centre.
+  gear:
+    '<circle cx="24" cy="24" r="6"/><path d="M24 5v6M24 37v6M5 24h6M37 24h6M10.6 10.6l4.2 4.2M33.2 33.2l4.2 4.2' +
+    'M37.4 10.6l-4.2 4.2M14.8 33.2l-4.2 4.2"/><circle cx="24" cy="24" r="13"/>',
+  // Title screen: a little house with a door.
+  home: '<path d="M7 23 24 8l17 15"/><path d="M12 19v21h24V19"/><path d="M20 40V29h8v11"/>',
+  // Controls: a game pad with a cross and two buttons.
+  pad:
+    '<path d="M14 14h20c6 0 10 5 10 12v4c0 5-6 7-9 3l-3-4H16l-3 4c-3 4-9 2-9-3v-4c0-7 4-12 10-12z"/>' +
+    '<path d="M15 20v8M11 24h8"/><circle cx="32" cy="21" r="1.8" fill="currentColor"/>' +
+    '<circle cx="36" cy="26" r="1.8" fill="currentColor"/>',
+  // Chapters: an open book.
+  book: '<path d="M24 13c-5-4-12-4-17-2v27c5-2 12-2 17 2 5-4 12-4 17-2V11c-5-2-12-2-17 2z"/><path d="M24 13v27"/>',
+  // Credits: a five-point star.
+  star: '<path d="M24 6l5.4 11.6L42 19l-9.4 8.6L35 40l-11-6.2L13 40l2.4-12.4L6 19l12.6-1.4z"/>',
 };
 
 function svg(body: string, size: number | string, stroked: boolean): string {

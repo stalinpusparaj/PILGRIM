@@ -42,11 +42,11 @@ export class Pause {
   ) {
     const titleId = uid('pg-pause');
     const tx = this.texts;
-    const resume = menuButton(tx, 'ui.pause.resume', { primary: true, onClick: () => handlers.resume() });
-    const satchel = menuButton(tx, 'ui.pause.satchel', { onClick: () => handlers.satchel() });
-    const settings = menuButton(tx, 'ui.pause.settings', { onClick: () => handlers.settings() });
-    this.controlsBtn = menuButton(tx, 'ui.pause.controls', { onClick: () => this.show('controls') });
-    this.quitBtn = menuButton(tx, 'ui.pause.titleScreen', { onClick: () => this.show('confirm') });
+    const resume = menuButton(tx, 'ui.pause.resume', { primary: true, icon: 'play', onClick: () => handlers.resume() });
+    const satchel = menuButton(tx, 'ui.pause.satchel', { icon: 'satchel', onClick: () => handlers.satchel() });
+    const settings = menuButton(tx, 'ui.pause.settings', { icon: 'gear', onClick: () => handlers.settings() });
+    this.controlsBtn = menuButton(tx, 'ui.pause.controls', { icon: 'pad', onClick: () => this.show('controls') });
+    this.quitBtn = menuButton(tx, 'ui.pause.titleScreen', { icon: 'home', onClick: () => this.show('confirm') });
     this.panel = h(
       'div',
       { className: 'panel pg-menu-panel pg-pause__panel pop-in' },

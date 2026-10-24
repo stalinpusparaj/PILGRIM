@@ -11,6 +11,7 @@ import { services } from '../core/Services';
 import type { SfxId } from '../audio/types';
 import '../audio/events';
 import { h } from './dom';
+import { icon, type IconName } from './Svg';
 
 type Params = TranslateParams | (() => TranslateParams);
 
@@ -83,6 +84,8 @@ export interface MenuButtonOptions {
   primary?: boolean;
   className?: string;
   params?: Params;
+  /** A small glossy icon before the label (gloss.css). */
+  icon?: IconName;
 }
 
 /** A chunky menu button with live-translated text, marked as a Menu item. */
@@ -90,11 +93,20 @@ export function menuButton(texts: Texts, key: string, o: MenuButtonOptions): HTM
   const kind = o.primary ? 'pg-mbtn--primary' : 'btn-secondary';
   const button = h('button', {
     type: 'button',
-    className: `btn pg-mbtn ${kind}${o.className ? ` ${o.className}` : ''}`,
+    className: `btn pg-mbtn ${kind}${o.icon ? ' has-icon' : ''}${o.className ? ` ${o.className}` : ''}`,
     dataset: { menuItem: '', primary: o.primary ? '' : null, key },
     onClick: () => o.onClick(),
   });
-  texts.text(button, key, o.params);
+  if (!o.icon) {
+    texts.text(button, key, o.params);
+    return button;
+  }
+  // Icon + label (gloss.css): the label span carries the translated text, so a language change keeps the icon.
+  const glyph = h('span', { className: 'pg-mbtn__icon', 'aria-hidden': 'true' });
+  glyph.innerHTML = icon(o.icon, '100%');
+  const label = h('span', { className: 'pg-mbtn__label' });
+  texts.text(label, key, o.params);
+  button.append(glyph, label);
   return button;
 }
 
