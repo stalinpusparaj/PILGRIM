@@ -9,6 +9,8 @@ import { urlParams } from '../core/Flags';
 import { save, type SaveData } from '../core/Save';
 import { ChapterSelect, EPILOGUE } from '../ui/ChapterSelect';
 import { Credits } from '../ui/Credits';
+import { DailyCard, dailyButton } from '../ui/DailyCard';
+import { daily } from '../core/Daily';
 import { Title } from '../ui/Title';
 import { TitleScene } from '../ui/TitleScene';
 import { landProgress } from './chapter-progress';
@@ -20,13 +22,15 @@ export interface TitleHubHandlers {
   startChapter(chapter: number): void;
 }
 
-export type TitleSub = 'chapters' | 'credits' | ScreenId;
+export type TitleSub = 'chapters' | 'credits' | 'daily' | ScreenId;
 
 export class TitleHub {
   readonly title: Title;
   readonly scene: TitleScene;
   private sub: { id: TitleSub; handle: ScreenHandle } | null = null;
   private latest: SaveData | null = null;
+  /** Morning Manna's sun button (DECISIONS #403); hidden on the very first day. */
+  private readonly sun: HTMLButtonElement | null;
   private disposed = false;
 
   constructor(
@@ -43,6 +47,8 @@ export class TitleHub {
       credits: () => this.open('credits'),
     });
     this.scene = new TitleScene(engine);
+    this.sun = daily.newcomer ? null : dailyButton(() => this.open('daily'));
+    if (this.sun) parent.appendChild(this.sun);
     events.emit('music:play', { id: 'title', fade: 1.5, state: 'calm' });
     events.emit('ambience:set', { id: 'meadow', fade: 2 });
     this.scene.start().then(
@@ -57,6 +63,7 @@ export class TitleHub {
         if (this.disposed) return;
         this.latest = data;
         this.title.setContinueAvailable(data !== null);
+        if (daily.cardDue) this.open('daily');
       },
       (err: unknown) => console.warn('[flow] could not read the saves', err),
     );
@@ -79,6 +86,7 @@ export class TitleHub {
     if (this.disposed) return;
     this.disposed = true;
     this.closeSub();
+    this.sun?.remove();
     this.title.dispose();
     this.scene.dispose();
   }
@@ -98,6 +106,11 @@ export class TitleHub {
       void journeyFinds().then((f) => {
         if (this.sub?.handle === select) select.setProgress((n) => landProgress(n, f.promises, f.achievements));
       });
+      return;
+    }
+    if (id === 'daily') {
+      this.sub = { id, handle: new DailyCard(this.parent, { chapter: this.latest?.chapter ?? 1, onClose: () => this.closeSub() }) };
+      this.title.setCovered(true, true);
       return;
     }
     if (id === 'credits') {

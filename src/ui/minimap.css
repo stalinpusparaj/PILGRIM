@@ -43,3 +43,12 @@ body.lang-ta .pg-map { font-family:var(--font-tamil); }
 @media(max-width:640px) and (min-height:501px) {
   .hud:not(.is-touch) .journey { bottom:calc(var(--gap) + var(--safe-bottom) + calc(var(--fs-body) * 3.8 * 88 / 64) + 92px); }
 }
+/* Map looks left today without the full journey (DECISIONS #403), and the resting map with its unlock. */
+.pg-map__left { position:absolute; left:calc(14px + var(--safe-left) + 48px); bottom:calc(var(--gap) + var(--safe-bottom) + calc(var(--fs-body) * 3.8 * 88 / 64) + 14px + 50px); pointer-events:none; z-index:2; box-shadow:0 2px 6px rgba(0,0,0,.35); min-width:24px; height:24px; padding:0 5px; box-sizing:border-box; border-radius:12px;
+  font:900 14px/24px var(--font-body); color:#3a2408; background:#ffd36b; border:2px solid #fff8ea; }
+.pg-map__left[hidden], .pg-map.is-open .pg-map__left { display:none; }
+.hud-minimap__rest { display:none; flex-direction:column; gap:12px; align-items:stretch; text-align:center; }
+.hud-minimap__rest-text { margin:0; font-size:var(--fs-body); line-height:1.4; }
+.pg-map__unlock { min-height:52px; }
+.pg-map.is-rest .hud-minimap__frame, .pg-map.is-rest .hud-minimap__legend { display:none; }
+.pg-map.is-rest .hud-minimap__rest { display:flex; }

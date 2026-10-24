@@ -1514,6 +1514,14 @@ function chapterLauncher(engine, opts?: { script?: string; onManager?(m: Chapter
   patrols, lantern pools: caught = back to 'sneak_start'), `ch10-kit.ts` (zone lookups, instanced crowds). Level
   zones it reads: types 'crowd' (count, face; `day: "cage"` = the square), 'jury', 'spot' ('cage_inside',
   'sneak_start', 'chariot_spot'), 'patrol' (npc, phase).
+- Daily return (DECISIONS #403): `src/core/Daily.ts` (`daily` singleton, `installDaily()` in main.ts, also
+  `window.__pilgrim.daily`): `visit()` once a day (Pilgrim's Path, 7 stones, lantern gifts in `LANTERNS`), today's
+  quest from `QUESTS` (counted on its event; done → toast 'ui.daily.questDone', today's stone gold), `mapLeft` /
+  `useMap()` (3 a day unless `entitlement.owned`), `setLantern(id)` (`--lantern-hue` on :root, read by hud.css),
+  `newcomer` (the first day: no card, quest or greeting), `cardDue`. Morning Manna: `DailyCard` + `dailyButton()`
+  (src/ui/DailyCard.ts, z-index 450) opened by TitleHub as the 'daily' sub-screen; tips from
+  `tipsFor(day, chapter)` (src/game/daily-tips.ts; keys `tip.play.*`, `tip.fact.*`, `tip.ch<n>.a|b`). The map's
+  rest panel opens `openPaywallOver({ pauseGame: true })` (src/ui/Paywall.ts, also used by Settings > About).
 - Engagement (Phase 5): `src/game/badges.ts` (`BADGES` from content/badges.json, `installBadges()` in main.ts:
   detectors on events, per-chapter tracking reset on 'hud:chapterCard', `GameState.unlock` → toast 'ui.toast.badge',
   bells; Journey adds `points`); THE ROLL lists badges (`pg-satchel__awards`); Promises nudge once within 12 m

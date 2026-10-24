@@ -7,6 +7,8 @@ import * as THREE from 'three';
 import type { World } from '../world/World';
 import { services } from '../core/Services';
 import { t } from '../core/I18n';
+import { daily } from '../core/Daily';
+import { openPaywallOver } from './Paywall';
 import { h } from './dom';
 import './minimap.css';
 
@@ -39,6 +41,11 @@ export class Minimap {
   private readonly button = h('button', { className: 'pg-map__btn', type: 'button' });
   private readonly panel = h('div', { className: 'hud-minimap', role: 'dialog' });
   private readonly close = h('button', { className: 'pg-map__close', type: 'button' });
+  /** Map looks left today without the full journey (DECISIONS #403); hidden when unlimited. */
+  private readonly left = h('span', { className: 'pg-map__left', 'aria-hidden': 'true' });
+  private readonly rest = h('div', { className: 'hud-minimap__rest' });
+  private readonly restText = h('p', { className: 'hud-minimap__rest-text' });
+  private readonly unlock = h('button', { className: 'btn pg-map__unlock', type: 'button' });
   private open = false;
   private readonly title = h('div', { className: 'hud-minimap__title' });
   private readonly legend = h('div', { className: 'hud-minimap__legend' });
@@ -57,8 +64,15 @@ export class Minimap {
     const frame = h('div', { className: 'hud-minimap__frame' }, this.map, this.north);
     this.close.innerHTML = CLOSE_ICON;
     const head = h('div', { className: 'hud-minimap__head' }, this.title, this.close);
-    this.panel.append(head, frame, this.legend);
+    this.rest.append(this.restText, this.unlock);
+    this.panel.append(head, frame, this.legend, this.rest);
     this.button.innerHTML = MAP_ICON;
+    this.el.appendChild(this.left); // beside the button: its glass orb clips what it holds
+    this.unlock.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.setOpen(false); // the paywall takes Escape / Back from here
+      openPaywallOver({ pauseGame: true });
+    });
     const scrim = h('div', { className: 'pg-map__scrim' });
     this.el.append(this.button, scrim, this.panel);
     this.el.hidden = true;
@@ -75,6 +89,7 @@ export class Minimap {
 
   private readonly onOpen = (e: Event): void => {
     e.preventDefault();
+    this.el.classList.toggle('is-rest', !daily.useMap());
     this.setOpen(true);
   };
 
@@ -124,7 +139,16 @@ export class Minimap {
     if (this.el.hidden || !this.player) return;
     this.button.setAttribute('aria-label', t('ui.minimap.open'));
     this.close.setAttribute('aria-label', t('ui.minimap.close'));
+    const left = daily.mapLeft;
+    this.left.hidden = !Number.isFinite(left);
+    if (Number.isFinite(left)) this.left.textContent = String(left);
     if (!this.open) return;
+    if (this.el.classList.contains('is-rest')) {
+      this.title.textContent = t('ui.minimap.title');
+      this.restText.textContent = t('ui.minimap.rest');
+      this.unlock.textContent = t('ui.minimap.unlock');
+      return;
+    }
     this.clock += dt;
     if (this.clock < 0.1) return;
     this.clock = 0;

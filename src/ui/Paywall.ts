@@ -10,10 +10,11 @@ import { events } from '../core/Events';
 import { t } from '../core/I18n';
 import { entitlement, type Plan, type PlanInfo } from '../core/Entitlement';
 import { emblemSvg } from './Emblem';
-import { h, setText } from './dom';
+import { h, setText, uiRoot } from './dom';
 import { Menu } from './Menu';
 import { askGrownUp } from './ParentGate';
 import { Texts, menuButton, playSfx, uid } from './menu-screen';
+import { services } from '../core/Services';
 
 export interface PaywallOptions {
   /** The journey is open (bought or restored). */
@@ -136,4 +137,32 @@ export class Paywall {
     this.texts.dispose();
     this.root.remove();
   }
+}
+
+/**
+ * The paywall over whatever is on screen (Settings, the play map; z raised over Settings). `pauseGame` stops the
+ * loop and gameplay input while it is up (in play). Escape closes only the paywall (the grown-up check first).
+ */
+export function openPaywallOver(opts: { pauseGame?: boolean; onDone?: () => void } = {}): void {
+  const engine = opts.pauseGame ? services.tryGet('engine') : undefined;
+  const input = opts.pauseGame ? services.tryGet('input') : undefined;
+  const wasPaused = engine?.loop.paused ?? false;
+  if (engine) engine.loop.paused = true;
+  input?.setGameplayActive(false);
+  const close = (): void => {
+    window.removeEventListener('keydown', onKey, true);
+    wall.dispose();
+    if (engine) engine.loop.paused = wasPaused;
+    input?.setGameplayActive(true);
+    opts.onDone?.();
+  };
+  const onKey = (e: KeyboardEvent): void => {
+    if (e.key !== 'Escape' || document.querySelector('.pg-gate')) return; // the grown-up check closes first
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    close();
+  };
+  const wall: Paywall = new Paywall(uiRoot(), { onUnlocked: close, onClose: close });
+  wall.root.classList.add('pg-paywall--over');
+  window.addEventListener('keydown', onKey, true);
 }

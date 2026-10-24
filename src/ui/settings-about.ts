@@ -10,7 +10,7 @@ import { buildFlags } from '../core/Flags';
 import { t } from '../core/I18n';
 import { nativeLinks, updateAvailable } from '../core/NativeShell';
 import { entitlement } from '../core/Entitlement';
-import { Paywall } from './Paywall';
+import { openPaywallOver as openPaywall } from './Paywall';
 import { Credits } from './Credits';
 import { askGrownUp } from './ParentGate';
 import { uiRoot } from './dom';
@@ -22,23 +22,6 @@ function action(id: string, icon: ActionSpec['icon'], run: () => void, hint: str
 
 /** Behind the grown-up check: `go` runs only after a right answer. */
 const gated = (go: () => void) => (): void => void askGrownUp().then((ok) => ok && go());
-
-/** The paywall over Settings (z 420 under Settings' 850: raised). */
-function openPaywall(): void {
-  const close = (): void => {
-    window.removeEventListener('keydown', onKey, true);
-    wall.dispose();
-  };
-  const onKey = (e: KeyboardEvent): void => {
-    if (e.key !== 'Escape' || document.querySelector('.pg-gate')) return; // the grown-up check closes first
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    close();
-  };
-  const wall: Paywall = new Paywall(uiRoot(), { onUnlocked: close, onClose: close });
-  wall.root.classList.add('pg-paywall--over');
-  window.addEventListener('keydown', onKey, true);
-}
 
 /** The credits over Settings; Escape / Backspace (and Android Back, which sends Escape) close only them. */
 function openCredits(): void {

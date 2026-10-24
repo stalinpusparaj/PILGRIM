@@ -30,6 +30,7 @@ import { h, uiRoot } from './ui/dom';
 import { installJuice } from './ui/Juice';
 import { THERMAL_MODERATE, THERMAL_SEVERE, installNativeShell } from './core/NativeShell';
 import { installEntitlement } from './core/Entitlement';
+import { daily, installDaily } from './core/Daily';
 import { startMode, type FlowStart, type ModeKind, type ModeRunner } from './modes';
 import type { LabProbe } from './gen/lab-probe';
 import type { DialogueTestScene } from './narrative/DialogueTestScene';
@@ -115,6 +116,8 @@ export interface PilgrimHandle {
   readonly play: PlaySession | null;
   /** `?dialogue=test`: the dialogue demo scene (play the sample, its camera). */
   readonly dialogueTest: DialogueTestScene | null;
+  /** Morning Manna, the Pilgrim's Path, the daily quest and map looks (src/core/Daily.ts). */
+  readonly daily: typeof daily;
   /** Disposes the current mode and starts it again (leak checks). Resolves when it is back on screen. */
   restartMode(): Promise<void>;
 }
@@ -165,6 +168,7 @@ Object.defineProperty(window, '__pilgrim', {
     get dialogueTest() {
       return state.runner?.dialogueTest ?? null;
     },
+    daily,
     restartMode: () => (state.restart ? state.restart() : Promise.reject(new Error('[main] not booted'))),
     services,
     events,
@@ -325,6 +329,7 @@ async function boot(): Promise<void> {
   installJuice(); // sparkles, vignettes, button squash: event-driven, app-lifetime
   installNativeShell(); // Android shell: haptics, audio focus (no-op in a browser)
   installEntitlement(); // the full journey: RevenueCat purchases in the Android shell (no-op in a browser)
+  installDaily(); // Morning Manna, the Pilgrim's Path, the daily quest and map looks (DECISIONS #403)
   installBadges(); // badges for curiosity and skill (content/badges.json), app-lifetime
 
   // Started before the loop so its first frame already shows the mode (the test world's loading scene).

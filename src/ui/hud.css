@@ -345,3 +345,6 @@ body.lang-ta .hud-card.is-in-a .hud-card__number, body.lang-ta .hud-card.is-in-b
   .hud:not(.is-touch) .hud-objective { max-width: calc(100vw - 28px - var(--safe-left) - var(--safe-right)); }
   .hud:not(.is-touch) .hud-objective:is(.is-in-a, .is-in-b) ~ .hud-toasts { top: calc(var(--gap) + var(--safe-top) + 5.4em); }
 }
+
+/* The HUD lantern wears the chosen colour (flame and glass only). */
+.hud-lantern .l-flicker, .hud-lantern .l-glass { filter: hue-rotate(var(--lantern-hue, 0deg)); }
