@@ -21,8 +21,8 @@ android {
         applicationId = "com.pilgrim.narrowway"
         minSdk = 26
         targetSdk = 36
-        versionCode = 16
-        versionName = "0.2.5"
+        versionCode = 17
+        versionName = "0.2.6"
     }
     signingConfigs {
         if (keystorePropertiesFile.exists()) {
