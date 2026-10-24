@@ -95,7 +95,8 @@ test.describe('desktop', () => {
       .first()
       .evaluate((card) => ({
         fg: getComputedStyle(card.querySelector('.pg-chapter__number')!).color,
-        bg: getComputedStyle(card).backgroundColor,
+        // The label sits on its own gold ribbon (chapter-cards.css); its solid fallback colour is the backdrop.
+        bg: getComputedStyle(card.querySelector('.pg-chapter__number')!).backgroundColor,
       }));
     expect(contrast(colours.fg, colours.bg)).toBeGreaterThanOrEqual(4.5);
     await page.waitForTimeout(400);

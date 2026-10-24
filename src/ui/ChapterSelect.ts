@@ -12,6 +12,7 @@ import { t } from '../core/I18n';
 import { PALETTES, type PaletteId } from '../gen/palette';
 import { h } from './dom';
 import { paintChapterArt } from './art';
+import './chapter-cards.css';
 import { Menu } from './Menu';
 import { Texts, menuButton, playSfx, uid } from './menu-screen';
 
@@ -63,7 +64,8 @@ export function chapterLock(n: number, furthest: number, demo = buildFlags.DEMO)
 
 export class ChapterSelect {
   readonly root: HTMLDivElement;
-  private readonly texts = new Texts();
+  // A language change also re-writes the progress lines ("Promises 0/1"), which are not bound keys.
+  private readonly texts = new Texts(() => this.applyLocks());
   private readonly cards = new Map<number, HTMLButtonElement>();
   private readonly menu: Menu;
   private furthest = 1;
@@ -163,6 +165,10 @@ export class ChapterSelect {
       },
     });
     paintChapterArt(swatch, n);
+    // Premium frame (chapter-cards.css): a glass sheen that sweeps across, and a gold lock seal for locked lands.
+    const seal = h('span', { className: 'pg-chapter__seal' });
+    seal.innerHTML = LOCK_SVG; // our own markup
+    swatch.append(h('span', { className: 'pg-chapter__shine' }), seal);
     const status = h('span', { className: 'pg-chapter__status' });
     const card = h(
       'button',
@@ -170,6 +176,7 @@ export class ChapterSelect {
         type: 'button',
         className: 'pg-chapter',
         dataset: { menuItem: '', chapter: n, key: `ui.chapter.${key}.title` },
+        style: { '--card-i': String(n) }, // staggers the light sweep down the list
         onClick: () => this.pick(n),
       },
       swatch,

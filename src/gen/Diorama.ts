@@ -154,6 +154,22 @@ async function toUrl(px: Uint8Array, W: number, H: number): Promise<string | nul
   const row = W * 4;
   for (let y = 0; y < H; y++) img.data.set(px.subarray((H - 1 - y) * row, (H - y) * row), y * row);
   ctx.putImageData(img, 0, 0);
-  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.86));
+  // A storybook grade: a touch richer and warmer, with a golden glow from the sky (DECISIONS #398).
+  const out = document.createElement('canvas');
+  out.width = W;
+  out.height = H;
+  const g = out.getContext('2d');
+  if (!g) return null;
+  g.filter = 'saturate(1.22) contrast(1.07) brightness(1.04)';
+  g.drawImage(canvas, 0, 0);
+  g.filter = 'none';
+  g.globalCompositeOperation = 'soft-light';
+  const glow = g.createRadialGradient(W * 0.5, H * 0.18, 0, W * 0.5, H * 0.18, W * 0.75);
+  glow.addColorStop(0, 'rgba(255, 214, 140, 0.55)');
+  glow.addColorStop(1, 'rgba(255, 214, 140, 0)');
+  g.fillStyle = glow;
+  g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'source-over';
+  const blob = await new Promise<Blob | null>((r) => out.toBlob(r, 'image/jpeg', 0.88));
   return blob ? URL.createObjectURL(blob) : null;
 }

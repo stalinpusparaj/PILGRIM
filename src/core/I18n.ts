@@ -98,8 +98,8 @@ export class I18n {
     // Every Indic language uses the long-script layout rules (`lang-ta`) and names itself (`lang-<code>`).
     const body = document.body;
     if (!body) return;
+    for (const l of LANGS) if (l !== 'ta') body.classList.toggle(`lang-${l}`, l === this.current && l !== 'en');
     body.classList.toggle('lang-ta', INDIC.includes(this.current));
-    for (const l of LANGS) body.classList.toggle(`lang-${l}`, l === this.current && l !== 'ta' && l !== 'en');
   }
 
   private warnMissing(key: string): void {
