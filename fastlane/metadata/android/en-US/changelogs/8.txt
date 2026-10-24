@@ -1,0 +1,3 @@
+- Play shows only the controls; tips stay up long enough for slow readers, then fade.
+- A small map button opens a big map; close it to shrink it back.
+- Menus and Tamil text fit small phones.

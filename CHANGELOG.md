@@ -2,6 +2,12 @@
 
 All notable changes to PILGRIM: THE NARROW WAY. Dates are release dates.
 
+## 0.1.7 — 2026-10-24 — Room to play (versionCode 8)
+
+- Play shows only the controls: the objective and tips stay long enough for slow readers, then fade.
+- A small map button opens a big map; close it to shrink it back.
+- Menus, title and Settings fit small phones; Tamil text no longer overflows banners, toasts or buttons.
+
 ## 0.1.6 — 2026-10-24 — Small phones (versionCode 7)
 
 - Narrow phones (360-420 px wide, e.g. 720p Android): a smaller objective banner, route map and journey line that keep the middle of the screen clear; the idle joystick ghost no longer sits under USE.
