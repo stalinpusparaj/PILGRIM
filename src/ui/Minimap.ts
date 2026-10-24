@@ -1,4 +1,8 @@
-/** North-up local map. Routes are built once; only marker transforms update at 10 Hz. */
+/**
+ * North-up local map. In play it is a small round MAP button (bottom-left, over the lantern) so the play area keeps
+ * only the controls; a tap opens the big map in the middle of the screen, and closing it (the X, a tap outside,
+ * Esc) shrinks it back to the button. Routes are built once; only marker transforms update at 10 Hz.
+ */
 import * as THREE from 'three';
 import type { World } from '../world/World';
 import { services } from '../core/Services';
@@ -12,15 +16,30 @@ export interface MapPlayer {
   readonly controller: { readonly velocity: THREE.Vector3 };
 }
 const NS = 'http://www.w3.org/2000/svg';
-const RANGE = 48;
+/** Metres from the player to the map's edge. */
+const RANGE = 60;
 function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number>): SVGElementTagNameMap[K] {
   const el = document.createElementNS(NS, tag);
   for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, String(value));
   return el;
 }
 
+/** A folded paper map (our own drawing). */
+const MAP_ICON =
+  '<svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden="true" focusable="false" fill="none" ' +
+  'stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/>' +
+  '<path d="M9 4v14M15 6v14"/></svg>';
+const CLOSE_ICON =
+  '<svg viewBox="0 0 24 24" width="100%" height="100%" aria-hidden="true" focusable="false" stroke="currentColor" ' +
+  'stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
 export class Minimap {
-  readonly el = h('div', { className: 'hud-minimap' });
+  /** Mounted beside the HUD (not inside it): the HUD sits under the touch controls, the map button over them. */
+  readonly el = h('div', { className: 'pg-map' });
+  private readonly button = h('button', { className: 'pg-map__btn', type: 'button' });
+  private readonly panel = h('div', { className: 'hud-minimap', role: 'dialog' });
+  private readonly close = h('button', { className: 'pg-map__close', type: 'button' });
+  private open = false;
   private readonly title = h('div', { className: 'hud-minimap__title' });
   private readonly legend = h('div', { className: 'hud-minimap__legend' });
   private readonly map = svg('svg', { viewBox: '-48 -48 96 96', role: 'img' });
@@ -36,8 +55,48 @@ export class Minimap {
   constructor() {
     this.map.append(this.route, this.movement, this.goal, this.marker);
     const frame = h('div', { className: 'hud-minimap__frame' }, this.map, this.north);
-    this.el.append(this.title, frame, this.legend);
+    this.close.innerHTML = CLOSE_ICON;
+    const head = h('div', { className: 'hud-minimap__head' }, this.title, this.close);
+    this.panel.append(head, frame, this.legend);
+    this.button.innerHTML = MAP_ICON;
+    const scrim = h('div', { className: 'pg-map__scrim' });
+    this.el.append(this.button, scrim, this.panel);
     this.el.hidden = true;
+    this.button.addEventListener('click', this.onOpen);
+    this.close.addEventListener('click', this.onClose);
+    scrim.addEventListener('click', this.onClose);
+    window.addEventListener('keydown', this.onKey, true);
+    this.setOpen(false);
+  }
+
+  get isOpen(): boolean {
+    return this.open;
+  }
+
+  private readonly onOpen = (e: Event): void => {
+    e.preventDefault();
+    this.setOpen(true);
+  };
+
+  private readonly onClose = (e: Event): void => {
+    e.preventDefault();
+    this.setOpen(false);
+  };
+
+  /** Esc closes the big map first (and is not passed on as Pause). */
+  private readonly onKey = (e: KeyboardEvent): void => {
+    if (!this.open || e.code !== 'Escape') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    this.setOpen(false);
+  };
+
+  private setOpen(open: boolean): void {
+    this.open = open;
+    this.el.classList.toggle('is-open', open);
+    this.button.setAttribute('aria-expanded', String(open));
+    this.clock = 1;
+    if (!open && document.activeElement === this.close) this.button.focus({ preventScroll: true });
   }
 
   setSource(world: World, player: MapPlayer): void {
@@ -61,7 +120,11 @@ export class Minimap {
 
   update(dt: number, visible: boolean): void {
     this.el.hidden = !visible || !this.player || !this.world;
+    if (this.el.hidden && this.open) this.setOpen(false);
     if (this.el.hidden || !this.player) return;
+    this.button.setAttribute('aria-label', t('ui.minimap.open'));
+    this.close.setAttribute('aria-label', t('ui.minimap.close'));
+    if (!this.open) return;
     this.clock += dt;
     if (this.clock < 0.1) return;
     this.clock = 0;
@@ -96,6 +159,7 @@ export class Minimap {
     this.world = null;
     this.player = null;
     this.route.replaceChildren();
+    window.removeEventListener('keydown', this.onKey, true);
     this.el.remove();
   }
 }

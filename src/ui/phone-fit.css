@@ -1,0 +1,31 @@
+/*
+ * Phone fit (portrait phones up to 480 px wide, e.g. 360 px 720p Android): one calm system for every menu screen.
+ * - Margins: 16 px from the screen edge (plus safe areas), 20 px inside panels.
+ * - Hierarchy: one title (28 px), one primary action (60 px tall), secondary actions 52 px; all text at a
+ *   steady 17 px, Tamil 16 px (its glyphs run taller and wider).
+ * - Spacing: 10 px between list items, so a five-item menu fits a 360 x 640 screen without scrolling.
+ * Touch targets stay >= 44 px (menus) and >= 72 px (gameplay buttons, Touch.ts). Selectors start with `body` so
+ * they win over the screen styles that load later in their own chunks.
+ */
+@media (max-width: 480px) and (orientation: portrait) {
+  body .pg-screen {
+    padding: calc(16px + var(--safe-top)) calc(16px + var(--safe-right)) calc(16px + var(--safe-bottom))
+      calc(16px + var(--safe-left));
+  }
+  body .panel { padding: 20px; }
+  body .pg-menu-panel { gap: 10px; }
+  body .pg-menu-title { margin: 0 0 6px; font-size: 28px; line-height: 1.15; letter-spacing: 0.02em; }
+  body .pg-menu-list { gap: 10px; }
+  body .pg-mbtn { min-height: 52px; padding-block: 8px; font-size: 17px; }
+  body .pg-mbtn--primary { min-height: 60px; font-size: 19px; }
+  body.lang-ta .pg-mbtn { font-size: 16px; }
+  body.lang-ta .pg-mbtn--primary { font-size: 17px; }
+
+  /* Settings: a compact header (title, BACK) and tabs as even chips. */
+  body .pg-settings__title { font-size: 26px; }
+  body .pg-settings__back { min-height: 44px; padding: 6px 14px; font-size: 16px; }
+  body .pg-settings__tablist { gap: 6px; }
+  body .pg-settings__tab { min-height: 44px; padding: 6px 10px; font-size: 16px; }
+  body.lang-ta .pg-settings__tab,
+  body.lang-ta .pg-settings__back { font-size: 15px; }
+}

@@ -35,6 +35,11 @@ android {
         }
     }
     buildTypes {
+        // Debug builds install beside the Play Store copy (own app id, own save), so testing never needs an uninstall.
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

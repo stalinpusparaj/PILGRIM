@@ -151,3 +151,5 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+/* Narrow phones: "Hold to skip" stays on one line beside the ring. */
+@media (max-width: 420px) { .pg-cs-skip__label { font-size: var(--fs-small); white-space: nowrap; } }

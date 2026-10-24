@@ -149,7 +149,9 @@ test.describe('phone', () => {
     await page.goto('/');
     await waitForFlow(page, (p) => p.titleReady);
     await showContinue(page);
-    expect((await titleFit(page)).more).toBe(true);
+    // The phone-fit title usually fits even Tamil XL; when it does not, the "more" arrow must show.
+    const start = await titleFit(page);
+    expect(start.more).toBe(Math.max(...start.past) > 0);
     await page.waitForTimeout(900);
     await shot(page, 'title-continue-ta-XL-phone');
     await page.locator('.pg-title__main').evaluate((el) => (el.scrollTop = el.scrollHeight));

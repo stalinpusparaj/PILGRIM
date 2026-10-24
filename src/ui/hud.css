@@ -49,7 +49,7 @@
   /* 28vw on a wide screen, never narrower than ~260px (or the screen) so words never break per letter. */
   max-width: clamp(min(260px, 100vw - 32px), 28vw, 440px); display: flex; align-items: center; gap: 0.45em;
   padding: 0.4em 0.95em 0.45em 0.45em; border-radius: var(--radius); font-size: var(--fs-large); line-height: 1.18;
-  text-wrap: balance; overflow-wrap: anywhere; opacity: 0; visibility: hidden;
+  text-wrap: pretty; overflow-wrap: break-word; opacity: 0; visibility: hidden;
 }
 .hud.is-touch .hud-objective {
   top: calc(var(--hud-touch-top) + var(--safe-top)); left: calc(14px + var(--safe-left));
@@ -329,7 +329,19 @@ body.lang-ta .hud-card.is-in-a .hud-card__number, body.lang-ta .hud-card.is-in-b
   .hud-lantern__body { width: calc(var(--fs-body) * 3.3); }
 }
 
-/* Narrow phones: the objective banner drops to body size so it stays one or two short lines. */
+/* Narrow phones: the objective banner drops to body size so it stays one or two short lines; a single long Tamil
+   word may break inside rather than run out of the banner. */
 @media (max-width: 420px) {
-  .hud.is-touch .hud-objective { font-size: var(--fs-body); padding: 0.3em 0.8em 0.35em 0.35em; }
+  .hud .hud-objective { font-size: var(--fs-body); padding: 0.3em 0.8em 0.35em 0.35em; }
+}
+.hud-objective__text { min-width: 0; overflow-wrap: anywhere; }
+
+/* Narrow screens with a keyboard or pad (a phone with a controller, a narrow window): the same full-width toast and
+   objective as on touch, so long Tamil words never spill out of a 260 px box or break one syllable per line. */
+@media (max-width: 640px) {
+  .hud .hud-toasts { z-index: 2; } /* over the guide chevron */
+  .hud:not(.is-touch) .hud-toasts { --hud-toast-w: calc(100vw - 28px - var(--safe-left) - var(--safe-right)); }
+  .hud:not(.is-touch) .hud-toast { border-radius: var(--radius); }
+  .hud:not(.is-touch) .hud-objective { max-width: calc(100vw - 28px - var(--safe-left) - var(--safe-right)); }
+  .hud:not(.is-touch) .hud-objective:is(.is-in-a, .is-in-b) ~ .hud-toasts { top: calc(var(--gap) + var(--safe-top) + 5.4em); }
 }

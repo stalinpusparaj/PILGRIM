@@ -33,3 +33,4 @@ fastlane/*service-account*.json
 
 # Local credentials supplied for publishing
 secrets/
+qa-results/

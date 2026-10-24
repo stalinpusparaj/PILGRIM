@@ -323,3 +323,16 @@
   .pg-title__menu .pg-mbtn--primary { font-size: calc(var(--fs-body) * 1.1); }
   .pg-title__footer { padding-top: 4px; }
 }
+
+/* Narrow phones (360-420 px wide; Tamil runs longer): a smaller head, credit and footer so all four or five
+   buttons fit without the "more" arrow. */
+@media (max-width: 420px) and (orientation: portrait) {
+  .pg-title__emblem svg { width: 64px; height: 64px; }
+  .pg-title__word { font-size: min(44px, 7.5vh); }
+  .pg-title__sub { margin-top: 6px; font-size: 15px; }
+  .pg-title__credit { margin-top: 8px; font-size: 14px; line-height: 1.3; }
+  .pg-title__menu { gap: 8px; }
+  .pg-title__menu .pg-mbtn { min-height: 50px; font-size: calc(var(--fs-body) * 0.95); }
+  .pg-title__menu .pg-mbtn--primary { font-size: var(--fs-body); }
+  .pg-title__footer { font-size: 13px; padding-top: 4px; }
+}

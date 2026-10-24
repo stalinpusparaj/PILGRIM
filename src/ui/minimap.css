@@ -1,28 +1,45 @@
-.hud-minimap { position:absolute; right:calc(16px + var(--safe-right)); bottom:calc(16px + var(--safe-bottom)); width:164px; padding:8px; border:2px solid #d9bc76; border-radius:18px; color:#fff4ce; background:#172c2bf2; box-shadow:0 4px 12px #0005; box-sizing:border-box; }
-.hud-minimap[hidden] { display:none; }
-.hud-minimap__title { font-size:12px; font-weight:850; letter-spacing:.06em; margin-bottom:5px; }
+/* The map (src/ui/Minimap.ts): a small round MAP button over the lantern; a tap opens the big map in the middle. */
+.pg-map { position:absolute; inset:0; z-index:6; pointer-events:none; } /* over the touch controls (5), under bubbles (25) */
+.pg-map[hidden] { display:none; }
+.pg-map__btn { position:absolute; left:calc(14px + var(--safe-left)); bottom:calc(var(--gap) + var(--safe-bottom) + calc(var(--fs-body) * 3.8 * 88 / 64) + 14px);
+  width:64px; height:64px; padding:16px; border-radius:50%; border:3px solid rgba(255,248,234,.75); background:rgba(28,20,34,.5);
+  color:#fff4ce; box-shadow:0 4px 12px rgba(28,20,34,.35); pointer-events:auto; touch-action:manipulation; cursor:pointer;
+  transition:transform 120ms var(--ease-out), opacity 160ms linear; }
+.pg-map__btn:active { transform:scale(.92); }
+.pg-map__scrim { position:absolute; inset:0; background:rgba(14,10,20,.5); opacity:0; visibility:hidden; transition:opacity 180ms linear, visibility 0s 180ms; }
+.hud-minimap { position:absolute; left:50%; top:50%; width:min(440px, calc(100vw - 32px - var(--safe-left) - var(--safe-right))); padding:14px;
+  border:3px solid #d9bc76; border-radius:22px; color:#fff4ce; background:#172c2bf5; box-shadow:0 8px 28px #0007; box-sizing:border-box;
+  opacity:0; visibility:hidden; transform:translate(-50%,-50%) scale(.3); transform-origin:center;
+  transition:transform 240ms var(--ease-bounce), opacity 160ms linear, visibility 0s 240ms; }
+.hud-minimap__head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.hud-minimap__title { font-size:var(--fs-body); font-weight:850; letter-spacing:.06em; }
+.pg-map__close { flex:none; width:48px; height:48px; padding:12px; border:0; border-radius:50%; background:#2c4441; color:#fff4ce; cursor:pointer; touch-action:manipulation; }
+.hud-minimap__north { position:absolute; left:10px; top:6px; font-size:16px; font-weight:900; }
+.hud-minimap__legend { font-size:var(--fs-small); line-height:1.4; margin-top:10px; }
+.pg-map.is-open { pointer-events:auto; }
+.pg-map.is-open .pg-map__btn { opacity:0; pointer-events:none; }
+.pg-map.is-open .pg-map__scrim { opacity:1; visibility:visible; transition:opacity 180ms linear; }
+.pg-map.is-open .hud-minimap { opacity:1; visibility:visible; transform:translate(-50%,-50%) scale(1); transition:transform 240ms var(--ease-bounce), opacity 160ms linear; }
+@media(max-height:500px) { .hud-minimap { width:min(360px, 70vh); padding:10px; } .hud-minimap__legend { display:none; } }
+body.reduce-motion .hud-minimap, body.reduce-motion .pg-map__scrim { transition:none; }
+body.lang-ta .pg-map { font-family:var(--font-tamil); }
 .hud-minimap__frame { position:relative; aspect-ratio:1; overflow:hidden; border-radius:10px; border:1px solid #7a967f; background:radial-gradient(circle,#3f5544,#263c34); }
 .hud-minimap svg { width:100%; height:100%; display:block; }
-.hud-minimap__north { position:absolute; left:7px; top:4px; font-size:12px; font-weight:900; }
-.hud-minimap__legend { font-size:11px; line-height:1.4; margin-top:5px; }
 .minimap-way { fill:none; stroke:#f8d384; stroke-width:2.8; stroke-linecap:round; stroke-linejoin:round; }
 .minimap-detour { fill:none; stroke:#c18e77; stroke-width:1.5; stroke-dasharray:3 3; }
 .minimap-stone { fill:#f2ead0; stroke:#182b29; stroke-width:.7; }
 .minimap-player { fill:#8ce8ff; stroke:#102a35; stroke-width:1; paint-order:stroke; }
 .minimap-movement { fill:none; stroke:#8ce8ff; stroke-width:1.3; stroke-linecap:round; stroke-linejoin:round; }
 .minimap-goal { fill:#ffcf67; stroke:#fff5c7; stroke-width:1.2; }
-.hud.is-touch .hud-minimap { width:140px; bottom:calc(238px + var(--safe-bottom)); }
-.hud.is-touch .journey { left:16px; transform:none; width:calc(100% - 190px); max-width:360px; bottom:calc(238px + var(--safe-bottom)); }
-@media(max-width:600px) { .hud:not(.is-touch) .journey { left:16px; transform:none; width:calc(100% - 208px); } }
-@media(max-height:500px) { .hud.is-touch .hud-minimap { width:108px; right:calc(330px + var(--safe-right)); bottom:calc(16px + var(--safe-bottom)); padding:5px; } .hud.is-touch .hud-minimap__title { font-size:10px; } .hud.is-touch .hud-minimap__legend { display:none; } .hud.is-touch .journey { left:50%; transform:translateX(-50%); width:min(340px,48vw); bottom:auto; } }
-/* Narrow phones (360-420 px wide, e.g. 720p Android): a smaller map and journey line that keep the middle of
-   the screen, where Christian walks, clear. */
+.hud.is-touch .journey { left:16px; transform:none; width:calc(100% - 32px); max-width:420px; bottom:calc(238px + var(--safe-bottom)); }
+@media(max-width:600px) { .hud:not(.is-touch) .journey { left:16px; transform:none; width:calc(100% - 32px); } }
+@media(max-height:500px) { .hud.is-touch .journey { left:50%; transform:translateX(-50%); width:min(340px,48vw); bottom:auto; } }
 @media(max-width:420px) and (min-height:501px) {
-  .hud.is-touch .hud-minimap { width:96px; padding:5px; border-radius:14px; bottom:calc(196px + var(--safe-bottom)); }
-  .hud.is-touch .hud-minimap__title { font-size:10px; margin-bottom:3px; }
-  .hud.is-touch .hud-minimap__north { font-size:10px; }
-  .hud.is-touch .hud-minimap__legend { display:none; }
-  .hud.is-touch .journey { left:12px; width:calc(100% - 132px); bottom:calc(196px + var(--safe-bottom)); }
-  .hud.is-touch .journey-stats { font-size:11px; padding:3px 10px; }
-  .hud.is-touch .journey-hint { font-size:12px; line-height:1.35; padding:5px 8px; margin-top:4px; }
+  .hud.is-touch .journey { bottom:calc(244px + var(--safe-bottom)); } /* above PRAY (its top is 225 px up) */
+  .hud.is-touch .journey-stats { font-size:13px; padding:4px 12px; }
+  .hud.is-touch .journey-hint { font-size:16px; line-height:1.4; padding:8px 12px; margin-top:6px; }
+}
+/* Narrow screens without touch: the tips sit above the map button and lantern, not over them. */
+@media(max-width:640px) and (min-height:501px) {
+  .hud:not(.is-touch) .journey { bottom:calc(var(--gap) + var(--safe-bottom) + calc(var(--fs-body) * 3.8 * 88 / 64) + 92px); }
 }

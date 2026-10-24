@@ -27,21 +27,26 @@ test('discovery rewards persist, deduplicate and reset with the save', async ({ 
   expect(result).toEqual({ score: 75, restored: 75, reset: undefined });
 });
 
-test('objective remains visible beyond six seconds and returns after cutscenes', async ({ page }) => {
+test('objective stays up long enough to read slowly, then fades, and returns after cutscenes', async ({ page }) => {
   await page.goto('/');
   const result = await page.evaluate(async () => {
     const path = '/src/ui/hud-banners.ts';
     const { ObjectiveLine } = await import(/* @vite-ignore */ path);
     const objective = new ObjectiveLine();
     objective.set('ui.hud.objective.followLight');
-    objective.update(10, true);
-    const persistent = objective.visible;
+    objective.update(0.1, true);
+    objective.update(7, true);
+    const readable = objective.visible; // 8 s at least (GDD 6 s, longer for slow young readers)
+    objective.set('ui.hud.objective.followLight');
+    objective.update(0.1, true);
     objective.update(1, false);
-    const hidden = !objective.visible;
-    objective.update(1, true);
-    return { persistent, hidden, restored: objective.visible };
+    const hidden = !objective.visible; // a cutscene hides it
+    objective.update(0.1, true);
+    const restored = objective.visible; // and it comes back after
+    objective.update(30, true);
+    return { readable, hidden, restored, faded: !objective.visible };
   });
-  expect(result).toEqual({ persistent: true, hidden: true, restored: true });
+  expect(result).toEqual({ readable: true, hidden: true, restored: true, faded: true });
 });
 
 test('mobile coaching fits a portrait phone and touch joystick is discoverable', async ({ page }) => {

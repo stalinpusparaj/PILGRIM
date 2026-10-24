@@ -49,6 +49,8 @@ const chrome = findChrome();
 
 export default defineConfig({
   testDir: 'tests',
+  // The Tamil phone QA sweep (tests/qa-tamil.spec.ts, ~30 min) runs only on demand: QA=1 npx playwright test qa-tamil.
+  testIgnore: env?.['QA'] ? [] : ['**/qa-tamil.spec.ts'],
   fullyParallel: false,
   workers: 1,
   retries: 0,

@@ -9,8 +9,17 @@ import { h, setText } from './dom';
 import { chapterArt, cssUrl } from './art';
 import { badgeSvg } from './hud-icons';
 
-/** On screen after a new objective (GDD 2.14). */
-export const OBJECTIVE_SECONDS = 6;
+/** On screen after a new objective, at least (GDD 2.14 says 6 s; kids reading slowly get more, DECISIONS). */
+export const OBJECTIVE_SECONDS = 8;
+
+/**
+ * Seconds a child (reading age 8) needs to read `text` slowly, then glance back at it: 8 s at least, plus
+ * about 1 s per 9 characters past the first 40 (graphemes, so Tamil is not counted by code units).
+ */
+export function readSeconds(text: string): number {
+  const length = [...text].length;
+  return Math.max(OBJECTIVE_SECONDS, OBJECTIVE_SECONDS + (length - 40) / 9);
+}
 /** On screen again after the Satchel closes ("briefly"). */
 export const OBJECTIVE_RESHOW_SECONDS = 3;
 /** A deferred objective (held back by the chapter card or a hidden HUD) gets at least this much time. */
@@ -61,7 +70,7 @@ export class ObjectiveLine {
     }
     this.key = key;
     setText(this.text, t(key));
-    this.remaining = OBJECTIVE_SECONDS;
+    this.remaining = readSeconds(t(key));
     this.pending = true;
     if (this.shown) this.restartEntrance();
   }
@@ -92,7 +101,9 @@ export class ObjectiveLine {
       this.showNow();
     }
     if (!this.shown) return;
-    // Keep the current task visible until it changes; menus and chapter cards still hide it.
+    // Then the play area keeps only the controls; the Satchel's THE ROLL page always lists the task.
+    this.remaining -= dt;
+    if (this.remaining <= 0) this.hide();
   }
 
   /** Alternates two identical entrance animations, so the entrance replays even with no frame in between. */

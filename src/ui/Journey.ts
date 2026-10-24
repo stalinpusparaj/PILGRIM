@@ -6,6 +6,7 @@ import { buildFlags } from '../core/Flags';
 import { badgeById } from '../game/badges';
 import { h } from './dom';
 import { focusedInteractable } from './hud-focus';
+import { readSeconds } from './hud-banners';
 import './journey.css';
 
 /** Chapters of the full game and of the demo (VITE_DEMO: Chapters I-IV). */
@@ -23,6 +24,9 @@ export class Journey {
   private rewardKey = '';
   private rewardPoints = 0;
   private flip = false;
+  /** The hint shown last (its kind, not its text: the distance ticks) and how long it stays up. */
+  private hintKey = '';
+  private hintTime = 0;
 
   constructor() {
     this.el.append(this.stats, this.hint, this.reward);
@@ -67,7 +71,9 @@ export class Journey {
   }
 
   update(dt: number, visible: boolean): void {
-    this.el.hidden = !visible;
+    if (this.hintTime > 0) this.hintTime -= dt;
+    this.el.hidden = !visible || (this.hintTime <= 0 && this.rewardTime <= 0);
+    this.el.classList.toggle('is-reading', this.hintTime > 0);
     if (!visible) return;
     const input = services.tryGet('input');
     const state = services.tryGet('state');
@@ -102,6 +108,12 @@ export class Journey {
     else if (guide?.offWay) key = 'return';
     else if (guide?.custom && guide.distance < 4) key = 'near';
     const device = input.device;
+    // A new hint (and the chapter line with it) stays up long enough to read slowly, then fades: the play area
+    // keeps only the controls.
+    if (`${key}.${device}` !== this.hintKey) {
+      this.hintKey = `${key}.${device}`;
+      this.hintTime = readSeconds(t(`ui.journey.${key}.${device}`));
+    }
     // Glyph HTML is produced by Input from validated bindings; localized copy stays text-only.
     this.hint.replaceChildren();
     const copy = h('span');

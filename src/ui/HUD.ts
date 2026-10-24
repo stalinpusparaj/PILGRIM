@@ -76,10 +76,10 @@ export class HUD {
       this.bubble.el,
       this.guide.el,
       this.journey.el,
-      this.minimap.el,
     );
     this.root = h('div', { className: 'hud ui-passive' }, this.main, this.card.el);
     parent.appendChild(this.root);
+    parent.appendChild(this.minimap.el);
     this.layout = new HudLayout(this.root);
 
     const input = services.tryGet('input');

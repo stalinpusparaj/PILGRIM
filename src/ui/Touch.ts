@@ -76,6 +76,7 @@ const CSS = `
 .pg-touch-btn.down{transform:scale(.92);background:rgba(242,179,61,.7)}
 .pg-touch-btn svg{width:44%;height:44%}
 .pg-touch-btn.small svg{width:56%;height:56%}
+body.lang-ta .pg-touch-btn{font-size:10px;letter-spacing:0;padding:0 6px;text-align:center}
 `;
 let styleUsers = 0;
 

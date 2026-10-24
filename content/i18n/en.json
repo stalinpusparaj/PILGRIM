@@ -690,6 +690,8 @@
   "ui.minimap.legend": "Blue: you · Gold: goal",
   "ui.minimap.north": "N",
   "ui.minimap.label": "Local map: blue arrow shows your facing, blue line shows movement, gold marks your goal.",
+  "ui.minimap.open": "Map",
+  "ui.minimap.close": "Close map",
   "ui.settings.label.movementPace": "Movement speed",
   "ui.settings.option.movementPace.slow": "Slow",
   "ui.settings.option.movementPace.normal": "Normal",
