@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "വലത് സ്റ്റിക്ക്",
   "ui.settings.controls.dpad": "ഡി-പാഡ്",
   "ui.settings.controls.padNote": "ഗെയിംപാഡ് ബട്ടണുകൾ മാറില്ല.",
-  "ui.settings.touch.stick": "നടക്കാൻ ഇടതുവശത്ത് വലിക്കൂ. ഓടാൻ അറ്റം വരെ തള്ളൂ.",
-  "ui.settings.touch.look": "ചുറ്റും നോക്കാൻ വലതുവശത്ത് വലിക്കൂ.",
+  "ui.settings.touch.stick": "വഴിയിലൂടെ നടക്കാൻ സ്ക്രീനിന്റെ ഇടതുവശത്ത് വിരൽ അമർത്തിപ്പിടിക്കൂ. തിരിയാൻ വലിക്കൂ; ഓടാൻ അരികുവരെ തള്ളൂ.",
+  "ui.settings.touch.look": "ചുറ്റും നോക്കാൻ വലത്തേ അരികിൽ വലിക്കൂ.",
   "ui.settings.touch.satchel": "സഞ്ചി: മുകളിൽ ഇടത്തെ മൂലയിൽ",
   "ui.settings.touch.pause": "നിർത്തൽ: മുകളിൽ വലത്തെ മൂലയിൽ",
   "ui.settings.touch.combat": "വാളും പരിചയും ആവശ്യമുള്ളപ്പോൾ മാത്രം കാണും.",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "പുതിയ പതിപ്പ് തയ്യാർ!",
   "ui.update.text": "പുതിയ സാഹസങ്ങളും തിരുത്തലുകളും നേടൂ.",
   "ui.update.now": "പുതുക്കൂ",
-  "ui.update.skip": "ഒഴിവാക്കൂ"
+  "ui.update.skip": "ഒഴിവാക്കൂ",
+  "ui.settings.touch.use": "അടുത്ത് എന്തെങ്കിലും ഉണ്ടോ? അതിനു മുകളിലുള്ള കൈ കുമിളയിൽ തൊടൂ.",
+  "ui.settings.controls.more": "കീബോർഡും കൺട്രോളറും"
 }

@@ -15,7 +15,7 @@ import { applyAtmosphere } from './Sky';
 import { DIORAMAS, type DioramaRecipe } from './diorama-recipes';
 
 /** 16:9 picture size by quality level: sharp on strong devices, light on budget phones. */
-const SIZES = { low: [480, 270, 0], medium: [640, 360, 4], high: [960, 540, 4] } as const;
+const SIZES = { low: [640, 360, 0], medium: [800, 450, 4], high: [960, 540, 4] } as const;
 
 const cache = new Map<number, Promise<string | null>>();
 /** The sky wall is never fogged (it is the far distance), so it keeps its gradient; app-lifetime like mat(). */
@@ -170,6 +170,6 @@ async function toUrl(px: Uint8Array, W: number, H: number): Promise<string | nul
   g.fillStyle = glow;
   g.fillRect(0, 0, W, H);
   g.globalCompositeOperation = 'source-over';
-  const blob = await new Promise<Blob | null>((r) => out.toBlob(r, 'image/jpeg', 0.88));
+  const blob = await new Promise<Blob | null>((r) => out.toBlob(r, 'image/jpeg', 0.92));
   return blob ? URL.createObjectURL(blob) : null;
 }

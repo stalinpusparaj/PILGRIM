@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "வலது குச்சி",
   "ui.settings.controls.dpad": "திசைப் பொத்தான்கள்",
   "ui.settings.controls.padNote": "கேம்பேட் பொத்தான்கள் மாறாது.",
-  "ui.settings.touch.stick": "நடக்க, திரையின் இடப்பக்கம் இழு. ஓட, ஓரம் வரை தள்ளு.",
-  "ui.settings.touch.look": "சுற்றிப் பார்க்க, திரையின் வலப்பக்கம் இழு.",
+  "ui.settings.touch.stick": "பாதையில் நடக்க, திரையின் இடப்பக்கம் விரலை அழுத்திப் பிடி. திசை மாற்ற இழு; ஓட, ஓரம் வரை தள்ளிப் பிடி.",
+  "ui.settings.touch.look": "சுற்றிப் பார்க்க, திரையின் வலது ஓரத்தில் இழு.",
   "ui.settings.touch.satchel": "தோள்பை: மேல் இடது மூலை",
   "ui.settings.touch.pause": "இடைநிறுத்தம்: மேல் வலது மூலை",
   "ui.settings.touch.combat": "வாளும் கேடயமும் தேவைப்படும்போது மட்டும் வரும்.",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "புதிய பதிப்பு தயார்!",
   "ui.update.text": "புதிய சாகசங்களும் திருத்தங்களும் பெறுங்கள்.",
   "ui.update.now": "புதுப்பி",
-  "ui.update.skip": "தவிர்"
+  "ui.update.skip": "தவிர்",
+  "ui.settings.touch.use": "அருகில் ஏதாவது இருக்கிறதா? அதன் மேலே உள்ள கை குமிழியைத் தொடு.",
+  "ui.settings.controls.more": "விசைப்பலகையும் கட்டுப்படுத்தியும்"
 }

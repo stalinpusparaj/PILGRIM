@@ -47,7 +47,8 @@ export function aboutRows(): RowSpec[] {
       action(
         'rate',
         'star',
-        gated(() => (native ? native.rate() : window.open(store, '_blank', 'noopener'))),
+        // Owner's choice: Rate opens the Play listing straight away (no grown-up check).
+        () => (native ? native.rate() : window.open(store, '_blank', 'noopener')),
         t('ui.settings.about.rateHint'),
       ),
     );

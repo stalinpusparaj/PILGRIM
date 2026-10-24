@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "दायाँ स्टिक",
   "ui.settings.controls.dpad": "D-pad",
   "ui.settings.controls.padNote": "गेमपैड के बटन नहीं बदलते।",
-  "ui.settings.touch.stick": "चलने के लिए बाईं ओर उँगली खींचो। दौड़ने के लिए किनारे तक धकेलो।",
-  "ui.settings.touch.look": "चारों ओर देखने के लिए दाईं ओर उँगली खींचो।",
+  "ui.settings.touch.stick": "रास्ते पर चलने के लिए स्क्रीन के बाईं ओर अँगूठा दबाए रखो। मुड़ने के लिए खींचो; दौड़ने के लिए किनारे तक ले जाओ।",
+  "ui.settings.touch.look": "चारों ओर देखने के लिए दाएँ किनारे पर खींचो।",
   "ui.settings.touch.satchel": "झोला: ऊपर बाएँ कोने में",
   "ui.settings.touch.pause": "रोको: ऊपर दाएँ कोने में",
   "ui.settings.touch.combat": "तलवार और ढाल तभी दिखते हैं जब उनकी ज़रूरत हो।",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "नया संस्करण तैयार है!",
   "ui.update.text": "नए रोमांच और सुधार पाओ।",
   "ui.update.now": "अपडेट करो",
-  "ui.update.skip": "छोड़ो"
+  "ui.update.skip": "छोड़ो",
+  "ui.settings.touch.use": "कुछ पास है? उसके ऊपर वाले हाथ के बुलबुले को छुओ।",
+  "ui.settings.controls.more": "कीबोर्ड और कंट्रोलर"
 }

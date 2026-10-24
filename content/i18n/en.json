@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "Right stick",
   "ui.settings.controls.dpad": "D-pad",
   "ui.settings.controls.padNote": "Gamepad buttons stay the same.",
-  "ui.settings.touch.stick": "Drag on the left side to walk. Push to the edge to run.",
-  "ui.settings.touch.look": "Drag on the right side to look around.",
+  "ui.settings.touch.stick": "Hold your thumb on the left of the screen to walk the Way. Drag to steer; hold at the edge to run.",
+  "ui.settings.touch.look": "Drag on the right edge to look around.",
   "ui.settings.touch.satchel": "Satchel: top left corner",
   "ui.settings.touch.pause": "Pause: top right corner",
   "ui.settings.touch.combat": "SWORD and SHIELD only show up when you need them.",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "A new version is ready!",
   "ui.update.text": "Get the newest adventures and fixes.",
   "ui.update.now": "Update",
-  "ui.update.skip": "Skip"
+  "ui.update.skip": "Skip",
+  "ui.settings.touch.use": "Near something? Tap the hand bubble above it.",
+  "ui.settings.controls.more": "Keyboard and controller"
 }

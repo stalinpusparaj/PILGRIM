@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "ಬಲ ಸ್ಟಿಕ್",
   "ui.settings.controls.dpad": "D-ಪ್ಯಾಡ್",
   "ui.settings.controls.padNote": "ಗೇಮ್‌ಪ್ಯಾಡ್ ಗುಂಡಿಗಳು ಬದಲಾಗುವುದಿಲ್ಲ.",
-  "ui.settings.touch.stick": "ನಡೆಯಲು ಎಡಭಾಗದಲ್ಲಿ ಎಳೆ. ಓಡಲು ಅಂಚಿನವರೆಗೆ ತಳ್ಳು.",
-  "ui.settings.touch.look": "ಸುತ್ತಲೂ ನೋಡಲು ಬಲಭಾಗದಲ್ಲಿ ಎಳೆ.",
+  "ui.settings.touch.stick": "ದಾರಿಯಲ್ಲಿ ನಡೆಯಲು ಪರದೆಯ ಎಡಭಾಗದಲ್ಲಿ ಹೆಬ್ಬೆರಳು ಒತ್ತಿ ಹಿಡಿ. ತಿರುಗಲು ಎಳೆ; ಓಡಲು ಅಂಚಿನವರೆಗೆ ತಳ್ಳು.",
+  "ui.settings.touch.look": "ಸುತ್ತ ನೋಡಲು ಬಲ ಅಂಚಿನಲ್ಲಿ ಎಳೆ.",
   "ui.settings.touch.satchel": "ಜೋಳಿಗೆ: ಮೇಲಿನ ಎಡ ಮೂಲೆ",
   "ui.settings.touch.pause": "ನಿಲ್ಲಿಸು: ಮೇಲಿನ ಬಲ ಮೂಲೆ",
   "ui.settings.touch.combat": "ಕತ್ತಿ ಮತ್ತು ಗುರಾಣಿ ಬೇಕಾದಾಗ ಮಾತ್ರ ಕಾಣಿಸುತ್ತವೆ.",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "ಹೊಸ ಆವೃತ್ತಿ ಸಿದ್ಧ!",
   "ui.update.text": "ಹೊಸ ಸಾಹಸಗಳು ಮತ್ತು ಸರಿಪಡಿಕೆಗಳನ್ನು ಪಡೆ.",
   "ui.update.now": "ನವೀಕರಿಸು",
-  "ui.update.skip": "ಬಿಡು"
+  "ui.update.skip": "ಬಿಡು",
+  "ui.settings.touch.use": "ಹತ್ತಿರ ಏನಾದರೂ ಇದೆಯೇ? ಅದರ ಮೇಲಿನ ಕೈ ಗುಳ್ಳೆಯನ್ನು ಮುಟ್ಟು.",
+  "ui.settings.controls.more": "ಕೀಬೋರ್ಡ್ ಮತ್ತು ಕಂಟ್ರೋಲರ್"
 }

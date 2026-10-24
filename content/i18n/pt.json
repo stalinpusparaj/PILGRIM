@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "Alavanca direita",
   "ui.settings.controls.dpad": "Direcional",
   "ui.settings.controls.padNote": "Os botões do controle não mudam.",
-  "ui.settings.touch.stick": "Arraste no lado esquerdo para andar. Empurre até a borda para correr.",
-  "ui.settings.touch.look": "Arraste no lado direito para olhar em volta.",
+  "ui.settings.touch.stick": "Segure o polegar à esquerda da tela para seguir o Caminho. Arraste para virar; vá até a borda para correr.",
+  "ui.settings.touch.look": "Arraste na borda direita para olhar em volta.",
   "ui.settings.touch.satchel": "Bolsa: canto de cima, à esquerda",
   "ui.settings.touch.pause": "Pausa: canto de cima, à direita",
   "ui.settings.touch.combat": "ESPADA e ESCUDO só aparecem quando você precisa deles.",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "Uma nova versão está pronta!",
   "ui.update.text": "Ganhe as aventuras mais novas e as correções.",
   "ui.update.now": "Atualizar",
-  "ui.update.skip": "Pular"
+  "ui.update.skip": "Pular",
+  "ui.settings.touch.use": "Algo por perto? Toque na bolha da mão acima dele.",
+  "ui.settings.controls.more": "Teclado e controle"
 }

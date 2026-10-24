@@ -58,24 +58,26 @@ export class ControlsTab {
       },
       t('ui.settings.reset'),
     );
-    this.el = h(
-      'div',
-      { className: 'pg-set-controls' },
+    const keyboard = h(
+      'section',
+      { className: 'pg-set-group' },
       h(
-        'section',
-        { className: 'pg-set-group' },
-        h(
-          'div',
-          { className: 'pg-set-group__head' },
-          h('h3', { className: 'pg-set-group__title', id: titleId }, t('ui.settings.controls.keyboard')),
-          reset,
-        ),
-        this.status,
-        this.list,
+        'div',
+        { className: 'pg-set-group__head' },
+        h('h3', { className: 'pg-set-group__title', id: titleId }, t('ui.settings.controls.keyboard')),
+        reset,
       ),
-      gamepadCard(),
-      touchCard(),
+      this.status,
+      this.list,
     );
+    // The player's own device first: a touch player sees the touch controls, not a keyboard list.
+    const cards =
+      device === 'touch'
+        ? [touchCard()] // a phone: no computer keyboard or gamepad lists at all
+        : device === 'pad'
+          ? [gamepadCard(), keyboard, touchCard()]
+          : [keyboard, gamepadCard(), touchCard()];
+    this.el = h('div', { className: 'pg-set-controls' }, ...cards);
 
     this.promptAction = h('p', { className: 'pg-set-capture__action' });
     this.promptHint = h('p', { className: 'pg-set-capture__hint' }, t('ui.settings.controls.escToCancel'));

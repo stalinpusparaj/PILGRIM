@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "Stick droit",
   "ui.settings.controls.dpad": "Croix directionnelle",
   "ui.settings.controls.padNote": "Les boutons de la manette ne changent pas.",
-  "ui.settings.touch.stick": "Glisse ton doigt à gauche pour marcher. Pousse jusqu'au bord pour courir.",
-  "ui.settings.touch.look": "Glisse ton doigt à droite pour regarder autour.",
+  "ui.settings.touch.stick": "Garde ton pouce à gauche de l’écran pour suivre le Chemin. Fais glisser pour tourner ; va jusqu’au bord pour courir.",
+  "ui.settings.touch.look": "Fais glisser sur le bord droit pour regarder autour.",
   "ui.settings.touch.satchel": "Besace : coin en haut à gauche",
   "ui.settings.touch.pause": "Pause : coin en haut à droite",
   "ui.settings.touch.combat": "ÉPÉE et BOUCLIER n'apparaissent que quand tu en as besoin.",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "Une nouvelle version est prête !",
   "ui.update.text": "Découvre les toutes dernières aventures et corrections.",
   "ui.update.now": "Mettre à jour",
-  "ui.update.skip": "Plus tard"
+  "ui.update.skip": "Plus tard",
+  "ui.settings.touch.use": "Quelque chose tout près ? Touche la bulle de la main au-dessus.",
+  "ui.settings.controls.more": "Clavier et manette"
 }

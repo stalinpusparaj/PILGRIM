@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "కుడి స్టిక్",
   "ui.settings.controls.dpad": "D-ప్యాడ్",
   "ui.settings.controls.padNote": "గేమ్‌ప్యాడ్ బటన్లు మారవు.",
-  "ui.settings.touch.stick": "నడవడానికి ఎడమ వైపు లాగు. పరుగెత్తడానికి అంచు వరకు నెట్టు.",
-  "ui.settings.touch.look": "చుట్టూ చూడటానికి కుడి వైపు లాగు.",
+  "ui.settings.touch.stick": "దారిలో నడవడానికి తెర ఎడమ వైపు బొటనవేలు నొక్కి పట్టు. దిశ మార్చడానికి లాగు; పరుగెత్తడానికి అంచు వరకు నెట్టు.",
+  "ui.settings.touch.look": "చుట్టూ చూడటానికి కుడి అంచున లాగు.",
   "ui.settings.touch.satchel": "సంచి: పైన ఎడమ మూల",
   "ui.settings.touch.pause": "ఆపు: పైన కుడి మూల",
   "ui.settings.touch.combat": "కత్తి, డాలు అవసరమైనప్పుడే కనిపిస్తాయి.",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "కొత్త వెర్షన్ సిద్ధంగా ఉంది!",
   "ui.update.text": "కొత్త సాహసాలు, సవరణలు పొందండి.",
   "ui.update.now": "అప్‌డేట్ చేయి",
-  "ui.update.skip": "వదిలేయి"
+  "ui.update.skip": "వదిలేయి",
+  "ui.settings.touch.use": "దగ్గర ఏదైనా ఉందా? దాని పైని చేతి బుడగను తాకు.",
+  "ui.settings.controls.more": "కీబోర్డ్, కంట్రోలర్"
 }

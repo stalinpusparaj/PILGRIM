@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "Stik kanan",
   "ui.settings.controls.dpad": "D-pad",
   "ui.settings.controls.padNote": "Tombol gamepad tetap sama.",
-  "ui.settings.touch.stick": "Geser di sisi kiri untuk berjalan. Dorong sampai ke tepi untuk berlari.",
-  "ui.settings.touch.look": "Geser di sisi kanan untuk melihat sekeliling.",
+  "ui.settings.touch.stick": "Tahan ibu jarimu di sisi kiri layar untuk berjalan di Jalan. Geser untuk berbelok; tahan di tepi untuk berlari.",
+  "ui.settings.touch.look": "Geser di tepi kanan untuk melihat sekeliling.",
   "ui.settings.touch.satchel": "Tas: pojok kiri atas",
   "ui.settings.touch.pause": "Jeda: pojok kanan atas",
   "ui.settings.touch.combat": "PEDANG dan PERISAI hanya muncul saat kamu membutuhkannya.",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "Versi baru sudah siap!",
   "ui.update.text": "Dapatkan petualangan terbaru dan perbaikan.",
   "ui.update.now": "Perbarui",
-  "ui.update.skip": "Lewati"
+  "ui.update.skip": "Lewati",
+  "ui.settings.touch.use": "Ada sesuatu di dekatmu? Ketuk gelembung tangan di atasnya.",
+  "ui.settings.controls.more": "Keyboard dan stik"
 }

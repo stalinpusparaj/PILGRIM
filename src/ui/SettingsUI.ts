@@ -17,6 +17,7 @@
  * caller should ignore its own back / pause handling until open() resolves.
  */
 import './settings.css';
+import './settings-phone.css';
 import { events } from '../core/Events';
 import { services } from '../core/Services';
 import type { InputDevice } from '../core/Input';

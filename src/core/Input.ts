@@ -347,7 +347,8 @@ export class Input {
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     if (e.code === 'F1') e.preventDefault(); // browser help
     if (!e.code || isFormField(e.target)) return;
-    this.setDevice('kbm');
+    // Only a real keyboard switches prompts (Android Back arrives as an untrusted Escape: touch stays touch).
+    if (e.isTrusted) this.setDevice('kbm');
     if (!this.codeMap.has(e.code)) return;
     // Tab, Space, arrows (any bound key) must not move focus or scroll during gameplay; a focused button ("Click to
     // play") keeps only Space / Enter, so Tab can never send focus out of the page.

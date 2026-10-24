@@ -39,7 +39,7 @@ async function answerGate(page: Page): Promise<void> {
   await page.locator('.pg-gate__answer', { hasText: new RegExp(`^${a! + b!}$`) }).click();
 }
 
-test('About: rate (behind the grown-up check), more games, creators, version; a wrong answer opens nothing', async ({ page }) => {
+test('About: rate opens the store, more games behind the grown-up check, creators, version', async ({ page }) => {
   const problems = watchConsole(page);
   await boot(page, null);
   await page.locator('[data-key="ui.title.settings"]').click();
@@ -49,15 +49,16 @@ test('About: rate (behind the grown-up check), more games, creators, version; a 
   await expect(page.locator('.pg-set-row', { hasText: 'Version' })).toContainText(/v\d+\.\d+\.\d+/);
   await page.screenshot({ path: 'test-results/settings/about.png' });
 
+  // Rate opens the store at once; More games asks a grown-up first (a wrong answer opens nothing).
   await actions.filter({ hasText: 'Rate' }).click();
+  await expect(page.locator('.pg-gate')).toHaveCount(0);
+  await actions.filter({ hasText: 'More games' }).click();
   const q = (await page.locator('.pg-gate__question').textContent()) ?? '';
   const [a, b] = (q.match(/\d+/g) ?? []).map(Number);
   await page.locator('.pg-gate__answer').filter({ hasNotText: new RegExp(`^${a! + b!}$`) }).first().click();
   await expect(page.locator('.pg-gate')).toHaveCount(0);
-  expect(await page.evaluate(() => (window as unknown as Opened).__opened)).toEqual([]);
+  expect(await page.evaluate(() => (window as unknown as Opened).__opened)).toEqual(['store']);
 
-  await actions.filter({ hasText: 'Rate' }).click();
-  await answerGate(page);
   await actions.filter({ hasText: 'More games' }).click();
   await answerGate(page);
   expect(await page.evaluate(() => (window as unknown as Opened).__opened)).toEqual(['store', 'link:more']);

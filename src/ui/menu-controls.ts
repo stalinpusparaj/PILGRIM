@@ -90,12 +90,15 @@ export class ControlsCard {
       this.list,
       back,
     );
+    // A touch phone shows only its touch controls: no computer keyboard or gamepad tabs (DECISIONS #399).
+    const touchOnly = this.device === 'touch';
+    tabRow.hidden = touchOnly;
     this.render();
     parent.appendChild(this.root);
     this.menu = new Menu({
       root: this.root,
       nav: 'vertical',
-      items: () => [this.tabs.kbm, this.tabs.pad, this.tabs.touch, ...this.rows(), back],
+      items: () => [...(touchOnly ? [] : [this.tabs.kbm, this.tabs.pad, this.tabs.touch]), ...this.rows(), back],
       initial: () => this.tabs[this.device],
       onBack: () => o.onBack(),
       onShoulder: (dir) => this.cycle(dir),
@@ -104,7 +107,7 @@ export class ControlsCard {
     this.offs.push(
       events.on('input:bindings', () => this.render()),
       events.on('input:device', ({ device }) => {
-        if (!this.picked) this.select(device, false);
+        if (!this.picked && !touchOnly) this.select(device, false);
       }),
     );
   }
@@ -215,7 +218,11 @@ function touchRows(): HTMLLIElement[] {
   out.push(row(glyphs(STICK_SVG), t('ui.settings.controls.move'), t('ui.settings.touch.stick')));
   out.push(row(glyphs(SWIPE_SVG), t('ui.settings.controls.look'), t('ui.settings.touch.look')));
   for (const b of TOUCH_BUTTONS) {
-    const label = `${t(b.label)}: ${b.actions.map((a) => t(`ui.settings.action.${a}`)).join(' · ')}`;
+    // USE on touch is the hand bubble over the object, not a round button.
+    const label =
+      b.id === 'use'
+        ? t('ui.settings.touch.use')
+        : `${t(b.label)}: ${b.actions.map((a) => t(`ui.settings.action.${a}`)).join(' · ')}`;
     out.push(row(glyphs(`<span class="pg-controls__round">${icon(b.id, '1.3em')}</span>`), label));
   }
   out.push(row(glyphs(icon('satchel', '1.6em')), t('ui.settings.touch.satchel')));

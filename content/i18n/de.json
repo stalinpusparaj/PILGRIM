@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "Rechter Stick",
   "ui.settings.controls.dpad": "D-pad",
   "ui.settings.controls.padNote": "Die Gamepad-Tasten bleiben gleich.",
-  "ui.settings.touch.stick": "Zieh auf der linken Seite zum Gehen. Schieb bis zum Rand zum Rennen.",
-  "ui.settings.touch.look": "Zieh auf der rechten Seite zum Umschauen.",
+  "ui.settings.touch.stick": "Halte den Daumen links auf dem Bildschirm, um dem Weg zu folgen. Ziehen zum Lenken, bis zum Rand zum Rennen.",
+  "ui.settings.touch.look": "Zieh am rechten Rand, um dich umzusehen.",
   "ui.settings.touch.satchel": "Tasche: Ecke oben links",
   "ui.settings.touch.pause": "Pause: Ecke oben rechts",
   "ui.settings.touch.combat": "SCHWERT und SCHILD erscheinen nur, wenn du sie brauchst.",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "Eine neue Version ist da!",
   "ui.update.text": "Hol dir die neuesten Abenteuer und Verbesserungen.",
   "ui.update.now": "Aktualisieren",
-  "ui.update.skip": "Überspringen"
+  "ui.update.skip": "Überspringen",
+  "ui.settings.touch.use": "Etwas in der Nähe? Tippe auf die Handblase darüber.",
+  "ui.settings.controls.more": "Tastatur und Controller"
 }

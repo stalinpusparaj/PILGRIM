@@ -101,7 +101,10 @@ export function touchCard(): HTMLElement {
     row(glyph(LOOK_SVG), null, t('ui.settings.touch.look')),
   ];
   // The round button's picture is what the player sees on screen; the text says what it does.
-  for (const id of ROUND_BUTTONS) rows.push(row(roundIcon(id), null, actionText(TOUCH_ACTIONS[id])));
+  // USE on touch is the hand bubble over the object (Touch.tapBubble), not a round button.
+  for (const id of ROUND_BUTTONS) {
+    rows.push(row(roundIcon(id), null, id === 'use' ? t('ui.settings.touch.use') : actionText(TOUCH_ACTIONS[id])));
+  }
   rows.push(row(roundIcon('satchel'), null, t('ui.settings.touch.satchel')));
   rows.push(row(roundIcon('pause'), null, t('ui.settings.touch.pause')));
   return card('touch', t('ui.settings.controls.touch'), t('ui.settings.touch.combat'), rows);

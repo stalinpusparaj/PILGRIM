@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "Palanca derecha",
   "ui.settings.controls.dpad": "D-pad",
   "ui.settings.controls.padNote": "Los botones del control no cambian.",
-  "ui.settings.touch.stick": "Arrastra en el lado izquierdo para caminar. Empuja hasta el borde para correr.",
-  "ui.settings.touch.look": "Arrastra en el lado derecho para mirar alrededor.",
+  "ui.settings.touch.stick": "Mantén el pulgar a la izquierda de la pantalla para seguir el Camino. Arrastra para girar; llega al borde para correr.",
+  "ui.settings.touch.look": "Arrastra en el borde derecho para mirar alrededor.",
   "ui.settings.touch.satchel": "Morral: esquina de arriba a la izquierda",
   "ui.settings.touch.pause": "Pausa: esquina de arriba a la derecha",
   "ui.settings.touch.combat": "ESPADA y ESCUDO solo aparecen cuando los necesitas.",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "¡Hay una nueva versión lista!",
   "ui.update.text": "Consigue las aventuras y arreglos más nuevos.",
   "ui.update.now": "Actualizar",
-  "ui.update.skip": "Omitir"
+  "ui.update.skip": "Omitir",
+  "ui.settings.touch.use": "¿Hay algo cerca? Toca la burbuja de la mano encima.",
+  "ui.settings.controls.more": "Teclado y mando"
 }

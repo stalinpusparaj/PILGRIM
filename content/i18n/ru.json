@@ -265,8 +265,8 @@
   "ui.settings.controls.rightStick": "Правый стик",
   "ui.settings.controls.dpad": "Крестовина",
   "ui.settings.controls.padNote": "Кнопки геймпада не меняются.",
-  "ui.settings.touch.stick": "Веди пальцем слева, чтобы идти. Дотяни до края, чтобы бежать.",
-  "ui.settings.touch.look": "Веди пальцем справа, чтобы оглядеться.",
+  "ui.settings.touch.stick": "Держи палец слева на экране, чтобы идти по Пути. Веди пальцем, чтобы поворачивать; до края — бежать.",
+  "ui.settings.touch.look": "Веди пальцем у правого края, чтобы осмотреться.",
   "ui.settings.touch.satchel": "Сумка: верхний левый угол",
   "ui.settings.touch.pause": "Пауза: верхний правый угол",
   "ui.settings.touch.combat": "МЕЧ и ЩИТ появляются, только когда они нужны.",
@@ -1235,5 +1235,7 @@
   "ui.update.title": "Готова новая версия!",
   "ui.update.text": "Новые приключения и исправления.",
   "ui.update.now": "Обновить",
-  "ui.update.skip": "Пропустить"
+  "ui.update.skip": "Пропустить",
+  "ui.settings.touch.use": "Что-то рядом? Нажми на пузырь с ладонью над ним.",
+  "ui.settings.controls.more": "Клавиатура и геймпад"
 }

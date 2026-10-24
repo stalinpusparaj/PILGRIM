@@ -1,0 +1,70 @@
+/*
+ * Settings on a phone held upright (DECISIONS #399): everything compact so a tab fits in about one screen.
+ * - Title and BACK on one row; the five tabs in a 3 + 2 grid of short pills.
+ * - Every choice is ONE row of equal segments (never one option per line), labels may wrap to two lines.
+ * - Tighter rows, smaller hints, slimmer sliders, the dropdown and About buttons 48-52 px tall.
+ * - Controls: the action name sits above its keys, so names never break mid-word.
+ * Touch targets stay >= 44 px (Apple HIG / Material minimum). Loaded after settings.css (SettingsUI.ts).
+ */
+@media (max-width: 480px) and (orientation: portrait) {
+  body .pg-settings__head { flex-wrap: nowrap; gap: 8px; }
+  body .pg-settings__title { font-size: 22px; min-width: 0; overflow-wrap: anywhere; }
+  body .pg-settings__back { flex: none; min-height: 44px; padding: 4px 12px; font-size: 15px; }
+  body .pg-settings__tabs { margin: 8px 0 4px; }
+  body .pg-settings__tablist { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  body .pg-settings__tab { grid-column: span 2; min-height: 44px; padding: 4px 6px; font-size: 14px; line-height: 1.1; }
+  body .pg-settings__tab:nth-child(4), body .pg-settings__tab:nth-child(5) { grid-column: span 3; }
+
+  body .pg-set-row { gap: 6px; padding: 10px 2px; }
+  body .pg-set-row__label { font-size: 16px; }
+  body .pg-set-row__hint { font-size: 13px; line-height: 1.35; }
+
+  body .pg-set-seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; }
+  body .pg-set-opt {
+    min-width: 0; min-height: 44px; padding: 4px 4px; font-size: 14px; line-height: 1.12;
+    overflow-wrap: break-word; word-break: normal; text-wrap: balance;
+  }
+
+  body .pg-set-select { min-height: 48px; font-size: 16px; }
+  body .pg-set-row--action .pg-set-action { min-height: 52px; font-size: 15px; }
+  body .pg-set-row--action .pg-mbtn__label { padding-right: 6px; overflow-wrap: break-word; word-break: normal; text-wrap: balance; }
+  body .pg-set-row--action .pg-mbtn__icon { width: 32px; height: 32px; padding: 7px; }
+
+  body .pg-set-key { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 8px 2px; }
+  body .pg-set-key__label { font-size: 15px; overflow-wrap: break-word; }
+  body .pg-set-key__slots { justify-content: flex-start; }
+  body .pg-set-keybtn { min-width: 60px; min-height: 44px; }
+}
+
+/* Controls on touch: the keyboard and pad lists fold under one glossy line (settings-controls.ts). */
+.pg-set-more { margin-top: 12px; }
+.pg-set-more__summary {
+  display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 16px;
+  border: 3px solid var(--gloss-pearl-edge, #c9a868); border-radius: var(--radius); cursor: pointer;
+  font-weight: 800; color: var(--ink); list-style: none; pointer-events: auto;
+  background: linear-gradient(180deg, #ffffff 0%, #fbf2df 48%, #efdcb6 54%, #fbf2df 100%);
+}
+.pg-set-more__summary::-webkit-details-marker { display: none; }
+.pg-set-more__summary::after { content: '▾'; color: var(--gloss-gold-edge, #a8650f); }
+.pg-set-more[open] .pg-set-more__summary::after { content: '▴'; }
+.pg-set-more[open] > :not(summary) { margin-top: 10px; }
+@media (max-width: 480px) and (orientation: portrait) {
+  body .pg-settings__title { font-size: 20px; overflow-wrap: normal; word-break: keep-all; white-space: nowrap; }
+  body .pg-set-opt { font-size: 13px; overflow-wrap: normal; word-break: keep-all; }
+  body .pg-set-ref { padding: 10px 12px; }
+  body .pg-set-ref__list li { gap: 10px; padding: 6px 0; font-size: 15px; line-height: 1.35; }
+  body .pg-set-ref__note { font-size: 13px; }
+  body .pg-set-ref .pg-set-group__title { font-size: 20px; }
+  body .pg-set-ref__glyph { width: 40px; height: 40px; flex: none; }
+}
+@media (max-width: 480px) and (orientation: portrait) {
+  /* Two-option rows (On / Off, 30 / 60, Easy / Normal): label and switch share one line. */
+  body .pg-set-row:has(> .pg-set-seg > .pg-set-opt:nth-child(2):last-child) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 46%);
+    align-items: center;
+    padding: 6px 2px;
+  }
+  body .pg-set-row:has(> .pg-set-seg > .pg-set-opt:nth-child(2):last-child) > .pg-set-row__hint { grid-column: 1 / -1; }
+  /* Sliders: label and value on one line, a slimmer track. */
+  body .pg-set-row:has(input[type="range"]) { padding: 6px 2px; row-gap: 2px; }
+}
