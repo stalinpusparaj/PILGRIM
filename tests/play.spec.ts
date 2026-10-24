@@ -149,6 +149,18 @@ test('touch: the joystick moves the player, JUMP jumps and tapping the bubble re
   const b = await playerPos(page);
   expect(Math.hypot(b.x - a.x, b.z - a.z)).toBeGreaterThan(1.2);
 
+  // Hold (no drag): he walks the Way by himself.
+  const touchZone = (type: string): Promise<boolean> =>
+    page.evaluate((type) => {
+      const o = { pointerId: 14, pointerType: 'touch', clientX: 200, clientY: 500, bubbles: true };
+      return document.querySelector('.pg-touch-zone')!.dispatchEvent(new PointerEvent(type, o));
+    }, type);
+  await touchZone('pointerdown');
+  await waitSim(page, 1.5);
+  await touchZone('pointerup');
+  const held = await playerPos(page);
+  expect(Math.hypot(held.x - b.x, held.z - b.z)).toBeGreaterThan(1);
+
   const tap = (id: string, ms: number): Promise<void> =>
     page.evaluate(
       async ({ id, ms }) => {

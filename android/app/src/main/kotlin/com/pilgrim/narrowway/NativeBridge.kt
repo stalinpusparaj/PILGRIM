@@ -5,6 +5,7 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
+import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -48,6 +49,28 @@ class NativeBridge(private val context: Context, private val webView: WebView) {
             .setWillPauseWhenDucked(false)
             .build().also { focus = it }
         audio.requestAudioFocus(req)
+    }
+
+    private val power = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    private val thermal = PowerManager.OnThermalStatusChangedListener { status -> sendThermal(status) }
+
+    /** The current thermal status (the game asks once when it starts; later changes are pushed). */
+    @JavascriptInterface
+    fun thermalStatus(): Int = if (Build.VERSION.SDK_INT >= 29) power.currentThermalStatus else 0
+
+    private fun sendThermal(status: Int) {
+        webView.post { webView.evaluateJavascript("window.__pilgrimNative&&window.__pilgrimNative.thermal($status)", null) }
+    }
+
+    /** Android's thermal status to the game (src/core/NativeShell.ts): warm phones drop to 30 fps and a lower resolution. */
+    fun watchThermal(on: Boolean) {
+        if (Build.VERSION.SDK_INT < 29) return
+        if (on) {
+            power.addThermalStatusListener(thermal)
+            sendThermal(power.currentThermalStatus)
+        } else {
+            power.removeThermalStatusListener(thermal)
+        }
     }
 
     fun abandonFocus() {

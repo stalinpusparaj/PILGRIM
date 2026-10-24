@@ -9,9 +9,25 @@ import { services } from './Services';
  */
 interface NativeBridge {
   vibrate(pattern: string): void;
+  thermalStatus?(): number;
 }
 interface NativeHooks {
   audioFocus(on: boolean): void;
+  /** Android PowerManager thermal status: 0 none, 1 light, 2 moderate, 3 severe, 4+ critical. */
+  thermal(level: number): void;
+}
+declare module './Events' {
+  interface EventMap {
+    /** The device's thermal status changed (Android shell only); main.ts eases frame rate and resolution. */
+    'device:thermal': { level: number };
+  }
+}
+export const THERMAL_MODERATE = 2;
+export const THERMAL_SEVERE = 3;
+let thermalLevel = 0;
+/** The last thermal status the shell reported (0 in a browser). */
+export function thermalStatus(): number {
+  return thermalLevel;
 }
 declare global {
   interface Window {
@@ -43,6 +59,12 @@ export function installNativeShell(): () => void {
     events.on('burden:dropped', () => buzz(HAPTICS.burdenDropped)),
   ];
   window.__pilgrimNative = {
+    thermal(level: number): void {
+      const l = Number.isFinite(level) ? Math.max(0, Math.round(level)) : 0;
+      if (l === thermalLevel) return;
+      thermalLevel = l;
+      events.emit('device:thermal', { level: l });
+    },
     audioFocus(on: boolean): void {
       const ctx = services.tryGet('audio') as AudioLike | undefined;
       if (!on) {
@@ -53,5 +75,10 @@ export function installNativeShell(): () => void {
       }
     },
   };
+  try {
+    window.__pilgrimNative.thermal(bridge.thermalStatus?.() ?? 0);
+  } catch {
+    /* an older shell without the thermal call */
+  }
   return () => { offs.forEach((off) => off()); delete window.__pilgrimNative; };
 }

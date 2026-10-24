@@ -98,6 +98,15 @@ export function radialDeadzone(out: { x: number; y: number }, x: number, y: numb
   out.y = y * scale;
 }
 
+/** Response curve on a deadzoned stick: length^power, same direction (a half push walks slowly). */
+export function curveStick(v: { x: number; y: number }, power: number): void {
+  const len = Math.hypot(v.x, v.y);
+  if (len <= 0) return;
+  const k = Math.pow(len, power) / len;
+  v.x *= k;
+  v.y *= k;
+}
+
 /** Browsers only offer gamepads to secure pages (https, localhost); elsewhere asking just logs a warning. */
 function padsAvailable(): boolean {
   return typeof navigator.getGamepads === 'function' && (typeof isSecureContext === 'undefined' || isSecureContext);

@@ -1,8 +1,8 @@
 /**
  * The player (GDD 2.6, 2.7, 2.15): owns Christian's Character and the kinematic controller; the 'player' service.
  *
- * - Fixed 60 Hz update(): camera-relative movement from Input (walk, fast walk while burdened, run when free, jump), ledge climbs, facing
- *   with a smooth turn, animation choice (player-anim.ts), bonks and safe spots (Bonk.ts).
+ * - Fixed 60 Hz update(): camera-relative movement from Input (walk, run when free, jump; a touch hold walks the
+ *   Way, player-waywalk.ts), ledge climbs, a smooth turn, animation (player-anim.ts), bonks (Bonk.ts).
  * - render(alpha): places the character between the last two fixed positions (interpolation) and animates it with
  *   the simulated time since the last frame, then polls footsteps (Footsteps.ts).
  * - Speeds come from the Burden system (the 'burden' service: `params()`, joy jumps through `consumeJoyJump()`)
@@ -15,10 +15,6 @@
  * - Modes: 'play' (input drives), 'locked' (no input, physics on: bonks, dialogue), 'cutscene' (scripts move the
  *   root or call teleport(); leaving the mode takes the root's place as the new position). Leaving 'play' drops a
  *   buffered jump press.
- *
- *   const player = new Player({ world, col, state, recipe: 'christian_burdened', spawn, facing });
- *   loop: player.update(dt) (fixed), player.render(alpha) (per frame, before the camera)
- *   player.dispose();
  */
 import * as THREE from 'three';
 import { movementPaceScale } from '../core/MovementPace';
@@ -46,6 +42,7 @@ import {
   lerpAngle,
   scaledParams,
 } from './player-move';
+import { wayWalkWish } from './player-waywalk';
 
 export type PlayerMode = 'play' | 'locked' | 'cutscene';
 
@@ -239,11 +236,13 @@ export class Player {
     let my = 0;
     let run = false;
     let jump = false;
+    let auto = false;
     const input = this._mode === 'play' && !this.bonks.active ? services.tryGet('input') : undefined;
     if (input) {
       mx = input.move.x;
       my = input.move.y;
       run = input.runHeld();
+      auto = input.wayWalk;
       jump = !this.walkOnly && input.pressed('jump');
     }
     const asked = this.ledge.consumeRequest();
@@ -262,6 +261,7 @@ export class Player {
     this.wish.z = 0;
     const camera = services.tryGet('engine')?.camera;
     if (camera && (mx !== 0 || my !== 0)) cameraWish(camera, mx, my, top, this.wish);
+    else if (auto) wayWalkWish(this.world.ways.main, ctrl.position, p.walkSpeed, this.wish);
 
     const res = ctrl.step(dt, this.wish, jump, p);
     this.grounded = res.grounded;

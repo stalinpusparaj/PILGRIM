@@ -27,7 +27,7 @@ import { installBadges } from './game/badges';
 import { AudioEngine } from './audio/AudioEngine';
 import { h, uiRoot } from './ui/dom';
 import { installJuice } from './ui/Juice';
-import { installNativeShell } from './core/NativeShell';
+import { THERMAL_MODERATE, THERMAL_SEVERE, installNativeShell } from './core/NativeShell';
 import { startMode, type FlowStart, type ModeKind, type ModeRunner } from './modes';
 import type { LabProbe } from './gen/lab-probe';
 import type { DialogueTestScene } from './narrative/DialogueTestScene';
@@ -243,8 +243,18 @@ async function boot(): Promise<void> {
   const quality = new Quality();
   events.on('quality:changed', () => engine.applyQuality(effectivePreset(quality)));
   await quality.resolve(settings.data.quality, engine.renderer);
-  loop.frameCap = settings.data.frameCap;
-  engine.setResolutionScale(settings.data.resolutionScale);
+  // Frame cap and resolution, eased off while the phone reports heat (NativeShell 'device:thermal').
+  let thermal = 0;
+  const applyPacing = (): void => {
+    loop.frameCap = thermal >= THERMAL_MODERATE ? 30 : settings.data.frameCap;
+    const hot = thermal >= THERMAL_SEVERE ? 0.6 : thermal >= THERMAL_MODERATE ? 0.75 : 1;
+    engine.setResolutionScale(Math.min(settings.data.resolutionScale, hot));
+  };
+  applyPacing();
+  events.on('device:thermal', (p) => {
+    thermal = p.level;
+    applyPacing();
+  });
 
   const input = new Input(canvas, uiRoot());
   loop.onBeforeStep = () => input.beginStep();
@@ -279,10 +289,8 @@ async function boot(): Promise<void> {
         engine.applyQuality(effectivePreset(quality));
         break;
       case 'resolutionScale':
-        engine.setResolutionScale(data.resolutionScale);
-        break;
       case 'frameCap':
-        loop.frameCap = data.frameCap;
+        applyPacing();
         break;
       case 'fov':
         state.runner?.setFov(data.fov);

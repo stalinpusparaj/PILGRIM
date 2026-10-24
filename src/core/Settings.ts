@@ -11,7 +11,7 @@
 import { events } from './Events';
 import { services } from './Services';
 import type { Action } from './Input';
-import type { QualitySetting } from './Quality';
+import { isSmallTouchScreen, type QualitySetting } from './Quality';
 import type { MovementPace } from './MovementPace';
 
 export interface SettingsData {
@@ -61,7 +61,8 @@ export const DEFAULT_SETTINGS: SettingsData = deepFreeze({
   quality: 'auto',
   resolutionScale: 1,
   shadows: true,
-  frameCap: 60,
+  // GDD 2.15: budget phones target a stable 30 fps (half the work, a cooler phone); 60 stays in Settings.
+  frameCap: isSmallTouchScreen() ? 30 : 60,
   difficulty: 'easy',
   movementPace: 'normal',
   autoCamera: 'default',

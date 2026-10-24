@@ -8,8 +8,9 @@
  * and as cheap as playing sound files. Still our own generated sound (GDD 2.3). A song plays once all its stems
  * are ready (about 15 s the very first time on a budget phone, then under a second from the device store).
  */
+import { THERMAL_MODERATE, thermalStatus } from '../core/NativeShell';
 import type { MusicPosition } from './Sequencer';
-import { bakedLoop } from './music-bake';
+import { bakedLoop, forgetOldStores } from './music-bake';
 import { prepareSong } from './seq-song';
 import type { MusicState, SongDef, SongId, TrackDef } from './types';
 
@@ -27,6 +28,10 @@ export interface MusicBackend {
 
 /** Songs whose stems are kept in memory (a few MB per stem at 24 kHz). */
 const SONGS_KEPT = 2;
+/** Background prebake starts this long after the music engine (ms), clear of the first chapter's build. */
+const PREBAKE_DELAY_MS = 8000;
+/** Rest between background bakes (ms): the phone's CPU cools between songs. */
+const PREBAKE_REST_MS = 4000;
 const DEFAULT_SONG_FADE = 1.5;
 const DEFAULT_STATE_FADE = 2;
 /** First fade-in of a song that had to be baked (it arrives mid-scene, so it comes in gently). */
@@ -61,13 +66,17 @@ export class BakedMusic implements MusicBackend {
   private playing: Playing | null = null;
   private gen = 0;
   private disposed = false;
+  private prebakeTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly pos: MusicPosition = { bar: 0, beat: 0, loop: 0 };
 
   constructor(
     private readonly ctx: AudioContext,
     private readonly out: AudioNode,
     private readonly songs: Partial<Record<SongId, SongDef>>,
-  ) {}
+  ) {
+    // Every song, in the background, after the first few seconds: later chapters' music is then ready at once.
+    this.prebakeTimer = setTimeout(() => void this.prebakeAll(), PREBAKE_DELAY_MS);
+  }
 
   get current(): SongId | null { return this.cur; }
   get state(): MusicState { return this.stateValue; }
@@ -129,9 +138,29 @@ export class BakedMusic implements MusicBackend {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    if (this.prebakeTimer !== null) clearTimeout(this.prebakeTimer);
     this.gen++;
     this.release(0);
     this.ready.clear();
+  }
+
+  /**
+   * Bakes every song's stems in the background, one at a time with a rest between them, and not at all while the
+   * phone reports heat (DECISIONS #394). Stems already on the device cost only a lookup.
+   */
+  private async prebakeAll(): Promise<void> {
+    this.prebakeTimer = null;
+    void forgetOldStores();
+    for (const [id, def] of Object.entries(this.songs) as Array<[SongId, SongDef | undefined]>) {
+      if (!def) continue;
+      for (const s of stemDefs(def)) {
+        while (!this.disposed && (thermalStatus() >= THERMAL_MODERATE || document.hidden)) await sleep(PREBAKE_REST_MS * 4);
+        if (this.disposed) return;
+        const t0 = performance.now();
+        await bakedLoop(id, s.def, { urgent: false, wanted: () => !this.disposed });
+        if (performance.now() - t0 > 500) await sleep(PREBAKE_REST_MS); // it was rendered, not read back
+      }
+    }
   }
 
   /** Every stem of a song, from the device store or baked now (one after another). Null if any fails. */
@@ -140,7 +169,7 @@ export class BakedMusic implements MusicBackend {
     if (!def) return null;
     const stems: Stem[] = [];
     for (const s of stemDefs(def)) {
-      const buf = await bakedLoop(id, 'calm', s.def, wanted);
+      const buf = await bakedLoop(id, s.def, { urgent: true, wanted });
       if (!buf) return null;
       stems.push({ states: s.states, buf });
     }
@@ -196,4 +225,8 @@ function ramp(param: AudioParam, to: number, now: number, fade: number): void {
   param.cancelScheduledValues(now);
   param.setValueAtTime(param.value, now);
   param.linearRampToValueAtTime(to, now + fade);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
 }

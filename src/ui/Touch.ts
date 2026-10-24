@@ -1,12 +1,9 @@
 /**
  * On-screen touch controls (GDD 2.6 "Touch").
  *
- * - Floating joystick on the left 70 % of the screen: the stick is centred where the thumb lands (the drawn base stays
- *   inside the screen near an edge), the knob clamps to the radius, pushing it to the edge means run.
- * - Drag on the right 30 % = look (auto-camera does the rest).
- * - Big round buttons bottom-right (>= 72 px): JUMP, USE, PRAY, SWORD, SHIELD (setButtons picks which).
- * - Satchel icon top-left, pause icon top-right.
- *
+ * - Left 70 %: hold (no drag) = walk the Way by itself (`holding`); drag = floating joystick centred where the
+ *   thumb landed, clamped to its radius, held at the edge = run. Right 30 %: drag = look (auto-camera does the rest).
+ * - Round buttons bottom-right (>= 72 px): JUMP, USE, PRAY, SWORD, SHIELD; satchel top-left, pause top-right.
  * Multi-touch safe: the stick, the look drag and every button track their own pointerId. Input owns this
  * object, reads `stick` each fixed step and receives buttons and look deltas through TouchHost.
  */
@@ -39,6 +36,8 @@ export interface TouchHost {
 const STICK_RADIUS = 76;
 /** Knob pushed this far (0..1 of the radius) counts as run. */
 export const TOUCH_RUN_EDGE = 0.97;
+/** A thumb that moves this far (px) from where it landed is steering, not holding. */
+const DRAG_START_PX = 16;
 /** Draw the joystick base at least this far from the screen edges, in px (the stick centre is not moved). */
 const EDGE_MARGIN = 12;
 
@@ -69,6 +68,7 @@ const CSS = `
 .pg-touch-knob{position:absolute;left:50%;top:50%;width:60px;height:60px;margin:-30px 0 0 -30px;
   border-radius:50%;background:rgba(255,248,234,.9);box-shadow:0 3px 10px rgba(28,20,34,.35)}
 .pg-touch-stick.run .pg-touch-knob{background:#ffd27a}
+.pg-touch-stick.hold .pg-touch-knob{background:#ffe9a8;box-shadow:0 0 0 6px rgba(255,210,122,.35)}
 .pg-touch-btn{position:absolute;box-sizing:border-box;margin:0;padding:0;pointer-events:auto;touch-action:none;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:50%;
   border:3px solid rgba(255,248,234,.75);background:rgba(28,20,34,.45);color:#fff8ea;font-family:inherit;
@@ -94,6 +94,8 @@ interface ButtonEntry {
 export class TouchControls {
   /** Raw knob offset, -1..1 per axis, length <= 1, y = forward (up). Zero when the thumb is lifted. */
   readonly stick = { x: 0, y: 0 };
+  /** Thumb resting on the move side without dragging: "hold to walk the Way" (DECISIONS #393). */
+  private dragged = false;
 
   private readonly host: TouchHost;
   private readonly root: HTMLDivElement;
@@ -288,9 +290,13 @@ export class TouchControls {
     const baseX = clamp(e.clientX, r, Math.max(r, window.innerWidth - r));
     const baseY = clamp(e.clientY, r, Math.max(r, window.innerHeight - r));
     this.base.style.transform = `translate(${baseX}px, ${baseY}px)`;
-    this.base.classList.add('on');
+    this.base.classList.add('on', 'hold');
+    this.dragged = false;
     this.updateStick(e.clientX, e.clientY);
   };
+
+  /** True while a thumb holds the move side without having dragged: the Player walks the Way by itself. */
+  get holding(): boolean { return this.stickPointer !== null && !this.dragged; } // prettier-ignore
 
   private readonly onStickMove = (e: PointerEvent): void => {
     if (e.pointerId === this.stickPointer) this.updateStick(e.clientX, e.clientY);
@@ -304,6 +310,15 @@ export class TouchControls {
     let dx = px - this.stickOrigin.x;
     let dy = py - this.stickOrigin.y;
     const len = Math.hypot(dx, dy);
+    // Until the thumb really drags, a hold walks the Way (no stick deflection from a trembling thumb).
+    if (!this.dragged && len < DRAG_START_PX) {
+      this.stick.x = this.stick.y = 0;
+      return;
+    }
+    if (!this.dragged) {
+      this.dragged = true;
+      this.base.classList.remove('hold');
+    }
     if (len > STICK_RADIUS) {
       dx *= STICK_RADIUS / len;
       dy *= STICK_RADIUS / len;
@@ -316,6 +331,8 @@ export class TouchControls {
 
   private resetStick(): void {
     this.stickPointer = null;
+    this.dragged = false;
+    this.base.classList.remove('hold');
     this.stick.x = 0;
     this.stick.y = 0;
     this.knob.style.transform = '';

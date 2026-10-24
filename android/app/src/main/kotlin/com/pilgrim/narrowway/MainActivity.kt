@@ -109,8 +109,8 @@ class MainActivity : ComponentActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean =
         if (keyCode == KeyEvent.KEYCODE_BACK) { onBackPressedDispatcher.onBackPressed(); true } else super.onKeyDown(keyCode, event)
 
-    override fun onResume() { super.onResume(); webView.onResume(); webView.resumeTimers(); native.requestFocus() }
-    override fun onPause() { voice.pause(); native.abandonFocus(); webView.pauseTimers(); webView.onPause(); super.onPause() }
+    override fun onResume() { super.onResume(); webView.onResume(); webView.resumeTimers(); native.requestFocus(); native.watchThermal(true) }
+    override fun onPause() { voice.pause(); native.abandonFocus(); native.watchThermal(false); webView.pauseTimers(); webView.onPause(); super.onPause() }
     override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); webView.saveState(outState) }
     override fun onDestroy() { voice.shutdown(); webView.removeJavascriptInterface("PilgrimVoice"); webView.removeJavascriptInterface("PilgrimNative"); webView.destroy(); super.onDestroy() }
 

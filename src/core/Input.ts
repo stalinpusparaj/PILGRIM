@@ -9,21 +9,10 @@
 import { events } from './Events';
 import { services } from './Services';
 import { FIXED_DT } from './Loop';
-import { GamepadReader, radialDeadzone } from './Gamepad';
-import {
-  ActionTable,
-  DEFAULT_BINDINGS,
-  KeyCapture,
-  PAD_BINDINGS,
-  bindingOverrides,
-  cloneBindings,
-  codeMapOf,
-  rebound,
-  resolveBindings,
-  sameBindings,
-  type Action,
-  type Bindings,
-} from './InputActions';
+import { GamepadReader, curveStick, radialDeadzone } from './Gamepad';
+// prettier-ignore
+import { ActionTable, DEFAULT_BINDINGS, KeyCapture, PAD_BINDINGS, bindingOverrides, cloneBindings, codeMapOf, rebound,
+  resolveBindings, sameBindings, type Action, type Bindings } from './InputActions';
 import { PointerLockGate } from '../ui/ClickToPlay';
 import { activatesControl, isFormField } from '../ui/dom';
 import { MOUSE_HABIT_PX, clampMousePx, lookStep } from './input-look';
@@ -146,6 +135,9 @@ export class Input {
   }
 
   /** Shift / pad B / touch joystick pushed to the edge. */
+  /** Touch: a thumb holds the move side without dragging, so the Player walks the Way by itself. */
+  get wayWalk(): boolean { return this.touch?.visible === true && this.touch.holding; } // prettier-ignore
+
   runHeld(): boolean {
     return this.actions.held('run');
   }
@@ -215,12 +207,7 @@ export class Input {
     this.pollPad();
     const stick = this.touch?.visible ? this.touch.stick : null;
     radialDeadzone(this.thumb, stick?.x ?? 0, stick?.y ?? 0, TOUCH_DEADZONE);
-    const mag = Math.hypot(this.thumb.x, this.thumb.y);
-    if (mag > 0) {
-      const k = Math.pow(mag, TOUCH_CURVE) / mag;
-      this.thumb.x *= k;
-      this.thumb.y *= k;
-    }
+    curveStick(this.thumb, TOUCH_CURVE);
     const atEdge = stick !== null && Math.hypot(stick.x, stick.y) >= TOUCH_RUN_EDGE;
     this.touchEdgeTime = atEdge ? this.touchEdgeTime + FIXED_DT : 0;
     this.actions.set('run', 't:stick', this.touchEdgeTime >= TOUCH_RUN_DELAY);
