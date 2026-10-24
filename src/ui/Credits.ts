@@ -37,7 +37,8 @@ const LINES: ReadonlyArray<readonly [string, 'name' | 'line' | 'big']> = [
   ['ui.credits.bunyan', 'big'],
   ['ui.credits.kjv', 'line'],
   ['ui.credits.madeHere', 'line'],
-  ['ui.credits.code', 'line'],
+  ['ui.credits.studio', 'big'],
+  ['ui.credits.developer', 'line'],
   ['ui.credits.thanks', 'big'],
 ];
 

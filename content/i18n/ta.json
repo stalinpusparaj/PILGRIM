@@ -243,7 +243,6 @@
   "ui.controls.devices": "இதற்கான கட்டுப்பாடுகளைக் காட்டு",
   "ui.controls.mouse": "மவுஸ்",
   "ui.controls.choices": "உரையாடல் தேர்வுகள்",
-  "ui.credits.code": "3D நிரல் நூலகம்: three.js (MIT உரிமம்)",
   "ui.credits.thanks": "விளையாடியதற்கு நன்றி!",
   "ui.flow.loadFailed": "ஐயோ! அந்த அத்தியாயம் திறக்கவில்லை. மீண்டும் முயற்சி செய்.",
   "ui.settings.tabs": "அமைப்புப் பகுதிகள்",
@@ -1237,5 +1236,7 @@
   "ui.update.now": "புதுப்பி",
   "ui.update.skip": "தவிர்",
   "ui.settings.touch.use": "அருகில் ஏதாவது இருக்கிறதா? அதன் மேலே உள்ள கை குமிழியைத் தொடு.",
-  "ui.settings.controls.more": "விசைப்பலகையும் கட்டுப்படுத்தியும்"
+  "ui.settings.controls.more": "விசைப்பலகையும் கட்டுப்படுத்தியும்",
+  "ui.credits.studio": "உருவாக்கம்: GEM CREATORS",
+  "ui.credits.developer": "உருவாக்குநர்: ஸ்டாலின் புஷ்பராஜ் A, சென்னை"
 }

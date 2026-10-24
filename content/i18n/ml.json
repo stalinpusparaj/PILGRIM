@@ -243,7 +243,6 @@
   "ui.controls.devices": "ഇതിന്റെ നിയന്ത്രണങ്ങൾ കാണിക്കൂ:",
   "ui.controls.mouse": "മൗസ്",
   "ui.controls.choices": "സംഭാഷണ ഉത്തരങ്ങൾ",
-  "ui.credits.code": "3D ലൈബ്രറി: three.js (MIT ലൈസൻസ്)",
   "ui.credits.thanks": "കളിച്ചതിനു നന്ദി!",
   "ui.flow.loadFailed": "അയ്യോ! ആ അധ്യായം തുറക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കൂ.",
   "ui.settings.tabs": "ക്രമീകരണ ഭാഗങ്ങൾ",
@@ -1237,5 +1236,7 @@
   "ui.update.now": "പുതുക്കൂ",
   "ui.update.skip": "ഒഴിവാക്കൂ",
   "ui.settings.touch.use": "അടുത്ത് എന്തെങ്കിലും ഉണ്ടോ? അതിനു മുകളിലുള്ള കൈ കുമിളയിൽ തൊടൂ.",
-  "ui.settings.controls.more": "കീബോർഡും കൺട്രോളറും"
+  "ui.settings.controls.more": "കീബോർഡും കൺട്രോളറും",
+  "ui.credits.studio": "നിർമ്മാണം: GEM CREATORS",
+  "ui.credits.developer": "ഡെവലപ്പർ: സ്റ്റാലിൻ പുഷ്പരാജ് A, ചെന്നൈ"
 }

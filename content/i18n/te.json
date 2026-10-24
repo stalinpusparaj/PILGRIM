@@ -243,7 +243,6 @@
   "ui.controls.devices": "ఈ పరికరానికి నియంత్రణలు చూపించు",
   "ui.controls.mouse": "మౌస్",
   "ui.controls.choices": "సంభాషణ ఎంపికలు",
-  "ui.credits.code": "3D లైబ్రరీ: three.js (MIT లైసెన్స్)",
   "ui.credits.thanks": "ఆడినందుకు ధన్యవాదాలు!",
   "ui.flow.loadFailed": "అయ్యో! ఆ అధ్యాయం లోడ్ కాలేదు. దయచేసి మళ్ళీ ప్రయత్నించు.",
   "ui.settings.tabs": "సెట్టింగ్‌ల విభాగాలు",
@@ -1237,5 +1236,7 @@
   "ui.update.now": "అప్‌డేట్ చేయి",
   "ui.update.skip": "వదిలేయి",
   "ui.settings.touch.use": "దగ్గర ఏదైనా ఉందా? దాని పైని చేతి బుడగను తాకు.",
-  "ui.settings.controls.more": "కీబోర్డ్, కంట్రోలర్"
+  "ui.settings.controls.more": "కీబోర్డ్, కంట్రోలర్",
+  "ui.credits.studio": "రూపొందించినది: GEM CREATORS",
+  "ui.credits.developer": "డెవలపర్: స్టాలిన్ పుష్పరాజ్ A, చెన్నై"
 }

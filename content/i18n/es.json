@@ -243,7 +243,6 @@
   "ui.controls.devices": "Ver los controles de",
   "ui.controls.mouse": "Ratón",
   "ui.controls.choices": "Respuestas",
-  "ui.credits.code": "Biblioteca 3D: three.js (Licencia MIT)",
   "ui.credits.thanks": "¡Gracias por jugar!",
   "ui.flow.loadFailed": "¡Oh, no! Ese capítulo no se pudo cargar. Inténtalo otra vez.",
   "ui.settings.tabs": "Secciones de ajustes",
@@ -1237,5 +1236,7 @@
   "ui.update.now": "Actualizar",
   "ui.update.skip": "Omitir",
   "ui.settings.touch.use": "¿Hay algo cerca? Toca la burbuja de la mano encima.",
-  "ui.settings.controls.more": "Teclado y mando"
+  "ui.settings.controls.more": "Teclado y mando",
+  "ui.credits.studio": "Hecho por GEM CREATORS",
+  "ui.credits.developer": "Desarrollador: Stalin Pushparaj A, Chennai"
 }

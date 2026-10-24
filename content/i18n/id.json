@@ -243,7 +243,6 @@
   "ui.controls.devices": "Tampilkan kontrol untuk",
   "ui.controls.mouse": "Mouse",
   "ui.controls.choices": "Pilihan dialog",
-  "ui.credits.code": "Pustaka 3D: three.js (Lisensi MIT)",
   "ui.credits.thanks": "Terima kasih sudah bermain!",
   "ui.flow.loadFailed": "Aduh! Bab itu tidak bisa dimuat. Coba lagi, ya.",
   "ui.settings.tabs": "Bagian pengaturan",
@@ -1237,5 +1236,7 @@
   "ui.update.now": "Perbarui",
   "ui.update.skip": "Lewati",
   "ui.settings.touch.use": "Ada sesuatu di dekatmu? Ketuk gelembung tangan di atasnya.",
-  "ui.settings.controls.more": "Keyboard dan stik"
+  "ui.settings.controls.more": "Keyboard dan stik",
+  "ui.credits.studio": "Dibuat oleh GEM CREATORS",
+  "ui.credits.developer": "Pengembang: Stalin Pushparaj A, Chennai"
 }

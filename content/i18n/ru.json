@@ -243,7 +243,6 @@
   "ui.controls.devices": "Показать управление для",
   "ui.controls.mouse": "Мышь",
   "ui.controls.choices": "Ответы в разговоре",
-  "ui.credits.code": "3D-библиотека: three.js (лицензия MIT)",
   "ui.credits.thanks": "Спасибо, что играешь!",
   "ui.flow.loadFailed": "Ой! Эта глава не загрузилась. Попробуй ещё раз.",
   "ui.settings.tabs": "Разделы настроек",
@@ -1237,5 +1236,7 @@
   "ui.update.now": "Обновить",
   "ui.update.skip": "Пропустить",
   "ui.settings.touch.use": "Что-то рядом? Нажми на пузырь с ладонью над ним.",
-  "ui.settings.controls.more": "Клавиатура и геймпад"
+  "ui.settings.controls.more": "Клавиатура и геймпад",
+  "ui.credits.studio": "Создано GEM CREATORS",
+  "ui.credits.developer": "Разработчик: Сталин Пушпарадж A, Ченнаи"
 }

@@ -243,7 +243,6 @@
   "ui.controls.devices": "ಇದರ ನಿಯಂತ್ರಣಗಳನ್ನು ತೋರಿಸು",
   "ui.controls.mouse": "ಮೌಸ್",
   "ui.controls.choices": "ಮಾತಿನ ಆಯ್ಕೆಗಳು",
-  "ui.credits.code": "3D ತಂತ್ರಾಂಶ ಗ್ರಂಥಾಲಯ: three.js (MIT ಪರವಾನಗಿ)",
   "ui.credits.thanks": "ಆಡಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು!",
   "ui.flow.loadFailed": "ಅಯ್ಯೋ! ಆ ಅಧ್ಯಾಯ ತೆರೆಯಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸು.",
   "ui.settings.tabs": "ಸೆಟ್ಟಿಂಗ್ ವಿಭಾಗಗಳು",
@@ -1237,5 +1236,7 @@
   "ui.update.now": "ನವೀಕರಿಸು",
   "ui.update.skip": "ಬಿಡು",
   "ui.settings.touch.use": "ಹತ್ತಿರ ಏನಾದರೂ ಇದೆಯೇ? ಅದರ ಮೇಲಿನ ಕೈ ಗುಳ್ಳೆಯನ್ನು ಮುಟ್ಟು.",
-  "ui.settings.controls.more": "ಕೀಬೋರ್ಡ್ ಮತ್ತು ಕಂಟ್ರೋಲರ್"
+  "ui.settings.controls.more": "ಕೀಬೋರ್ಡ್ ಮತ್ತು ಕಂಟ್ರೋಲರ್",
+  "ui.credits.studio": "ನಿರ್ಮಾಣ: GEM CREATORS",
+  "ui.credits.developer": "ಡೆವಲಪರ್: ಸ್ಟಾಲಿನ್ ಪುಷ್ಪರಾಜ್ A, ಚೆನ್ನೈ"
 }

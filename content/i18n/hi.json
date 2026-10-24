@@ -243,7 +243,6 @@
   "ui.controls.devices": "इसके कंट्रोल दिखाओ",
   "ui.controls.mouse": "माउस",
   "ui.controls.choices": "बातचीत के जवाब",
-  "ui.credits.code": "3D लाइब्रेरी: three.js (MIT लाइसेंस)",
   "ui.credits.thanks": "खेलने के लिए धन्यवाद!",
   "ui.flow.loadFailed": "अरे नहीं! वह अध्याय नहीं खुल पाया। कृपया फिर से कोशिश करो।",
   "ui.settings.tabs": "सेटिंग्स के हिस्से",
@@ -1237,5 +1236,7 @@
   "ui.update.now": "अपडेट करो",
   "ui.update.skip": "छोड़ो",
   "ui.settings.touch.use": "कुछ पास है? उसके ऊपर वाले हाथ के बुलबुले को छुओ।",
-  "ui.settings.controls.more": "कीबोर्ड और कंट्रोलर"
+  "ui.settings.controls.more": "कीबोर्ड और कंट्रोलर",
+  "ui.credits.studio": "निर्माता: GEM CREATORS",
+  "ui.credits.developer": "डेवलपर: स्टालिन पुष्पराज A, चेन्नई"
 }

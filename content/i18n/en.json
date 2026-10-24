@@ -243,7 +243,6 @@
   "ui.controls.devices": "Show the controls for",
   "ui.controls.mouse": "Mouse",
   "ui.controls.choices": "Dialogue choices",
-  "ui.credits.code": "3D library: three.js (MIT License)",
   "ui.credits.thanks": "Thank you for playing!",
   "ui.flow.loadFailed": "Oh no! That chapter could not load. Please try again.",
   "ui.settings.tabs": "Settings sections",
@@ -1237,5 +1236,7 @@
   "ui.update.now": "Update",
   "ui.update.skip": "Skip",
   "ui.settings.touch.use": "Near something? Tap the hand bubble above it.",
-  "ui.settings.controls.more": "Keyboard and controller"
+  "ui.settings.controls.more": "Keyboard and controller",
+  "ui.credits.studio": "Made by GEM CREATORS",
+  "ui.credits.developer": "Developer: Stalin Pushparaj A, Chennai"
 }

@@ -243,7 +243,6 @@
   "ui.controls.devices": "Voir les commandes pour",
   "ui.controls.mouse": "Souris",
   "ui.controls.choices": "Choix de dialogue",
-  "ui.credits.code": "Bibliothèque 3D : three.js (licence MIT)",
   "ui.credits.thanks": "Merci d'avoir joué !",
   "ui.flow.loadFailed": "Oh non ! Ce chapitre n'a pas pu se charger. Réessaie.",
   "ui.settings.tabs": "Sections des réglages",
@@ -1237,5 +1236,7 @@
   "ui.update.now": "Mettre à jour",
   "ui.update.skip": "Plus tard",
   "ui.settings.touch.use": "Quelque chose tout près ? Touche la bulle de la main au-dessus.",
-  "ui.settings.controls.more": "Clavier et manette"
+  "ui.settings.controls.more": "Clavier et manette",
+  "ui.credits.studio": "Créé par GEM CREATORS",
+  "ui.credits.developer": "Développeur : Stalin Pushparaj A, Chennai"
 }
