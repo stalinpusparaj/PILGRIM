@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings > About links (src/ui/settings-about.ts). Empty = the button stays hidden. -->
+<resources>
+    <!-- e.g. https://www.facebook.com/yourpage -->
+    <string name="facebook_url" translatable="false"></string>
+    <!-- e.g. hello@yourstudio.com -->
+    <string name="feedback_email" translatable="false"></string>
+    <!-- Google Play developer id: "More games from us" -->
+    <string name="developer_id" translatable="false">6443788179149742661</string>
+</resources>

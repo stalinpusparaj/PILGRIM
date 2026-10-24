@@ -5,6 +5,7 @@ import { t } from '../core/I18n';
 import type {} from '../game/flow-types';
 import type { SpeechHandle } from './AudioEngine';
 import type { VoiceParams } from './types';
+import { SPEECH_TAGS } from '../core/langs';
 
 type NativeVoice = {
   available(lang: string): boolean;
@@ -56,7 +57,7 @@ export class SpokenVoice {
     if (mode === 'classic') return null;
     if (mode === 'off' || this.paused || (typeof document !== 'undefined' && document.hidden)) return SILENT;
     if (typeof window === 'undefined') return null;
-    const lang = settings?.get('lang') === 'ta' ? 'ta-IN' : 'en-US';
+    const lang = SPEECH_TAGS[settings?.get('lang') ?? 'en'];
     const volume = (settings?.get('volMaster') ?? 1) * (settings?.get('volVoices') ?? 0.8);
     if (!text.trim() || volume === 0) return SILENT;
     const native = window.PilgrimVoice;

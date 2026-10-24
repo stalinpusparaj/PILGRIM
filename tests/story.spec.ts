@@ -129,9 +129,9 @@ test('title screen, keyboard only: CHAPTERS, SETTINGS (text size persists), STAR
   await page.keyboard.press('Enter');
   await waitForFlow(page, (p) => p.screen === 'settings');
   await expect(page.locator('.pg-settings')).toBeVisible();
-  await expect.poll(() => focusedId(page)).toBe('tab:graphics');
-  for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight');
-  await expect.poll(() => focusedId(page)).toBe('tab:text');
+  await expect.poll(() => focusedId(page)).toBe('tab:general');
+  await page.keyboard.press('ArrowDown');
+  await expect.poll(() => focusedId(page)).toBe('lang:select');
   await page.keyboard.press('ArrowDown');
   await expect.poll(() => focusedId(page)).toBe('textSize:M');
   await page.keyboard.press('ArrowRight');
@@ -171,10 +171,10 @@ test('title screen, gamepad only: CHAPTERS, SETTINGS, START', async ({ page }) =
   await padTap(page, PAD.DOWN);
   await padTap(page, PAD.A);
   await waitForFlow(page, (p) => p.screen === 'settings');
-  await expect.poll(() => focusedId(page)).toBe('tab:graphics');
-  for (let i = 0; i < 3; i++) await padTap(page, PAD.RB);
-  await expect.poll(() => focusedId(page)).toBe('tab:text');
+  await expect.poll(() => focusedId(page)).toBe('tab:general');
   await padTap(page, PAD.DOWN);
+  await padTap(page, PAD.DOWN);
+  await expect.poll(() => focusedId(page)).toBe('textSize:M');
   await padTap(page, PAD.RIGHT);
   await expect(page.locator('body')).toHaveClass(/text-L/);
   await padTap(page, PAD.LEFT);

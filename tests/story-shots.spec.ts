@@ -95,9 +95,9 @@ for (const device of ['desktop', 'phone'] as const) {
         await expect(page.locator('.pg-settings')).toBeVisible();
         await page.waitForTimeout(400);
         await shot(page, 'settings');
-        await page.locator('[data-focus-id="tab:text"]').click();
+        await page.locator('[data-focus-id="tab:about"]').click();
         await page.waitForTimeout(300);
-        await shot(page, 'settings-text');
+        await shot(page, 'settings-about');
         await page.keyboard.press('Escape');
         await waitForFlow(page, (p) => p.screen === 'title');
         await page.locator('[data-key="ui.title.start"]').click();

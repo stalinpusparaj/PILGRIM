@@ -28,7 +28,7 @@ const STICK_STEP = 0.6;
  * still tapping Space / A through the last line, not a request to start over.
  */
 const REPLAY_GRACE_MS = 1200;
-const LANG_ORDER: readonly Lang[] = ['en', 'ta'];
+const LANG_ORDER = ['en', 'ta'] as const;
 
 export class DemoUi {
   readonly root: HTMLDivElement;
@@ -42,7 +42,7 @@ export class DemoUi {
   private readonly playBtn: HTMLButtonElement;
   private readonly status: HTMLDivElement;
   private readonly langGroup: HTMLDivElement;
-  private readonly langBtns: Record<Lang, HTMLButtonElement>;
+  private readonly langBtns: Record<'en' | 'ta', HTMLButtonElement>;
   private delta: HTMLSpanElement | null = null;
   private deltaTimer: number | null = null;
   private playing = false;

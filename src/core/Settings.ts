@@ -13,6 +13,7 @@ import { services } from './Services';
 import type { Action } from './Input';
 import { isSmallTouchScreen, type QualitySetting } from './Quality';
 import type { MovementPace } from './MovementPace';
+import { preferredLang, type Lang } from './langs';
 
 export interface SettingsData {
   quality: QualitySetting;
@@ -38,7 +39,7 @@ export interface SettingsData {
   volAmbience: number;
   textSize: 'M' | 'L' | 'XL';
   textSpeed: 'slow' | 'normal' | 'instant';
-  lang: 'en' | 'ta';
+  lang: Lang;
   /** Only the player's overrides; the defaults live in Input (DEFAULT_BINDINGS). */
   bindings: Partial<Record<Action, string[]>>;
 }
@@ -169,7 +170,7 @@ const VALIDATORS: { [K in keyof SettingsData]: Validator<SettingsData[K]> } = {
   volAmbience: VOLUME,
   textSize: oneOf({ M: true, L: true, XL: true }),
   textSpeed: oneOf({ slow: true, normal: true, instant: true }),
-  lang: oneOf({ en: true, ta: true }),
+  lang: oneOf({ en: true, ta: true, hi: true, te: true, ml: true, kn: true, es: true, fr: true, pt: true, de: true, id: true, ru: true }),
   bindings,
 };
 
@@ -314,14 +315,10 @@ function defaultStorage(): Storage | null {
   }
 }
 
-/** First preference that is English or Tamil wins; anything else means English. */
+/** The first preferred language the game speaks wins (langs.ts); anything else means English. */
 function browserLang(): SettingsData['lang'] {
   try {
-    const prefs = navigator.languages?.length ? navigator.languages : [navigator.language];
-    for (const tag of prefs) {
-      if (/^ta\b/i.test(tag)) return 'ta';
-      if (/^en\b/i.test(tag)) return 'en';
-    }
+    return preferredLang(navigator.languages?.length ? navigator.languages : [navigator.language]);
   } catch {
     // navigator is missing outside the browser; fall through.
   }

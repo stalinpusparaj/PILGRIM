@@ -319,3 +319,24 @@
   .pg-set-opt[aria-checked="true"],
   .pg-settings__tab[aria-selected="true"] { border-color: Highlight; }
 }
+
+/* Six languages (DECISIONS #397): a tidy 3 x 2 grid, never a ragged wrap. */
+.pg-set-seg:has(> [data-focus-id^="lang:"]) { display: grid; grid-template-columns: repeat(3, 1fr); }
+/* About: full-width glossy action buttons. */
+.pg-set-row--action .pg-set-action { width: 100%; min-height: 60px; }
+.pg-set-seg > [data-focus-id^="lang:"] { white-space: nowrap; overflow-wrap: normal; word-break: keep-all; padding-left: 4px; padding-right: 4px; font-size: min(var(--fs-body), 17px); }
+/* The language dropdown: a glossy pearl pill with a gold chevron. */
+.pg-set-selectwrap { position: relative; }
+.pg-set-selectwrap::after {
+  content: ''; position: absolute; right: 20px; top: 50%; width: 10px; height: 10px; margin-top: -8px;
+  border-right: 3px solid var(--gloss-gold-edge, #a8650f); border-bottom: 3px solid var(--gloss-gold-edge, #a8650f);
+  transform: rotate(45deg); pointer-events: none;
+}
+.pg-set-select {
+  appearance: none; -webkit-appearance: none; width: 100%; min-height: 56px; padding: 0 48px 0 18px;
+  border: 3px solid var(--gloss-pearl-edge, #c9a868); border-radius: var(--radius); color: var(--ink);
+  font: 800 var(--fs-body) / 1.2 var(--font-body); cursor: pointer; pointer-events: auto;
+  background: linear-gradient(180deg, #ffffff 0%, #fbf2df 48%, #efdcb6 54%, #fbf2df 100%);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.95), 0 4px 0 var(--gloss-pearl-edge, #c9a868), 0 8px 14px rgba(20, 12, 24, 0.25);
+}
+.pg-set-select:focus-visible { outline: 4px solid var(--focus); outline-offset: 4px; }

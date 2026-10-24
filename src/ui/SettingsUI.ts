@@ -31,7 +31,7 @@ import { buildWidget, type Widget } from './settings-widgets';
 export { SETTINGS_TABS, type SettingsTab } from './settings-rows';
 
 export interface SettingsOpenOptions {
-  /** 'graphics' (default) | 'gameplay' | 'audio' | 'text' | 'controls'. Unknown values open Graphics. */
+  /** 'general' (default) | 'sound' | 'controls' | 'advanced' | 'about'. Unknown values open General. */
   tab?: string;
 }
 
@@ -52,7 +52,7 @@ export class SettingsUI {
   private readonly parent: HTMLElement;
   private readonly preview = new VolumePreview();
   private view: SettingsView | null = null;
-  private tab: SettingsTab = 'graphics';
+  private tab: SettingsTab = 'general';
   private widgets: Widget[] = [];
   private controls: ControlsTab | null = null;
   private offs: Array<() => void> = [];
@@ -79,7 +79,7 @@ export class SettingsUI {
   /** Shows the screen (or switches tab if it is already open). Resolves when it closes. */
   open(opts: SettingsOpenOptions = {}): Promise<void> {
     if (this.disposed) return Promise.resolve();
-    const tab = isSettingsTab(opts.tab) ? opts.tab : 'graphics';
+    const tab = isSettingsTab(opts.tab) ? opts.tab : 'general';
     if (this.view && this.closed) {
       this.selectTab(tab, true);
       return this.closed;

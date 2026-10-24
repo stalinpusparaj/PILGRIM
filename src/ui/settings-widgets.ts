@@ -12,7 +12,8 @@
  */
 import { events } from '../core/Events';
 import { h, setText } from './dom';
-import type { ChoiceSpec, RowSpec, SliderSpec, VolumeKey } from './settings-rows';
+import type { ActionSpec, ChoiceSpec, RowSpec, SelectSpec, SliderSpec, VolumeKey } from './settings-rows';
+import { icon } from './Svg';
 
 export interface Widget {
   readonly el: HTMLElement;
@@ -40,7 +41,56 @@ export function buildWidget(spec: RowSpec, host: WidgetHost): Widget {
     sync();
     return { el, sync };
   }
+  if (spec.kind === 'action') return actionWidget(spec);
+  if (spec.kind === 'select') return selectWidget(spec);
   return spec.kind === 'choice' ? choiceWidget(spec) : sliderWidget(spec, host);
+}
+
+/** A native dropdown (a phone opens its own picker), styled as a glossy pill in settings.css. */
+function selectWidget(spec: SelectSpec): Widget {
+  const labelId = `pg-set-label-${spec.id}-${++uid}`;
+  const select = h(
+    'select',
+    {
+      className: 'pg-set-select',
+      'aria-labelledby': labelId,
+      dataset: { focusId: `${spec.id}:select` },
+      onChange: () => spec.set(select.value),
+    },
+    ...spec.options.map((o) => h('option', { value: o.id, attrs: { lang: o.lang } }, o.label)),
+  );
+  const el = h(
+    'div',
+    { className: 'pg-set-row' },
+    h('p', { className: 'pg-set-row__label', id: labelId }, spec.label),
+    h('div', { className: 'pg-set-selectwrap' }, select),
+  );
+  const sync = (): void => {
+    select.value = spec.get();
+    select.lang = spec.get();
+  };
+  sync();
+  return { el, sync };
+}
+
+/** About: a glossy button with an icon medallion (and a grey line under it). */
+function actionWidget(spec: ActionSpec): Widget {
+  const glyph = h('span', { className: 'pg-mbtn__icon', 'aria-hidden': 'true' });
+  glyph.innerHTML = icon(spec.icon, '100%');
+  const button = h(
+    'button',
+    {
+      type: 'button',
+      className: 'btn btn-secondary pg-mbtn has-icon pg-set-action',
+      dataset: { focusId: `action:${spec.id}` },
+      onClick: () => spec.run(),
+    },
+    glyph,
+    h('span', { className: 'pg-mbtn__label' }, spec.label),
+  );
+  const el = h('div', { className: 'pg-set-row pg-set-row--action' }, button);
+  if (spec.hint) el.appendChild(h('p', { className: 'pg-set-row__hint' }, spec.hint));
+  return { el, sync: () => {} };
 }
 
 // ------------------------------------------------------------------------------------------------ choice

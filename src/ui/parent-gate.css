@@ -1,0 +1,7 @@
+/* "Ask a grown-up" (src/ui/ParentGate.ts): above Settings (850) and the credits shown from it. */
+.pg-gate { z-index: 880; display: flex; align-items: center; justify-content: center; background: rgba(20, 12, 28, 0.72); pointer-events: auto; }
+.pg-gate__panel { width: min(420px, 100%); display: flex; flex-direction: column; gap: 16px; text-align: center; }
+.pg-gate__question { margin: 0; font-size: var(--fs-large); font-weight: 800; color: var(--ink); }
+.pg-gate__answers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.pg-gate__answer { min-height: 64px; font-size: var(--fs-large); }
+.pg-credits--over { z-index: 870 !important; }

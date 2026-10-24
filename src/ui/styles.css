@@ -41,6 +41,11 @@
   --font-body: ui-rounded, "SF Pro Rounded", system-ui, "Segoe UI", Roboto, "Noto Sans", sans-serif;
   --font-title: Georgia, "Times New Roman", serif;
   --font-tamil: "Noto Sans Tamil", "Tamil Sangam MN", "Nirmala UI", Latha, sans-serif;
+  /* The other Indian scripts (src/core/langs.ts): system fonts only, like Tamil. */
+  --font-hi: "Noto Sans Devanagari", "Kohinoor Devanagari", "Devanagari Sangam MN", "Nirmala UI", Mangal, sans-serif;
+  --font-te: "Noto Sans Telugu", "Kohinoor Telugu", "Telugu Sangam MN", "Nirmala UI", Gautami, sans-serif;
+  --font-ml: "Noto Sans Malayalam", "Malayalam Sangam MN", "Nirmala UI", Kartika, sans-serif;
+  --font-kn: "Noto Sans Kannada", "Kannada Sangam MN", "Nirmala UI", Tunga, sans-serif;
 
   /* Safe areas (notches, home indicator) */
   --safe-top: env(safe-area-inset-top, 0px);
@@ -379,3 +384,15 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
 @media (forced-colors: active) {
   .btn, .panel { border-color: ButtonText; }
 }
+
+/* Each Indic language reuses the Tamil long-script layout (body.lang-ta) with its own font stack. */
+body.lang-hi { --font-tamil: var(--font-hi); --font-body: var(--font-hi); --font-title: var(--font-hi); }
+body.lang-te { --font-tamil: var(--font-te); --font-body: var(--font-te); --font-title: var(--font-te); }
+body.lang-ml { --font-tamil: var(--font-ml); --font-body: var(--font-ml); --font-title: var(--font-ml); }
+body.lang-kn { --font-tamil: var(--font-kn); --font-body: var(--font-kn); --font-title: var(--font-kn); }
+/* A language's own name, wherever it is shown in its script (Settings options, the title toggle). */
+[lang="hi"] { font-family: var(--font-hi); }
+[lang="te"] { font-family: var(--font-te); }
+[lang="ml"] { font-family: var(--font-ml); }
+[lang="kn"] { font-family: var(--font-kn); }
+.pg-title__langbtn:lang(ta), .pg-set-opt[lang="ta"] { font-family: var(--font-tamil); }

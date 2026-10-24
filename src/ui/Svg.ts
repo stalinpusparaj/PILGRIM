@@ -26,7 +26,10 @@ export type IconName =
   | 'home'
   | 'pad'
   | 'book'
-  | 'star';
+  | 'star'
+  | 'share'
+  | 'like'
+  | 'mail';
 
 const MOUSE_BODY = '<rect x="12" y="5" width="24" height="38" rx="12"/><path d="M24 5v14M12 19h24"/>';
 
@@ -77,6 +80,14 @@ const ICON_BODIES: Record<IconName, string> = {
   book: '<path d="M24 13c-5-4-12-4-17-2v27c5-2 12-2 17 2 5-4 12-4 17-2V11c-5-2-12-2-17 2z"/><path d="M24 13v27"/>',
   // Credits: a five-point star.
   star: '<path d="M24 6l5.4 11.6L42 19l-9.4 8.6L35 40l-11-6.2L13 40l2.4-12.4L6 19l12.6-1.4z"/>',
+  // Share: three linked dots.
+  share:
+    '<circle cx="35" cy="12" r="5"/><circle cx="13" cy="24" r="5"/><circle cx="35" cy="36" r="5"/>' +
+    '<path d="M17.5 21.5l13-7M17.5 26.5l13 7"/>',
+  // Like: a thumb up.
+  like: '<path d="M15 22v19H8V22z"/><path d="M15 22l8-14c3 0 5 2 4 6l-2 7h11c3 0 5 3 4 6l-3 11c-1 2-2 3-4 3H15"/>',
+  // Feedback: an envelope.
+  mail: '<rect x="6" y="11" width="36" height="26" rx="5"/><path d="M7 13l17 13 17-13"/>',
 };
 
 function svg(body: string, size: number | string, stroked: boolean): string {

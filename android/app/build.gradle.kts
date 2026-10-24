@@ -97,4 +97,5 @@ dependencies {
     implementation(libs.webkit)
     implementation(libs.activity.ktx)
     implementation(libs.core.ktx)
+    implementation(libs.play.app.update)
 }

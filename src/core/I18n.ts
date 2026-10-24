@@ -3,7 +3,7 @@
  *
  * - Flat `{ "dotted.key": "text" }` tables, bundled by static import (no fetch, works offline).
  * - `{name}` placeholders are filled from `params`.
- * - Missing in Tamil → English. Missing in English → the key itself, plus one dev-only warning per key.
+ * - Missing in any language → English. Missing in English → the key itself, plus one dev-only warning per key.
  * - The language is stored in Settings. `setLang()` updates <html lang> and the `lang-ta` body class (CSS
  *   switches to the Tamil font stack) and emits `lang:changed`. Changing the `lang` setting directly through
  *   Settings is followed as well.
@@ -14,17 +14,18 @@ import { events } from './Events';
 import { services } from './Services';
 // Side-effect import: the settings service must be registered before the saved language is read below.
 import './Settings';
-import en from '../../content/i18n/en.json';
-import ta from '../../content/i18n/ta.json';
+import { INDIC, LANGS, isLang, type Lang } from './langs';
 
-export type Lang = 'en' | 'ta';
+export { LANGS, type Lang };
 export type TranslateParams = Record<string, string | number>;
 
 type StringTable = Readonly<Record<string, string>>;
 
-/** Typing the imports as string tables makes a non-string value in either JSON file a compile error. */
-const TABLES: Readonly<Record<Lang, StringTable>> = { en, ta };
-export const LANGS: readonly Lang[] = ['en', 'ta'];
+/** Every content/i18n/<lang>.json, bundled (no fetch, works offline); a language without a file reads English. */
+const FILES = import.meta.glob<StringTable>('../../content/i18n/*.json', { eager: true, import: 'default' });
+const TABLES: Readonly<Partial<Record<Lang, StringTable>>> = Object.fromEntries(
+  Object.entries(FILES).map(([path, table]) => [path.replace(/^.*\/(\w+)\.json$/, '$1'), table]),
+);
 const PLACEHOLDER = /\{(\w+)\}/g;
 
 export class I18n {
@@ -77,7 +78,7 @@ export class I18n {
 
   /** English keys that `lang` has not translated yet (they fall back to English). For tests and the F1 panel. */
   missingTranslations(lang: Lang = 'ta'): string[] {
-    return Object.keys(TABLES.en).filter((key) => lookup(lang, key) === undefined);
+    return Object.keys(TABLES.en ?? {}).filter((key) => lookup(lang, key) === undefined);
   }
 
   dispose(): void {
@@ -94,7 +95,11 @@ export class I18n {
   private applyToDocument(): void {
     if (typeof document === 'undefined') return;
     document.documentElement.lang = this.current;
-    document.body?.classList.toggle('lang-ta', this.current === 'ta');
+    // Every Indic language uses the long-script layout rules (`lang-ta`) and names itself (`lang-<code>`).
+    const body = document.body;
+    if (!body) return;
+    body.classList.toggle('lang-ta', INDIC.includes(this.current));
+    for (const l of LANGS) body.classList.toggle(`lang-${l}`, l === this.current && l !== 'ta' && l !== 'en');
   }
 
   private warnMissing(key: string): void {
@@ -106,17 +111,13 @@ export class I18n {
 
 function lookup(lang: Lang, key: string): string | undefined {
   const table = TABLES[lang];
-  return Object.hasOwn(table, key) ? table[key] : undefined;
+  return table && Object.hasOwn(table, key) ? table[key] : undefined;
 }
 
 function fill(text: string, params: TranslateParams): string {
   return text.replace(PLACEHOLDER, (match, name: string) =>
     Object.hasOwn(params, name) ? String(params[name]) : match,
   );
-}
-
-function isLang(v: unknown): v is Lang {
-  return v === 'en' || v === 'ta';
 }
 
 function savedLang(): Lang {

@@ -14,9 +14,11 @@
  *   title.dispose();
  */
 import { i18n, type Lang } from '../core/I18n';
+import { LANG_NAMES } from '../core/langs';
 import { version as GAME_VERSION } from '../../package.json';
-import { h } from './dom';
+import { h, setText } from './dom';
 import { emblemSvg } from './Emblem';
+import { UpdateBanner } from './UpdateBanner';
 import { Menu } from './Menu';
 import { Texts, menuButton, playSfx, uid } from './menu-screen';
 
@@ -40,7 +42,10 @@ export class Title {
   private readonly continueBtn: HTMLButtonElement;
   private readonly emblem: HTMLDivElement;
   private readonly notice: HTMLParagraphElement;
-  private readonly langButtons: Record<Lang, HTMLButtonElement>;
+  /** English, and the player's regional language (the last non-English one chosen; Tamil at first). */
+  private readonly update: UpdateBanner;
+  private readonly langButtons: { en: HTMLButtonElement; ta: HTMLButtonElement };
+  private regional: Exclude<Lang, 'en'> = i18n.lang === 'en' ? 'ta' : i18n.lang;
   private readonly menuButtons: HTMLButtonElement[];
   private readonly main: HTMLDivElement;
   private readonly more: HTMLDivElement;
@@ -75,7 +80,7 @@ export class Title {
       'ui.menu.main',
     );
 
-    this.langButtons = { en: this.langButton('en'), ta: this.langButton('ta') };
+    this.langButtons = { en: this.langButton(() => 'en'), ta: this.langButton(() => this.regional) };
     const lang = tx.attr(
       h(
         'div',
@@ -117,6 +122,7 @@ export class Title {
     this.renderEmblem();
     this.syncLang();
     parent.appendChild(this.root);
+    this.update = new UpdateBanner(parent); // beside the title (inside it would disturb its size observer)
     // The menu's size changes with CONTINUE, the language, the text size and the window.
     this.main.addEventListener('scroll', this.updateMore, { passive: true });
     this.sizes = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(this.updateMore);
@@ -176,6 +182,7 @@ export class Title {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.update.dispose();
     window.clearTimeout(this.noticeTimer);
     this.sizes?.disconnect();
     this.main.removeEventListener('scroll', this.updateMore);
@@ -193,20 +200,18 @@ export class Title {
     this.more.hidden = !more;
   };
 
-  private langButton(lang: Lang): HTMLButtonElement {
-    const key = `ui.title.lang.${lang}`;
+  private langButton(lang: () => Lang): HTMLButtonElement {
     const b = h('button', {
       type: 'button',
       className: 'pg-title__langbtn',
-      lang,
-      dataset: { menuItem: '', key },
+      dataset: { menuItem: '' },
       onClick: () => {
-        if (i18n.lang === lang) return;
+        const l = lang();
+        if (i18n.lang === l) return;
         playSfx('ui_open');
-        i18n.setLang(lang);
+        i18n.setLang(l);
       },
     });
-    this.texts.text(b, key);
     return b;
   }
 
@@ -216,8 +221,12 @@ export class Title {
   }
 
   private syncLang(): void {
-    for (const lang of ['en', 'ta'] as const) {
-      this.langButtons[lang].setAttribute('aria-pressed', String(i18n.lang === lang));
+    if (i18n.lang !== 'en') this.regional = i18n.lang;
+    for (const [b, l] of [[this.langButtons.en, 'en'], [this.langButtons.ta, this.regional]] as const) {
+      b.lang = l; // each language names itself, in its own script
+      b.dataset.key = `ui.title.lang.${l}`;
+      setText(b, LANG_NAMES[l]);
+      b.setAttribute('aria-pressed', String(i18n.lang === l));
     }
   }
 

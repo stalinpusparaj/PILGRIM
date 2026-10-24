@@ -1,6 +1,9 @@
 package com.pilgrim.narrowway
 
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
@@ -11,6 +14,8 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.UpdateAvailability
 
 /**
  * Native helpers for the web game (src/core/NativeShell.ts): short haptic buzzes, and audio focus, so a phone
@@ -70,6 +75,71 @@ class NativeBridge(private val context: Context, private val webView: WebView) {
             sendThermal(power.currentThermalStatus)
         } else {
             power.removeThermalStatusListener(thermal)
+        }
+    }
+
+    /** The Play listing of the released app (the debug build shares the release id without ".debug"). */
+    private val playId = context.packageName.removeSuffix(".debug")
+
+    private fun launch(intent: Intent) {
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try { context.startActivity(intent) } catch (_: ActivityNotFoundException) { }
+    }
+
+    @JavascriptInterface
+    fun openStore() {
+        val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$playId"))
+        try {
+            market.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(market)
+        } catch (_: ActivityNotFoundException) {
+            launch(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$playId")))
+        }
+    }
+
+    @JavascriptInterface
+    fun share(text: String) {
+        val body = "${text.take(300)}\nhttps://play.google.com/store/apps/details?id=$playId"
+        val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, body)
+        launch(Intent.createChooser(send, null))
+    }
+
+    private fun link(name: String): String = when (name) {
+        "facebook" -> context.getString(R.string.facebook_url)
+        "feedback" -> context.getString(R.string.feedback_email)
+        "more" -> context.getString(R.string.developer_id)
+        else -> ""
+    }.trim()
+
+    @JavascriptInterface
+    fun hasLink(name: String): Boolean = link(name).isNotEmpty()
+
+    @JavascriptInterface
+    fun openLink(name: String) {
+        val target = link(name)
+        if (target.isEmpty()) return
+        if (name == "feedback") {
+            val version = try { context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch (_: Exception) { "" }
+            launch(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")).putExtra(Intent.EXTRA_EMAIL, arrayOf(target))
+                .putExtra(Intent.EXTRA_SUBJECT, "PILGRIM feedback ($version)"))
+        } else if (name == "more") {
+            val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://dev?id=$target")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try { context.startActivity(market) } catch (_: ActivityNotFoundException) {
+                launch(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/dev?id=$target")))
+            }
+        } else if (target.startsWith("https://")) {
+            launch(Intent(Intent.ACTION_VIEW, Uri.parse(target)))
+        }
+    }
+
+    /** Asks Google Play whether a newer version is out; the answer goes to the game (src/core/NativeShell.ts). */
+    @JavascriptInterface
+    fun checkUpdate() {
+        AppUpdateManagerFactory.create(context).appUpdateInfo.addOnSuccessListener { info ->
+            if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+                val code = info.availableVersionCode()
+                webView.post { webView.evaluateJavascript("window.__pilgrimNative&&window.__pilgrimNative.update($code)", null) }
+            }
         }
     }
 
