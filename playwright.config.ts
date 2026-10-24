@@ -38,7 +38,7 @@ function findChrome(): { channel?: 'chrome'; executablePath?: string } {
   const stock = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
   try {
     if (existsSync(stock)) return { channel: 'chrome' };
-    const app = readdirSync('/Applications').find((n: string) => /^Google Chrome.*\.app$/.test(n));
+    const app = readdirSync('/Applications').find((n: string) => /^(Google )?Chrome.*\.app$/.test(n));
     if (app) return { executablePath: `/Applications/${app}/Contents/MacOS/Google Chrome` };
   } catch {
     /* fall through */

@@ -1,15 +1,17 @@
 /**
- * Phone music (DECISIONS #391). The live sequencer builds a few oscillators, filters and envelopes per note; on a
- * budget phone the Web Audio thread cannot render that in time and the music stutters (measured on an OPPO A5x:
- * ~18 600 frames of output underrun per 10 s with music alone, none without). Here each (song, state) is baked
- * once into a seamless loop by the same sequencer, instruments and reverb (music-bake.ts, stored on the device)
- * and played as one looping AudioBufferSourceNode: as cheap as a sound file, and still made by our own code.
- * Until a tune's loop exists the live sequencer plays it, then hands over at the same point in the tune.
+ * Phone music (DECISIONS #391, #392). The live sequencer builds a few oscillators, filters and envelopes per note;
+ * on a budget phone the Web Audio thread cannot render that in time and the music stutters (measured on an OPPO
+ * A5x: ~18 600 frames of output underrun per 10 s with music alone, none without). Here a song is baked once into
+ * seamless loops by the same sequencer, instruments and reverb (music-bake.ts, kept on the device): one STEM per
+ * group of tracks that share their `states`. All stems of a song start together as looping AudioBufferSourceNodes
+ * and a state change only fades stem gains, exactly like the live sequencer's layer crossfades: instant, smooth,
+ * and as cheap as playing sound files. Still our own generated sound (GDD 2.3). A song plays once all its stems
+ * are ready (about 15 s the very first time on a budget phone, then under a second from the device store).
  */
 import type { MusicPosition } from './Sequencer';
 import { bakedLoop } from './music-bake';
 import { prepareSong } from './seq-song';
-import type { MusicState, SongDef, SongId } from './types';
+import type { MusicState, SongDef, SongId, TrackDef } from './types';
 
 /** What AudioEngine needs from a music player (MusicPlayer and BakedMusic both provide it). */
 export interface MusicBackend {
@@ -23,48 +25,60 @@ export interface MusicBackend {
   dispose(): void;
 }
 
-/** Baked loops kept in memory (~2-4 MB each at 24 kHz). */
-const CACHE_MAX = 4;
+/** Songs whose stems are kept in memory (a few MB per stem at 24 kHz). */
+const SONGS_KEPT = 2;
 const DEFAULT_SONG_FADE = 1.5;
 const DEFAULT_STATE_FADE = 2;
-/** Live-to-baked handover crossfade, seconds. */
-const HANDOVER = 1.2;
+/** First fade-in of a song that had to be baked (it arrives mid-scene, so it comes in gently). */
+const LATE_FADE = 2.5;
 
-interface Voice { src: AudioBufferSourceNode; gain: GainNode }
+interface StemDef { states: readonly MusicState[] | null; def: SongDef }
+interface Stem { states: readonly MusicState[] | null; buf: AudioBuffer }
+interface PlayingStem { states: readonly MusicState[] | null; src: AudioBufferSourceNode; gain: GainNode }
+interface Playing { id: SongId; stems: PlayingStem[]; bus: GainNode; origin: number; loopSec: number }
+
+/** Tracks grouped by the states they play in; each group becomes one stem that plays in every state. */
+export function stemDefs(def: SongDef): StemDef[] {
+  const groups = new Map<string, { states: MusicState[] | null; tracks: TrackDef[] }>();
+  for (const tr of def.tracks) {
+    const states = tr.states && tr.states.length ? [...tr.states].sort() : null;
+    const key = states ? states.join(',') : '*';
+    let g = groups.get(key);
+    if (!g) groups.set(key, (g = { states, tracks: [] }));
+    g.tracks.push({ ...tr, states: undefined });
+  }
+  return [...groups.values()].map((g) => ({ states: g.states, def: { ...def, tracks: g.tracks } }));
+}
+
+function audible(states: readonly MusicState[] | null, s: MusicState): boolean {
+  return states === null || states.includes(s);
+}
 
 export class BakedMusic implements MusicBackend {
-  private readonly cache = new Map<string, AudioBuffer>();
+  private readonly ready = new Map<SongId, Stem[]>();
   private cur: SongId | null = null;
   private stateValue: MusicState = 'calm';
-  private voice: Voice | null = null;
-  /** Context time the playing loop's sample 0 lines up with (for same-position crossfades). */
-  private origin = 0;
-  private loopSec = 0;
+  private playing: Playing | null = null;
   private gen = 0;
   private disposed = false;
   private readonly pos: MusicPosition = { bar: 0, beat: 0, loop: 0 };
 
-  /**
-   * `live` plays a tune the first time, while its loop is being baked (a light voice cap keeps it bearable);
-   * from then on the baked loop takes over at the same point in the tune.
-   */
   constructor(
     private readonly ctx: AudioContext,
     private readonly out: AudioNode,
     private readonly songs: Partial<Record<SongId, SongDef>>,
-    private readonly live: MusicBackend | null = null,
   ) {}
 
   get current(): SongId | null { return this.cur; }
   get state(): MusicState { return this.stateValue; }
   get position(): MusicPosition {
-    if (!this.voice && this.live?.current) return this.live.position;
-    const def = this.cur ? this.songs[this.cur] : undefined;
-    if (!def || !this.voice || this.loopSec <= 0) { this.pos.bar = this.pos.beat = this.pos.loop = 0; return this.pos; }
-    const song = prepareSong(this.cur!, def);
-    const t = Math.max(0, this.ctx.currentTime - this.origin);
-    this.pos.loop = Math.floor(t / this.loopSec);
-    const beats = (t - this.pos.loop * this.loopSec) / song.spb;
+    const p = this.playing;
+    const def = p ? this.songs[p.id] : undefined;
+    if (!p || !def || p.loopSec <= 0) { this.pos.bar = this.pos.beat = this.pos.loop = 0; return this.pos; }
+    const song = prepareSong(p.id, def);
+    const t = Math.max(0, this.ctx.currentTime - p.origin);
+    this.pos.loop = Math.floor(t / p.loopSec);
+    const beats = (t - this.pos.loop * p.loopSec) / song.spb;
     this.pos.bar = Math.floor(beats / song.barBeats);
     this.pos.beat = beats - this.pos.bar * song.barBeats;
     return this.pos;
@@ -76,115 +90,110 @@ export class BakedMusic implements MusicBackend {
       if (state !== undefined && state !== this.stateValue) this.setState(state, fade);
       return;
     }
-    const from = this.cur;
+    const hadSong = this.cur !== null;
     this.cur = id;
     this.stateValue = state ?? 'calm';
-    this.swap(fade ?? (from ? DEFAULT_SONG_FADE : 0), false);
+    const gen = ++this.gen;
+    const f = fade ?? (hadSong ? DEFAULT_SONG_FADE : 0);
+    this.release(f);
+    const stems = this.ready.get(id);
+    if (stems) {
+      this.start(id, stems, f);
+      return;
+    }
+    void this.bake(id, () => gen === this.gen && !this.disposed).then((baked) => {
+      if (baked && gen === this.gen && !this.disposed) this.start(id, baked, Math.max(f, LATE_FADE));
+    });
   }
 
   setState(s: MusicState, fade?: number): void {
     if (this.disposed || s === this.stateValue) return;
     this.stateValue = s;
-    if (this.cur) this.swap(fade ?? DEFAULT_STATE_FADE, true);
+    const p = this.playing;
+    if (!p) return;
+    const now = this.ctx.currentTime;
+    const f = Math.max(0.05, fade ?? DEFAULT_STATE_FADE);
+    for (const st of p.stems) ramp(st.gain.gain, audible(st.states, s) ? 1 : 0, now, f);
   }
 
   stop(fade?: number): void {
     this.gen++;
     this.cur = null;
-    this.fadeOut(fade ?? 1);
-    this.live?.stop(fade ?? 1);
+    this.release(fade ?? 1);
   }
 
   silence(fade?: number): void {
-    this.gen++;
-    this.cur = null;
-    this.fadeOut(fade ?? 0.4);
-    this.live?.silence(fade);
+    this.stop(fade ?? 0.4);
   }
 
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
     this.gen++;
-    this.fadeOut(0);
-    this.live?.dispose();
-    this.cache.clear();
+    this.release(0);
+    this.ready.clear();
   }
 
-  /** Plays the current song in the current state: its baked loop when ready, else live while it bakes. */
-  private swap(fade: number, samePosition: boolean): void {
-    const id = this.cur;
-    const def = id ? this.songs[id] : undefined;
-    if (!id || !def) return;
-    const gen = ++this.gen;
-    const state = this.stateValue;
-    const key = `${id}:${state}`;
-    const ready = this.cache.get(key);
-    if (ready) {
-      this.live?.stop(fade);
-      this.start(ready, fade, samePosition, null);
-      return;
-    }
-    // Not baked yet: the live sequencer plays (from where the loop was), and hands over once the bake is in.
-    const wasBaked = this.voice !== null;
-    this.fadeOut(fade);
-    if (this.live) {
-      if (wasBaked || this.live.current !== id) this.live.play(id, fade, state);
-      else this.live.setState(state, fade);
-    }
-    void bakedLoop(id, state, def, () => gen === this.gen && !this.disposed).then((buf) => {
-      if (!buf || this.disposed) return;
-      this.cache.set(key, buf);
-      while (this.cache.size > CACHE_MAX) this.cache.delete(this.cache.keys().next().value!);
-      if (gen !== this.gen) return;
-      const at = this.live?.current === id ? this.liveSeconds(id) : null;
-      this.live?.stop(HANDOVER);
-      this.start(buf, HANDOVER, false, at);
-    });
-  }
-
-  /** Where the live sequencer is in the loop, seconds. */
-  private liveSeconds(id: SongId): number | null {
+  /** Every stem of a song, from the device store or baked now (one after another). Null if any fails. */
+  private async bake(id: SongId, wanted: () => boolean): Promise<Stem[] | null> {
     const def = this.songs[id];
-    if (!def || !this.live) return null;
-    const song = prepareSong(id, def);
-    const p = this.live.position;
-    return (p.bar * song.barBeats + p.beat) * song.spb;
-  }
-
-  /** Starts a baked loop, crossfading from whatever baked loop plays (same position, or `at` seconds in). */
-  private start(buf: AudioBuffer, fade: number, samePosition: boolean, at: number | null): void {
-    const now = this.ctx.currentTime;
-    const loop = buf.duration;
-    let offset = 0;
-    if (at !== null) offset = ((at % loop) + loop) % loop;
-    else if (samePosition && this.voice && Math.abs(loop - this.loopSec) < 0.01) {
-      offset = (((now - this.origin) % loop) + loop) % loop;
+    if (!def) return null;
+    const stems: Stem[] = [];
+    for (const s of stemDefs(def)) {
+      const buf = await bakedLoop(id, 'calm', s.def, wanted);
+      if (!buf) return null;
+      stems.push({ states: s.states, buf });
     }
-    this.fadeOut(fade);
-    const src = this.ctx.createBufferSource();
-    src.buffer = buf;
-    src.loop = true;
-    const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(1, now + Math.max(0.02, fade));
-    src.connect(gain).connect(this.out);
-    src.start(now, offset);
-    this.voice = { src, gain };
-    this.origin = now - offset;
-    this.loopSec = loop;
+    this.ready.delete(id);
+    this.ready.set(id, stems);
+    while (this.ready.size > SONGS_KEPT) {
+      const oldest = this.ready.keys().next().value!;
+      if (oldest === this.cur) break;
+      this.ready.delete(oldest);
+    }
+    return stems;
   }
 
-  private fadeOut(fade: number): void {
-    const v = this.voice;
-    if (!v) return;
-    this.voice = null;
+  private start(id: SongId, stems: readonly Stem[], fade: number): void {
+    const now = this.ctx.currentTime;
+    const at = now + 0.05;
+    const bus = this.ctx.createGain();
+    bus.gain.setValueAtTime(0, now);
+    bus.gain.linearRampToValueAtTime(1, at + Math.max(0.02, fade));
+    bus.connect(this.out);
+    const playing: PlayingStem[] = stems.map((s) => {
+      const src = this.ctx.createBufferSource();
+      src.buffer = s.buf;
+      src.loop = true;
+      const gain = this.ctx.createGain();
+      gain.gain.value = audible(s.states, this.stateValue) ? 1 : 0;
+      src.connect(gain).connect(bus);
+      src.start(at);
+      return { states: s.states, src, gain };
+    });
+    this.playing = { id, stems: playing, bus, origin: at, loopSec: stems[0]?.buf.duration ?? 0 };
+  }
+
+  private release(fade: number): void {
+    const p = this.playing;
+    if (!p) return;
+    this.playing = null;
     const now = this.ctx.currentTime;
     const f = Math.max(0.02, fade);
-    v.gain.gain.cancelScheduledValues(now);
-    v.gain.gain.setValueAtTime(v.gain.gain.value, now);
-    v.gain.gain.linearRampToValueAtTime(0, now + f);
-    v.src.stop(now + f + 0.05);
-    v.src.onended = () => { v.src.disconnect(); v.gain.disconnect(); };
+    ramp(p.bus.gain, 0, now, f);
+    for (const s of p.stems) s.src.stop(now + f + 0.05);
+    const first = p.stems[0];
+    const cleanup = (): void => {
+      for (const s of p.stems) { s.src.disconnect(); s.gain.disconnect(); }
+      p.bus.disconnect();
+    };
+    if (first) first.src.onended = cleanup;
+    else cleanup();
   }
+}
+
+function ramp(param: AudioParam, to: number, now: number, fade: number): void {
+  param.cancelScheduledValues(now);
+  param.setValueAtTime(param.value, now);
+  param.linearRampToValueAtTime(to, now + fade);
 }

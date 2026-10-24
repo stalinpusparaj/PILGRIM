@@ -334,7 +334,7 @@ export class AudioEngine {
       // Phones play each tune as a baked loop (BakedMusic.ts): live synthesis stutters on budget CPUs.
       this.player = this.make('music', () =>
         LOW_POWER_AUDIO
-          ? new BakedMusic(ctx, mix.music, songs, new MusicPlayer(ctx, bank, mix.music, songs, mix.musicSend))
+          ? new BakedMusic(ctx, mix.music, songs)
           : new MusicPlayer(ctx, bank, mix.music, songs, mix.musicSend),
       );
     }
