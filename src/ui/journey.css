@@ -22,3 +22,15 @@ body.reduce-motion .journey-reward { animation:none; }
   .hud.is-touch .journey { top:var(--journey-top, calc(var(--hud-touch-top) + var(--safe-top))); bottom:auto !important; }
   .hud.is-touch .journey-reward { bottom:auto; top:calc(100% + 8px); }
 }
+/* Touch phones on their side: the tip and chapter line read at the top centre, between the satchel and pause
+   buttons, clear of Christian, the guide arrow and the thumbs (DECISIONS #401). */
+@media (max-height: 500px) {
+  .hud.is-touch .journey {
+    top: calc(8px + var(--safe-top)) !important; bottom: auto !important; left: 50%; transform: translateX(-50%);
+  }
+  .hud.is-touch .journey-stats { font-size: 12px; padding: 3px 10px; }
+  .hud.is-touch .journey-hint { font-size: 14px; line-height: 1.35; padding: 6px 10px; margin-top: 4px; }
+  .hud.is-touch .journey-reward { top: calc(100% + 6px); bottom: auto; }
+  /* A toast drops below the tip line rather than over it. */
+  .hud.is-touch .hud-toasts { top: calc(96px + var(--safe-top)); }
+}
