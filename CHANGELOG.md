@@ -2,6 +2,12 @@
 
 All notable changes to PILGRIM: THE NARROW WAY. Dates are release dates.
 
+## 0.2.1 — 2026-10-24 — Phone polish (versionCode 12)
+
+- Back button keeps the touch controls; Settings fits the phone screen; touch-only Controls.
+- Rate opens Google Play directly; sharper chapter pictures; locked chapters shown clearly with a shine.
+- Credits: GEM CREATORS and developer Stalin Pushparaj A, Chennai.
+
 ## 0.2.0 — 2026-10-24 — A richer journey (versionCode 11)
 
 - Premium look: frosted-glass menus, glossy buttons with icons, glass-orb game buttons.

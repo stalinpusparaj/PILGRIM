@@ -1,0 +1,4 @@
+- Settings now fits your phone screen.
+- The Back button keeps your touch controls.
+- Clearer, shinier chapter pictures.
+- Rate the game opens Google Play directly.
