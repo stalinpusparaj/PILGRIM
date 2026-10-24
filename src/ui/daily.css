@@ -6,6 +6,13 @@
 .pg-daily__sun { width: 52px; height: 52px; flex: none; animation: pg-daily-sun 6s ease-in-out infinite; }
 .pg-daily__title { margin: 0; }
 .pg-daily__body { display: flex; flex-direction: column; gap: 10px; }
+.pg-daily__cheer {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 16px; border-radius: 18px; text-align: center;
+  background: radial-gradient(circle at 50% 0%, #fff6d6, #f7d98c 85%); border: 2px solid #e8c25a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 3px 10px rgba(150, 100, 20, 0.25);
+}
+.pg-daily__cheer-text { margin: 0; font-family: var(--font-title, Georgia, serif); font-size: calc(var(--fs-body) * 1.25); font-weight: 700; line-height: 1.3; color: #5a3410; }
+body.lang-ta .pg-daily__cheer-text { font-family: var(--font-tamil); }
 .pg-daily__greet { margin: 0; text-align: center; color: var(--ink-soft); font-weight: 700; font-size: var(--fs-body); }
 .pg-daily__tips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .pg-daily__tip, .pg-daily__path, .pg-daily__quest, .pg-daily__lanterns {

@@ -6,7 +6,7 @@
 import './daily.css';
 import { PATH_STONES, QUESTS, daily, dayKey } from '../core/Daily';
 import { t } from '../core/I18n';
-import { tipsFor, type Tip } from '../game/daily-tips';
+import { cheerFor, tipsFor, type Tip } from '../game/daily-tips';
 import { h } from './dom';
 import { Menu } from './Menu';
 import { Texts, menuButton, playSfx, uid } from './menu-screen';
@@ -93,6 +93,12 @@ export class DailyCard {
       : null;
     const gift = this.gift ? h('p', { className: 'pg-daily__gift' }, t('ui.daily.gift', { name: t(`ui.daily.lantern.${this.gift}`) })) : null;
     this.body.replaceChildren(
+      h(
+        'div',
+        { className: 'pg-daily__cheer' },
+        h('span', { className: 'pg-daily__kind' }, t('ui.daily.kind.cheer')),
+        h('p', { className: 'pg-daily__cheer-text' }, t(cheerFor(dayKey()))),
+      ),
       h('p', { className: 'pg-daily__greet' }, t(d.days > 1 ? 'ui.daily.greetBack' : 'ui.daily.greet')),
       h('ul', { className: 'pg-daily__tips' }, ...tips),
       h(

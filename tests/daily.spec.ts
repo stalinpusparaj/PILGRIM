@@ -105,6 +105,7 @@ test("next day: Morning Manna with 3 tips, the path and a quest; LET'S GO closes
   await page.goto('/');
   const card = page.locator('.pg-daily');
   await expect(card).toBeVisible({ timeout: 30_000 });
+  await expect(card.locator('.pg-daily__cheer-text')).not.toBeEmpty();
   await expect(card.locator('.pg-daily__tip')).toHaveCount(3);
   await expect(card.locator('.pg-daily__tip--verse .pg-daily__ref')).not.toBeEmpty();
   await expect(card.locator('.pg-daily__stone.is-lit')).toHaveCount(5);
