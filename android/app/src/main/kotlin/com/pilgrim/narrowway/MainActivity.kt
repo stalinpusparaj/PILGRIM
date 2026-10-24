@@ -2,6 +2,7 @@ package com.pilgrim.narrowway
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
@@ -25,12 +26,18 @@ import androidx.webkit.WebViewAssetLoader
 class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
     private lateinit var voice: OfflineVoice
+    private lateinit var native: NativeBridge
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // Draw under the camera notch too; the game keeps its controls inside env(safe-area-inset-*).
+        if (Build.VERSION.SDK_INT >= 28) window.attributes = window.attributes.apply {
+            layoutInDisplayCutoutMode = if (Build.VERSION.SDK_INT >= 30) WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                else WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
 
         webView = WebView(this).apply {
             setBackgroundColor(Color.parseColor("#2B2235"))
@@ -55,6 +62,8 @@ class MainActivity : ComponentActivity() {
         }
         voice = OfflineVoice(this, webView)
         webView.addJavascriptInterface(voice, "PilgrimVoice")
+        native = NativeBridge(this, webView)
+        webView.addJavascriptInterface(native, "PilgrimNative")
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
@@ -100,10 +109,10 @@ class MainActivity : ComponentActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean =
         if (keyCode == KeyEvent.KEYCODE_BACK) { onBackPressedDispatcher.onBackPressed(); true } else super.onKeyDown(keyCode, event)
 
-    override fun onResume() { super.onResume(); webView.onResume(); webView.resumeTimers() }
-    override fun onPause() { voice.pause(); webView.pauseTimers(); webView.onPause(); super.onPause() }
+    override fun onResume() { super.onResume(); webView.onResume(); webView.resumeTimers(); native.requestFocus() }
+    override fun onPause() { voice.pause(); native.abandonFocus(); webView.pauseTimers(); webView.onPause(); super.onPause() }
     override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); webView.saveState(outState) }
-    override fun onDestroy() { voice.shutdown(); webView.removeJavascriptInterface("PilgrimVoice"); webView.destroy(); super.onDestroy() }
+    override fun onDestroy() { voice.shutdown(); webView.removeJavascriptInterface("PilgrimVoice"); webView.removeJavascriptInterface("PilgrimNative"); webView.destroy(); super.onDestroy() }
 
     private companion object {
         const val APP_HOST = "appassets.androidplatform.net"

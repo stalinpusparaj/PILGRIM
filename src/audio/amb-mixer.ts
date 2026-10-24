@@ -11,6 +11,7 @@
 import { DEFAULT_SETTINGS, type SettingsData } from '../core/Settings';
 import { services } from '../core/Services';
 import { createReverbImpulse } from './Synth';
+import { LOW_POWER_AUDIO } from './device';
 
 /** The engine's mixer nodes. For meters, tests and the music test page. */
 export interface AudioBuses {
@@ -48,7 +49,7 @@ export interface MixFlags {
 const MIX = { master: 1.4, music: 1, voice: 1.25, effects: 1, ambience: 0.8, reverb: 0.8 } as const;
 /** -6 dB (GDD 2.13: dialogue ducks music by 6 dB). */
 export const DUCK_GAIN = Math.pow(10, -6 / 20);
-const REVERB_SECONDS = 2.4;
+const REVERB_SECONDS = LOW_POWER_AUDIO ? 1.4 : 2.4;
 const REVERB_DECAY = 3;
 
 export class Mixer implements AudioBuses {

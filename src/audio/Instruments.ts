@@ -17,6 +17,7 @@
 import { Rng, hashString } from '../gen/rng';
 import type { InstrumentId } from './types';
 import { midiToHz } from './Synth';
+import { LOW_POWER_AUDIO } from './device';
 import { Kit, velCurve, type BuilderTable, type NoteSpec } from './inst-kit';
 import { SharedRig } from './inst-shared';
 import { Voice, VoicePool } from './inst-voice';
@@ -56,7 +57,7 @@ export const LEVEL: Readonly<Record<Exclude<InstrumentId, 'drums'>, number>> = {
 
 const BUILDERS: BuilderTable = { pluck, pad, bell, flute, bass, marimba, choir, musicbox, strings };
 
-const MAX_VOICES = 24;
+const MAX_VOICES = LOW_POWER_AUDIO ? 10 : 24;
 /** Fade time constant for a stolen voice (s); it is fully stopped ~70 ms later. */
 const STEAL_TC = 0.012;
 

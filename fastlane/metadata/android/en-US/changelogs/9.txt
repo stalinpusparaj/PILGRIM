@@ -1,0 +1,4 @@
+- Smooth music on budget phones.
+- Gentler touch control and a real walking pace.
+- Tap the hand bubble over an object to use it; tips read at the top.
+- Vibration, pausing for phone calls, full-screen under the notch.

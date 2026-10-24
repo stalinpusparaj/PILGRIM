@@ -15,8 +15,8 @@ export const TAU = Math.PI * 2;
 
 /** Facing turn: exponential ease (per second) with a top speed (rad/s). Burdened turns are slower and heavier. */
 export const TURN = {
-  free: { ease: 16, max: 13 },
-  burdened: { ease: 9, max: 7 },
+  free: { ease: 10, max: 7 },
+  burdened: { ease: 6, max: 4 },
 } as const;
 
 /** Wish speeds below this (m/s) leave the facing alone. */

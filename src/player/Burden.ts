@@ -48,19 +48,19 @@ export const FREE_MOVE: Readonly<MoveParams> = {
   slopeLimit: 40,
   stepUp: 0.3,
 };
-/** Burdened at size 1: responsive walking and a faster heavy stride, with a stubby hop. */
+/** Burdened at size 1 (GDD 2.7.1): a slow heavy 2.0 m/s walk, no running, a stubby hop. */
 export const BURDENED_MOVE: Readonly<MoveParams> = {
-  walkSpeed: 3.0,
-  runSpeed: 4.2,
+  walkSpeed: 2.0,
+  runSpeed: 2.0,
   jumpHeight: 0.3,
   gravity: 28,
-  accel: 14,
+  accel: 9,
   airControl: 0.3,
   slopeLimit: 40,
   stepUp: 0.3,
 };
 /** Walk speed at the biggest sack. */
-const BIG_WALK = 2.6;
+const BIG_WALK = 1.6;
 /** From this size the feet drag ruts. */
 const RUT_FROM = 1.1;
 /** Seconds between creaks while walking burdened (random in range). */

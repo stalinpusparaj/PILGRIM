@@ -68,8 +68,8 @@ export const CAMERA = {
   /** Auto-camera: recenters behind the player after manual look input pauses. */
   auto: {
     idle: 0.9,
-    yawRate: 3.2,
-    maxYawRate: 1.8,
+    yawRate: 2.2,
+    maxYawRate: 1.2,
     pitchRate: 1.6,
 
   },

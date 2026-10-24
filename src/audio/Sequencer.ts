@@ -19,6 +19,7 @@
 import { prepareSong, type PreparedSong } from './seq-song';
 import { SongRuntime, type SequencerInstruments } from './seq-runtime';
 import type { MusicState, SongDef, SongId } from './types';
+import { LOW_POWER_AUDIO } from './device';
 
 export { parseTrack, pitchToMidi, type ParsedNote, type DrumKind } from './seq-parse';
 export { validateSong } from './seq-validate';
@@ -27,7 +28,7 @@ export type { SequencerInstruments, NoteEvent } from './seq-runtime';
 /** Scheduler tick while the context runs (ms). */
 export const TICK_MS = 25;
 /** Notes starting within this many seconds of ctx.currentTime are scheduled each tick. */
-export const LOOKAHEAD = 0.12;
+export const LOOKAHEAD = LOW_POWER_AUDIO ? 0.4 : 0.12;
 /** Tick while the context is suspended or interrupted (ms): only waits for it to run again. */
 const IDLE_TICK_MS = 250;
 /** A new song starts this long after play() so its first notes are scheduled in time. */

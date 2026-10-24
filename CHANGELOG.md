@@ -2,6 +2,14 @@
 
 All notable changes to PILGRIM: THE NARROW WAY. Dates are release dates.
 
+## 0.1.8 — 2026-10-24 — Smooth on phones (versionCode 9)
+
+- Music plays smoothly on budget phones: each tune is prepared once on the device, then plays as a smooth loop.
+- Gentler touch control: a light push walks, the run needs a firm push; dragging most of the screen walks instead of turning the camera.
+- A real walking pace with the Burden, and calmer turns and camera.
+- Tap the hand bubble over an object to use it; the tip line reads at the top of the screen.
+- Haptics, pausing for phone calls, and full-screen under the camera notch.
+
 ## 0.1.7 — 2026-10-24 — Room to play (versionCode 8)
 
 - Play shows only the controls: the objective and tips stay long enough for slow readers, then fade.

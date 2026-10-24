@@ -27,9 +27,19 @@ const TAIL = 4;
 const STEP = TICK_MS / 1000;
 const AHEAD = LOOKAHEAD;
 /** MusicPlayer starts a song this long after play(); notes of the loop after the last one start no earlier. */
-const SONG_START = 0.06;
+export const SONG_START = 0.06;
 /** A state change starts this long (at most 80 % of a bar) before its loop, so new layers join on its downbeat. */
 const STATE_LEAD = 2;
+
+/** Options for renderSong: the game's baked phone music (BakedMusic.ts) renders lighter and dry of volume. */
+export interface RenderOptions {
+  /** Sample rate of the render (default RENDER_RATE). */
+  sampleRate?: number;
+  /** Seconds between scheduling pauses (default the realtime tick); look-ahead is this plus LOOKAHEAD. */
+  step?: number;
+  /** Music at unity gain, ignoring the volume settings (the realtime music bus applies them later). */
+  unity?: boolean;
+}
 
 /** `loops` loops of the song in `state`. */
 export interface SongSegment {
@@ -52,7 +62,11 @@ export async function renderSong(
   id: SongId,
   segments: readonly SongSegment[] = [{ state: 'calm', loops: 1 }],
   songs: Partial<Record<SongId, SongDef>> = SONGS,
+  opts: RenderOptions = {},
 ): Promise<AudioBuffer> {
+  const rate = opts.sampleRate ?? RENDER_RATE;
+  const step = opts.step ?? STEP;
+  const ahead = opts.step ? opts.step + AHEAD : AHEAD;
   const def = songs[id];
   const first = segments[0];
   if (!def || !first) throw new Error(`renderSong: no song "${id}" or no segments`);
@@ -68,12 +82,14 @@ export async function renderSong(
   const musicEnd = loops * loopSec + SONG_START / 2;
   const ctx = new OfflineAudioContext({
     numberOfChannels: 2,
-    length: Math.ceil((musicEnd + TAIL) * RENDER_RATE),
-    sampleRate: RENDER_RATE,
+    length: Math.ceil((musicEnd + TAIL) * rate),
+    sampleRate: rate,
   });
   const mix = new Mixer(ctx);
   mix.apply(FLAGS, 0);
+  if (opts.unity) for (const g of [mix.master, mix.music, mix.musicSend]) g.gain.value = 1;
   const bank = new InstrumentBank(ctx, mix.musicSend);
+  if (opts.unity) bank.maxVoices = 24; // a bake is not realtime: the phone's live voice cap does not apply
   // Notes of the loop after the last one are dropped, so the file ends with the song's own ring-out.
   const gate: SequencerInstruments = {
     play: (inst, n, out, wet) => {
@@ -86,27 +102,27 @@ export async function renderSong(
   const player = new MusicPlayer(ctx, gate, mix.music, { [id]: def }, mix.musicSend);
   try {
     player.play(id, 0, first.state);
-    player.scheduleUntil(AHEAD);
+    player.scheduleUntil(ahead);
     // Pause the render on a grid (plus at every state change) and schedule ahead, like the realtime look-ahead,
     // so the bank's voice limit sees the real clock.
     const frames = new Set<number>();
     const pause = (t: number): void => {
-      const frame = Math.floor((t * RENDER_RATE) / QUANTUM) * QUANTUM;
+      const frame = Math.floor((t * rate) / QUANTUM) * QUANTUM;
       if (frame <= 0 || frame >= ctx.length || frames.has(frame)) return;
       frames.add(frame);
-      const at = frame / RENDER_RATE;
+      const at = frame / rate;
       void ctx.suspend(at).then(() => {
         for (const c of changes) {
-          if (c.done || c.at > at + QUANTUM / RENDER_RATE) continue;
+          if (c.done || c.at > at + QUANTUM / rate) continue;
           c.done = true;
           player.setState(c.state, lead);
         }
-        player.scheduleUntil(Math.min(at + AHEAD, musicEnd));
+        player.scheduleUntil(Math.min(at + ahead, musicEnd));
         return ctx.resume();
       });
     };
     for (const c of changes) pause(c.at);
-    for (let t = STEP; t < musicEnd; t += STEP) pause(t);
+    for (let t = step; t < musicEnd; t += step) pause(t);
     return await ctx.startRendering();
   } finally {
     player.dispose();

@@ -65,7 +65,7 @@ export class PlayGifts {
 
   /** The round touch buttons for right now. */
   buttons(): TouchButton[] {
-    const list: TouchButton[] = ['jump', 'use'];
+    const list: TouchButton[] = ['jump']; // USE on touch = tap the hand bubble over the object (Touch.tapBubble)
     if (this.state.hasGift('prayer')) list.push('pray');
     if (this.combat.active) {
       if (this.state.hasGift('sword')) list.push('sword');

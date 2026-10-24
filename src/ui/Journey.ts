@@ -75,6 +75,7 @@ export class Journey {
     this.el.hidden = !visible || (this.hintTime <= 0 && this.rewardTime <= 0);
     this.el.classList.toggle('is-reading', this.hintTime > 0);
     if (!visible) return;
+    if (!this.el.hidden) this.placeUnderObjective();
     const input = services.tryGet('input');
     const state = services.tryGet('state');
     if (input && state) {
@@ -89,6 +90,17 @@ export class Journey {
     if (this.clock < 0.25) return;
     this.clock = 0;
     this.refresh();
+  }
+
+  /**
+   * On a touch phone the tip sits at the top, just under the objective banner (or the corner icons), so the play
+   * area and the thumbs' buttons stay clear (journey.css `.hud.is-touch .journey`).
+   */
+  private placeUnderObjective(): void {
+    const obj = this.el.parentElement?.querySelector<HTMLElement>('.hud-objective');
+    const box = obj && getComputedStyle(obj).visibility !== 'hidden' ? obj.getBoundingClientRect() : null;
+    const parentTop = this.el.parentElement?.getBoundingClientRect().top ?? 0;
+    this.el.style.setProperty('--journey-top', box && box.height > 0 ? `${Math.round(box.bottom - parentTop + 8)}px` : '');
   }
 
   private refresh(): void {

@@ -120,7 +120,7 @@ for (const phone of PHONES) {
           ),
         )
         .toBe('looking_glass_use');
-      const use = page.locator('.pg-touch-btn[data-id="use"]');
+      const use = page.locator('.hud-bubble.is-on');
       await expect(use).toBeVisible();
       const ub = (await use.boundingBox())!;
       await page.touchscreen.tap(ub.x + ub.width / 2, ub.y + ub.height / 2);

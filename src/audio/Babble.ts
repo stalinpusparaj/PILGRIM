@@ -27,6 +27,7 @@ import {
 } from './babblePlan';
 import { WAVE_MIX, createLevelScratch, loudness, type LevelScratch } from './babbleLevel';
 import type { Mood, Vec3, VoiceParams } from './types';
+import { LOW_POWER_AUDIO } from './device';
 
 export interface BabbleOptions {
   mood?: Mood;
@@ -43,7 +44,7 @@ export interface BabbleHandle {
   readonly done: Promise<void>;
 }
 
-const LOOKAHEAD = 0.12;
+const LOOKAHEAD = LOW_POWER_AUDIO ? 0.25 : 0.12;
 const TICK_MS = 25;
 const START_DELAY = 0.03;
 /** Blip envelope peak before loudness normalisation. */

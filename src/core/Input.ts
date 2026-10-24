@@ -50,6 +50,10 @@ declare module './Events' {
 const PAD_SOURCES = PAD_BINDINGS.map(([button, actions]) => ({ button, actions, token: `p:${button}` }));
 const TOUCH_IDS = Object.keys(TOUCH_ACTIONS) as TouchControlId[];
 const TOUCH_DEADZONE = 0.12;
+/** Touch response curve: a half push walks at ~1/3 speed, so small thumbs are not always at full speed. */
+const TOUCH_CURVE = 1.6;
+/** The knob must stay at the edge this long (s) before it counts as run: a quick flick only walks. */
+const TOUCH_RUN_DELAY = 0.35;
 /** Mouse events this soon after a touch are the browser's emulation of that touch. */
 const TOUCH_MOUSE_GUARD_MS = 1000;
 
@@ -77,6 +81,7 @@ export class Input {
   private touch: TouchControls | null = null;
   private lastTouchAt = -Infinity;
   private readonly thumb = { x: 0, y: 0 };
+  private touchEdgeTime = 0;
   private readonly mouseDelta = { x: 0, y: 0 };
   private mouseLookPx = 0;
   private readonly touchDelta = { x: 0, y: 0 };
@@ -210,7 +215,15 @@ export class Input {
     this.pollPad();
     const stick = this.touch?.visible ? this.touch.stick : null;
     radialDeadzone(this.thumb, stick?.x ?? 0, stick?.y ?? 0, TOUCH_DEADZONE);
-    this.actions.set('run', 't:stick', stick !== null && Math.hypot(stick.x, stick.y) >= TOUCH_RUN_EDGE);
+    const mag = Math.hypot(this.thumb.x, this.thumb.y);
+    if (mag > 0) {
+      const k = Math.pow(mag, TOUCH_CURVE) / mag;
+      this.thumb.x *= k;
+      this.thumb.y *= k;
+    }
+    const atEdge = stick !== null && Math.hypot(stick.x, stick.y) >= TOUCH_RUN_EDGE;
+    this.touchEdgeTime = atEdge ? this.touchEdgeTime + FIXED_DT : 0;
+    this.actions.set('run', 't:stick', this.touchEdgeTime >= TOUCH_RUN_DELAY);
     this.actions.latch(FIXED_DT);
     this.updateMove();
     this.updateLook();

@@ -20,6 +20,8 @@ import type { Camera } from 'three';
 import { SONGS } from '../../content/music/themes';
 import { events } from '../core/Events';
 import { SpokenVoice } from './SpokenVoice';
+import { LOW_POWER_AUDIO } from './device';
+import { BakedMusic, type MusicBackend } from './BakedMusic';
 import { services } from '../core/Services';
 import { hashString } from '../gen/rng';
 import { Ambience } from './Ambience';
@@ -104,7 +106,7 @@ export class AudioEngine {
   private ctx: AudioContext | null = null;
   private mixer: Mixer | null = null;
   private listener: ListenerSync | null = null;
-  private player: MusicPlayer | null = null;
+  private player: MusicBackend | null = null;
   private bank: InstrumentBank | null = null;
   private sfx: SfxBank | null = null;
   private voices: Babble | null = null;
@@ -165,7 +167,7 @@ export class AudioEngine {
   }
 
   /** The sequencer (song info, problems, position) for the music test page; null before unlock. */
-  get musicPlayer(): MusicPlayer | null {
+  get musicPlayer(): MusicBackend | null {
     return this.player;
   }
 
@@ -309,7 +311,7 @@ export class AudioEngine {
     try {
       if (!Ctor) throw new Error('Web Audio is not available');
       if (this.session) setAudioSession(this.session);
-      const ctx = new Ctor({ latencyHint: 'interactive' });
+      const ctx = new Ctor({ latencyHint: LOW_POWER_AUDIO ? 'playback' : 'interactive' });
       ctx.addEventListener('statechange', this.onStateChange);
       this.ctx = ctx;
       return ctx;
@@ -329,7 +331,12 @@ export class AudioEngine {
     const bank = (this.bank = this.make('instruments', () => new InstrumentBank(ctx, mix.musicSend)));
     const songs = this.songs;
     if (bank) {
-      this.player = this.make('music', () => new MusicPlayer(ctx, bank, mix.music, songs, mix.musicSend));
+      // Phones play each tune as a baked loop (BakedMusic.ts): live synthesis stutters on budget CPUs.
+      this.player = this.make('music', () =>
+        LOW_POWER_AUDIO
+          ? new BakedMusic(ctx, mix.music, songs, new MusicPlayer(ctx, bank, mix.music, songs, mix.musicSend))
+          : new MusicPlayer(ctx, bank, mix.music, songs, mix.musicSend),
+      );
     }
     this.sfx = this.make('sfx', () => new SfxBank(ctx, mix.effects));
     this.voices = this.make('babble', () => new Babble(ctx, mix.voice));

@@ -102,7 +102,7 @@ test('keyboard: W walks away from the camera, Space hops, E at a waystone saves 
   expect(problems, problems.join('\n')).toEqual([]);
 });
 
-test('touch: the joystick moves the player, JUMP jumps and USE reads a waystone', async ({ page }) => {
+test('touch: the joystick moves the player, JUMP jumps and tapping the bubble reads a waystone', async ({ page }) => {
   const problems = watchConsole(page);
   await openPlay(page);
   await toWayStart(page);
@@ -120,7 +120,8 @@ test('touch: the joystick moves the player, JUMP jumps and USE reads a waystone'
     document.body.dispatchEvent(new PointerEvent('pointerup', opts));
   });
   await expect(page.locator('.pg-touch-btn[data-id="jump"]')).toBeVisible();
-  await expect(page.locator('.pg-touch-btn[data-id="use"]')).toBeVisible();
+  // No bottom USE button on touch: the hand bubble over the object is tapped instead.
+  await expect(page.locator('.pg-touch-btn[data-id="use"]')).toBeHidden();
 
   const a = await playerPos(page);
   await page.evaluate(() => {
@@ -170,7 +171,17 @@ test('touch: the joystick moves the player, JUMP jumps and USE reads a waystone'
   await expect.poll(() => bubbleText(page)).not.toBeNull();
   expect(await bubbleGlyph(page)).toEqual({ device: 'touch', key: null, icon: true });
   await page.screenshot({ path: `${SHOT_DIR_PLAY}/interaction-bubble-touch.png` });
-  await tap('use', 120);
+  await page.evaluate(() => {
+    const r = document.querySelector('.hud-bubble.is-on')!.getBoundingClientRect();
+    const x = r.left + r.width / 2;
+    const zone = [...document.querySelectorAll('.pg-touch-zone')].find((z) => {
+      const zr = z.getBoundingClientRect();
+      return x >= zr.left && x <= zr.right;
+    })!;
+    const o = { pointerId: 13, pointerType: 'touch', clientX: x, clientY: r.top + r.height / 2, bubbles: true, cancelable: true };
+    zone.dispatchEvent(new PointerEvent('pointerdown', o));
+    zone.dispatchEvent(new PointerEvent('pointerup', o));
+  });
   await expect.poll(() => logged(page, 'save:written'), { timeout: 5000 }).toContainEqual({ slot: 'auto' });
   expect(problems, problems.join('\n')).toEqual([]);
 });
@@ -231,7 +242,7 @@ test('gamepad: left stick moves, A jumps, X uses a waystone', async ({ page }) =
   expect(problems, problems.join('\n')).toEqual([]);
 });
 
-test('Normal pace: burdened walk ~2.4 and fast walk ~3.36 m/s; after the debug Cross drop free walk ~2.72, run ~4.8 and three joy jumps', async ({
+test('Normal pace: burdened walk ~1.6 m/s with no running; after the debug Cross drop free walk ~2.72, run ~4.8 and three joy jumps', async ({
   page,
 }) => {
   test.setTimeout(150_000);
@@ -240,7 +251,7 @@ test('Normal pace: burdened walk ~2.4 and fast walk ~3.36 m/s; after the debug C
   await toWayStart(page);
   const w = keys(page, ['KeyW']);
   const burdened = await measureSpeed(page, w.down, w.up);
-  // Full input offers a faster stride while retaining the burdened animation.
+  // Burdened: holding run changes nothing (GDD 2.7.1).
   await toWayStart(page);
   const sw = keys(page, ['ShiftLeft', 'KeyW']);
   const burdenedRun = await measureSpeed(page, sw.down, sw.up);

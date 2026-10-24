@@ -157,7 +157,7 @@ export class Interactables {
 
   /** Uses the focused thing now (a tap on the bubble, tests). Ignores `holdSeconds`. False when nothing is focused. */
   useFocused(): boolean {
-    if (!this.current || this.disposed) return false;
+    if (!this.current || this.disposed || this.player.mode !== 'play' || this.player.walkOnly === true) return false;
     this.use(this.current);
     return true;
   }

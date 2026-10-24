@@ -1,9 +1,9 @@
 /**
  * On-screen touch controls (GDD 2.6 "Touch").
  *
- * - Floating joystick on the left half: the stick is centred where the thumb lands (the drawn base stays
+ * - Floating joystick on the left 70 % of the screen: the stick is centred where the thumb lands (the drawn base stays
  *   inside the screen near an edge), the knob clamps to the radius, pushing it to the edge means run.
- * - Drag on the right half = look.
+ * - Drag on the right 30 % = look (auto-camera does the rest).
  * - Big round buttons bottom-right (>= 72 px): JUMP, USE, PRAY, SWORD, SHIELD (setButtons picks which).
  * - Satchel icon top-left, pause icon top-right.
  *
@@ -11,6 +11,7 @@
  * object, reads `stick` each fixed step and receives buttons and look deltas through TouchHost.
  */
 import { events } from '../core/Events';
+import { services } from '../core/Services';
 import { t } from '../core/I18n';
 import type { Action, TouchButton } from '../core/Input';
 import { icon, type IconName } from './Svg';
@@ -35,9 +36,9 @@ export interface TouchHost {
 }
 
 /** Knob travel in px. */
-const STICK_RADIUS = 64;
+const STICK_RADIUS = 76;
 /** Knob pushed this far (0..1 of the radius) counts as run. */
-export const TOUCH_RUN_EDGE = 0.9;
+export const TOUCH_RUN_EDGE = 0.97;
 /** Draw the joystick base at least this far from the screen edges, in px (the stick centre is not moved). */
 const EDGE_MARGIN = 12;
 
@@ -57,7 +58,7 @@ const CSS = `
 .pg-touch{position:fixed;inset:0;z-index:5;pointer-events:none;user-select:none;-webkit-user-select:none;
   -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .pg-touch[hidden],.pg-touch-btn[hidden]{display:none}
-.pg-touch-zone{position:absolute;top:0;bottom:0;width:50%;pointer-events:auto;touch-action:none}
+.pg-touch-zone{position:absolute;top:0;bottom:0;width:30%;pointer-events:auto;touch-action:none}
 .pg-touch-stick{position:absolute;left:0;top:0;width:${STICK_RADIUS * 2}px;height:${STICK_RADIUS * 2}px;
   margin:-${STICK_RADIUS}px 0 0 -${STICK_RADIUS}px;border-radius:50%;box-sizing:border-box;
   background:rgba(255,248,234,.16);border:3px solid rgba(255,248,234,.55);pointer-events:none;opacity:0;
@@ -76,6 +77,10 @@ const CSS = `
 .pg-touch-btn.down{transform:scale(.92);background:rgba(242,179,61,.7)}
 .pg-touch-btn svg{width:44%;height:44%}
 .pg-touch-btn.small svg{width:56%;height:56%}
+.pg-touch-btn.idle{opacity:.45}
+.pg-touch-btn.ready{background:rgba(242,179,61,.55);border-color:#ffd27a;box-shadow:0 0 0 4px rgba(255,210,122,.35),0 4px 14px rgba(28,20,34,.4)}
+@media (prefers-reduced-motion:no-preference){.pg-touch-btn.ready{animation:pg-use-pulse 1.4s ease-in-out infinite}}
+@keyframes pg-use-pulse{50%{box-shadow:0 0 0 10px rgba(255,210,122,.12),0 4px 14px rgba(28,20,34,.4)}}
 body.lang-ta .pg-touch-btn{font-size:10px;letter-spacing:0;padding:0 6px;text-align:center}
 `;
 let styleUsers = 0;
@@ -115,6 +120,7 @@ export class TouchControls {
     this.root.hidden = true;
     const left = div('pg-touch-zone');
     left.style.left = '0';
+    left.style.width = '70%'; // most of the screen moves him: kids drag anywhere; the camera follows by itself
     const right = div('pg-touch-zone');
     right.style.right = '0';
     this.base = div('pg-touch-stick');
@@ -155,8 +161,11 @@ export class TouchControls {
     this.on(right, 'pointermove', this.onLookMove);
     this.on(this.root, 'contextmenu', (e) => e.preventDefault());
     this.offs.push(events.on('lang:changed', () => this.refreshLabels()));
+    // USE only works when something is in reach: dim it otherwise, glow when it would do something.
+    this.offs.push(events.on('interact:focus', (e) => this.setUseReady(e.id !== null)));
 
     this.refreshLabels();
+    this.setUseReady(false);
     parent.appendChild(this.root);
   }
 
@@ -188,6 +197,23 @@ export class TouchControls {
     for (const off of this.offs.splice(0)) off();
     this.root.remove();
     if (--styleUsers === 0) document.getElementById(STYLE_ID)?.remove();
+  }
+
+  /** A touch on the hand bubble over an object uses that object (no bottom USE button on touch). */
+  private tapBubble(e: PointerEvent): boolean {
+    const bubble = document.querySelector('.hud-bubble.is-on');
+    if (!bubble) return false;
+    const r = bubble.getBoundingClientRect();
+    const pad = 16;
+    if (e.clientX < r.left - pad || e.clientX > r.right + pad || e.clientY < r.top - pad || e.clientY > r.bottom + pad) return false;
+    e.preventDefault();
+    return services.tryGet('interactables')?.useFocused() ?? false;
+  }
+
+  private setUseReady(ready: boolean): void {
+    const el = this.buttons.get('use')?.el;
+    el?.classList.toggle('ready', ready);
+    el?.classList.toggle('idle', !ready);
   }
 
   // ------------------------------------------------------------------------------------------- build
@@ -250,6 +276,7 @@ export class TouchControls {
 
   private readonly onStickDown = (e: PointerEvent): void => {
     e.preventDefault();
+    if (this.tapBubble(e)) return;
     if (this.stickPointer !== null) return;
     this.stickPointer = e.pointerId;
     capturePointer(e.currentTarget, e.pointerId);
@@ -299,6 +326,7 @@ export class TouchControls {
 
   private readonly onLookDown = (e: PointerEvent): void => {
     e.preventDefault();
+    if (this.tapBubble(e)) return;
     if (this.lookPointer !== null) return;
     this.lookPointer = e.pointerId;
     capturePointer(e.currentTarget, e.pointerId);

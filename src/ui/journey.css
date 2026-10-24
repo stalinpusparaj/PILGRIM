@@ -16,3 +16,9 @@ body.reduce-motion .journey-reward { animation:none; }
 /* Outside its reading time only a reward shows; the hint and chapter line fade out with the objective. */
 .journey:not(.is-reading) .journey-stats,
 .journey:not(.is-reading) .journey-hint { display:none; }
+/* Touch phones in portrait: the tip reads at the top, under the objective (Journey.placeUnderObjective), never
+   over the play area or the thumbs' buttons; a reward pops just below it. */
+@media(min-height:501px) {
+  .hud.is-touch .journey { top:var(--journey-top, calc(var(--hud-touch-top) + var(--safe-top))); bottom:auto !important; }
+  .hud.is-touch .journey-reward { bottom:auto; top:calc(100% + 8px); }
+}
