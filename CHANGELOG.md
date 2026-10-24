@@ -2,6 +2,12 @@
 
 All notable changes to PILGRIM: THE NARROW WAY. Dates are release dates.
 
+## 0.1.9 — 2026-10-24 — Follow the Way (versionCode 10)
+
+- Hold your thumb on the screen and Christian walks the Way by himself; drag to explore.
+- Music stays smooth through every mood change, and every song is prepared in the background.
+- Cooler phones: 30 fps by default on phones, and the game eases off when the phone gets warm.
+
 ## 0.1.8 — 2026-10-24 — Smooth on phones (versionCode 9)
 
 - Music plays smoothly on budget phones: each tune is prepared once on the device, then plays as a smooth loop.
