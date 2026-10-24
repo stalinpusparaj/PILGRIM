@@ -242,8 +242,16 @@ async function boot(): Promise<void> {
 
   // Quality: one listener applies every preset change (settings, auto pick, debug buttons) to the Engine.
   const quality = new Quality();
-  events.on('quality:changed', () => engine.applyQuality(effectivePreset(quality)));
+  // Body class fx-low / fx-medium / fx-high: gloss.css keeps cheap phones light and adds effects on strong ones.
+  const markFx = (): void => {
+    for (const l of ['low', 'medium', 'high'] as const) document.body.classList.toggle(`fx-${l}`, quality.level === l);
+  };
+  events.on('quality:changed', () => {
+    engine.applyQuality(effectivePreset(quality));
+    markFx();
+  });
   await quality.resolve(settings.data.quality, engine.renderer);
+  markFx();
   // Frame cap and resolution, eased off while the phone reports heat (NativeShell 'device:thermal').
   let thermal = 0;
   const applyPacing = (): void => {

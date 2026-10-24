@@ -253,11 +253,49 @@ body .pg-touch .pg-touch-btn.ready {
   color: #3a2408;
 }
 
+/* ---------------------------------------------------------------- device tiers (main.ts fx-*) */
+
+/* Low (budget phones): no live blur, rays, motes or sweeps: a solid warm glass tint costs nothing per frame. */
+body.fx-low .pg-screen.pg-pause,
+body.fx-low .pg-screen.pg-chapters,
+body.fx-low .pg-screen.pg-credits,
+body.fx-low .pg-screen.pg-demo-end {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background:
+    radial-gradient(120% 80% at 50% 38%, rgba(255, 214, 140, 0.14), rgba(0, 0, 0, 0) 60%),
+    radial-gradient(140% 100% at 50% 50%, rgba(36, 24, 44, 0.78) 40%, rgba(16, 10, 22, 0.94) 100%);
+}
+body.fx-low .pg-screen::before,
+body.fx-low .pg-screen::after,
+body.fx-low .btn::before { display: none; }
+
+/* High (strong phones, tablets, computers): richer glass, a warm halo round the panel, breathing orbs. */
+body.fx-high .pg-screen.pg-pause,
+body.fx-high .pg-screen.pg-chapters,
+body.fx-high .pg-screen.pg-credits,
+body.fx-high .pg-screen.pg-demo-end {
+  -webkit-backdrop-filter: blur(18px) saturate(1.5) brightness(0.8);
+  backdrop-filter: blur(18px) saturate(1.5) brightness(0.8);
+}
+body.fx-high .pg-screen .panel { animation: gloss-halo 5s ease-in-out infinite alternate; }
+@keyframes gloss-halo {
+  from { filter: drop-shadow(0 0 0 rgba(255, 210, 122, 0)); }
+  to { filter: drop-shadow(0 0 18px rgba(255, 210, 122, 0.45)); }
+}
+body.fx-high .pg-screen::after { animation-duration: 9s; }
+body.fx-high .pg-touch .pg-touch-btn.ready { animation: gloss-orb 1.6s ease-in-out infinite; }
+@keyframes gloss-orb {
+  50% { box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 0 0 6px rgba(255, 210, 122, 0.25), 0 0 24px rgba(255, 210, 122, 0.6); }
+}
+
 /* ---------------------------------------------------------------- reduce motion */
 
 body.reduce-motion .btn::before,
 body.reduce-motion .pg-screen::before,
-body.reduce-motion .pg-screen::after { animation: none; }
+body.reduce-motion .pg-screen::after,
+body.reduce-motion .pg-screen .panel,
+body.reduce-motion .pg-touch-btn { animation: none; }
 @media (prefers-reduced-motion: reduce) {
   body .btn::before, body .pg-screen::before, body .pg-screen::after { animation: none; }
 }

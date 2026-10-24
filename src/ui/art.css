@@ -1,42 +1,9 @@
 /*
- * Shipped art (public/art/, see src/ui/art.ts): where the generated images are painted. Each rule layers
- * the image under the existing cream panels, so every screen keeps its chunky toy look and its contrast.
- * `--art` is set per element by the TS (chapter tiles, the loading screen, the chapter card).
+ * Chapter pictures (src/ui/art.ts): each land's 3D diorama, drawn by our renderer (src/gen/Diorama.ts), is set
+ * per element as `--art`. The title shows its own live 3D landscape (TitleScene) and our SVG emblem.
  */
 
-/* ---------------------------------------------------------------- title */
-
-/* The painted backdrop is now the title's landscape: it stays (no fade to the 3D scene) with a slow drift. */
-.pg-screen .pg-title__backdrop {
-  background: #5e6fa8 url(/art/title.jpg) center / cover no-repeat;
-  transform-origin: 55% 60%;
-  animation: pg-art-drift 40s ease-in-out infinite alternate;
-}
-.pg-screen.pg-title.is-scene-ready .pg-title__backdrop { opacity: 1; }
-@media (orientation: portrait) {
-  .pg-screen .pg-title__backdrop { background-image: url(/art/title-portrait.jpg); background-position: 50% 40%; }
-}
-@keyframes pg-art-drift {
-  from { transform: scale(1.02) translate(0, 0); }
-  to { transform: scale(1.1) translate(-1.5%, -1%); }
-}
-/* The painted app icon replaces the SVG emblem on the title and loading screens. */
-.pg-title__emblem img, .pg-loading__emblem img {
-  display: block; width: 100%; height: 100%; border-radius: 22%; object-fit: cover;
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.22), 0 10px 24px rgba(0, 0, 0, 0.35);
-}
-.pg-title__emblem img {
-  width: clamp(56px, 11vh, 104px); height: clamp(56px, 11vh, 104px); margin: 0 auto 10px;
-  animation: pg-emblem-float 4.2s ease-in-out infinite;
-}
-
-/* ---------------------------------------------------------------- menus */
-
-/* Pause, Chapters, Credits and the demo end sit on the dimmed hero key art. */
-.pg-screen.pg-pause, .pg-screen.pg-chapters, .pg-screen.pg-credits, .pg-screen.pg-demo-end {
-  background: linear-gradient(180deg, rgba(28, 20, 34, 0.72), rgba(28, 20, 34, 0.8)),
-    #2b2235 url(/art/key-art.jpg) center / cover no-repeat;
-}
+.pg-title__emblem svg, .pg-loading__emblem svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35)); }
 
 /* Chapter tiles: the chapter's card art as a tall swatch; chapters without art keep the palette swatch. */
 .pg-chapter .pg-chapter__swatch { background-image: var(--art, none); background-size: cover; background-position: center; }
