@@ -8,6 +8,8 @@
  *   select.setFurthest(5);   // from Save.list()
  */
 import { buildFlags } from '../core/Flags';
+import { entitlement } from '../core/Entitlement';
+import { events } from '../core/Events';
 import { t } from '../core/I18n';
 import { PALETTES, type PaletteId } from '../gen/palette';
 import { h } from './dom';
@@ -57,8 +59,9 @@ export function chapterKey(n: number): string {
   return n === EPILOGUE ? 'epilogue' : String(n);
 }
 
-export function chapterLock(n: number, furthest: number, demo = buildFlags.DEMO): ChapterLock {
-  if (demo && n > DEMO_LAST_CHAPTER) return 'demo';
+/** 'demo': beyond the free chapters and not unlocked (the demo build, or the full journey not bought yet). */
+export function chapterLock(n: number, furthest: number, paid = entitlement.isChapterLocked(n)): ChapterLock {
+  if (paid && n > DEMO_LAST_CHAPTER) return 'demo';
   return n <= Math.max(1, furthest) ? 'open' : 'locked';
 }
 
@@ -67,6 +70,8 @@ export class ChapterSelect {
   // A language change also re-writes the progress lines ("Promises 0/1"), which are not bound keys.
   private readonly texts = new Texts(() => this.applyLocks());
   private readonly cards = new Map<number, HTMLButtonElement>();
+  /** A purchase (or a lapsed subscription) re-draws the locks at once. */
+  private readonly offBilling = events.on('billing:changed', () => this.applyLocks());
   private readonly menu: Menu;
   private furthest = 1;
   private progress: ((chapter: number) => string | null) | null = null;
@@ -140,6 +145,7 @@ export class ChapterSelect {
   }
 
   dispose(): void {
+    this.offBilling();
     this.menu.dispose();
     this.texts.dispose();
     this.root.remove();
@@ -195,7 +201,9 @@ export class ChapterSelect {
     for (const [n, card] of this.cards) {
       const lock = this.lockOf(n);
       card.dataset.lock = lock;
-      card.setAttribute('aria-disabled', String(lock !== 'open'));
+      // A chapter of the full journey still opens (the paywall) when the store sells it: not disabled.
+      const sells = lock === 'demo' && entitlement.gated && !buildFlags.DEMO;
+      card.setAttribute('aria-disabled', String(lock !== 'open' && !sells));
       const status = card.querySelector<HTMLElement>('.pg-chapter__status');
       if (!status) continue;
       this.texts.unbind(status.lastElementChild ?? status);
@@ -208,12 +216,15 @@ export class ChapterSelect {
       const icon = h('span', { className: 'pg-chapter__lock', 'aria-hidden': 'true' });
       icon.innerHTML = LOCK_SVG;
       const text = h('span');
-      this.texts.text(text, lock === 'demo' ? 'ui.chapters.fullGame' : 'ui.chapters.locked');
+      const paid = buildFlags.DEMO ? 'ui.chapters.fullGame' : 'ui.chapters.unlock';
+      this.texts.text(text, lock === 'demo' ? paid : 'ui.chapters.locked');
       status.append(icon, text);
     }
   }
 
   private pick(n: number): void {
+    // A chapter of the full journey opens the paywall (the flow's startChapter shows it).
+    if (this.lockOf(n) === 'demo' && entitlement.gated && !buildFlags.DEMO) return this.opts.onPick(n);
     if (this.lockOf(n) !== 'open') {
       playSfx('ui_close');
       return;

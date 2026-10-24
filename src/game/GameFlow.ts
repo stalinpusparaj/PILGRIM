@@ -17,13 +17,13 @@
 import * as THREE from 'three';
 import type { Engine } from '../core/Engine';
 import { events } from '../core/Events';
-import { buildFlags, urlParams } from '../core/Flags';
+import { urlParams } from '../core/Flags';
 import type { GameState } from '../core/GameState';
 import type { SaveData } from '../core/Save';
 import { services } from '../core/Services';
 import { DEMO_LAST_CHAPTER, EPILOGUE } from '../ui/ChapterSelect';
 import { Credits } from '../ui/Credits';
-import { DemoEnd } from '../ui/DemoEnd';
+import { entitlement } from '../core/Entitlement';
 import { Menu } from '../ui/Menu';
 import { Opening } from '../ui/Opening';
 import { uiRoot } from '../ui/dom';
@@ -32,6 +32,7 @@ import { installFlowDebug } from './flow-debug';
 import { chapterLauncher, settingsScreen } from './flow-launcher';
 import { PauseController, chapterWantsGameplay } from './flow-pause';
 import { FlowSatchel } from './flow-satchel';
+import { endOfFree, paywallAfter } from './flow-paywall';
 import { freshState, stateFrom } from './flow-session';
 import { TitleHub } from './flow-title';
 import { FlowTouchPause } from './flow-touch';
@@ -220,6 +221,7 @@ export class GameFlow {
   /** Loads and starts a chapter (behind the launcher's loading screen). `state` defaults to the live one. */
   async startChapter(chapter: number, waystone: string | null = null, state?: GameState): Promise<void> {
     if (this.current === 'disposed') return;
+    if (entitlement.isChapterLocked(chapter)) return this.showDemoEnd(chapter); // the paywall (or demo end)
     const gen = ++this.gen;
     this.clear(); // the old chapter goes first, while the state still describes it
     this.idle();
@@ -250,7 +252,7 @@ export class GameFlow {
   completeChapter(chapter: number): void {
     if (this.current !== 'playing' && this.current !== 'paused') return;
     this.pauser.close();
-    if (buildFlags.DEMO && chapter >= DEMO_LAST_CHAPTER) this.showDemoEnd();
+    if (paywallAfter(chapter)) this.showDemoEnd(chapter + 1);
     else if (chapter === LAST_CHAPTER) this.showEndCard();
     else if (chapter >= EPILOGUE) this.showEndCard('sequel');
     else void this.startChapter(chapter + 1);
@@ -271,7 +273,7 @@ export class GameFlow {
     this.showTitle();
   }
 
-  showDemoEnd(): void {
+  showDemoEnd(next = DEMO_LAST_CHAPTER + 1): void {
     this.gen++;
     this.pauser.close();
     this.clearOverlays();
@@ -280,7 +282,7 @@ export class GameFlow {
     this.engine.loop.paused = true; // the last chapter stays behind the scrim, still
     services.tryGet('input')?.setGameplayActive(false);
     this.setState('demoEnd');
-    const screen = new DemoEnd(this.parent, { onTitle: () => this.showTitle() });
+    const screen = endOfFree(this.parent, this, next);
     this.overlay = { id: 'demoEnd', dispose: () => screen.dispose() };
   }
 

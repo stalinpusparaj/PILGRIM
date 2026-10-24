@@ -29,6 +29,7 @@ import { AudioEngine } from './audio/AudioEngine';
 import { h, uiRoot } from './ui/dom';
 import { installJuice } from './ui/Juice';
 import { THERMAL_MODERATE, THERMAL_SEVERE, installNativeShell } from './core/NativeShell';
+import { installEntitlement } from './core/Entitlement';
 import { startMode, type FlowStart, type ModeKind, type ModeRunner } from './modes';
 import type { LabProbe } from './gen/lab-probe';
 import type { DialogueTestScene } from './narrative/DialogueTestScene';
@@ -323,6 +324,7 @@ async function boot(): Promise<void> {
 
   installJuice(); // sparkles, vignettes, button squash: event-driven, app-lifetime
   installNativeShell(); // Android shell: haptics, audio focus (no-op in a browser)
+  installEntitlement(); // the full journey: RevenueCat purchases in the Android shell (no-op in a browser)
   installBadges(); // badges for curiosity and skill (content/badges.json), app-lifetime
 
   // Started before the loop so its first frame already shows the mode (the test world's loading scene).

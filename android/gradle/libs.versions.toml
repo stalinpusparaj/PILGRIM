@@ -4,6 +4,7 @@ webkit = "1.17.1"
 activity = "1.13.0"
 coreKtx = "1.19.1"
 appUpdate = "2.1.0"
+revenuecat = "8.10.0"
 
 [libraries]
 webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
@@ -11,6 +12,8 @@ activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activ
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 # Play in-app updates: asks Google Play whether a newer version exists (the app has no internet permission).
 play-app-update = { module = "com.google.android.play:app-update", version.ref = "appUpdate" }
+# RevenueCat (wraps Google Play Billing): the subscription and one-time unlock of Chapters V-XIII (BillingBridge.kt).
+revenuecat = { module = "com.revenuecat.purchases:purchases", version.ref = "revenuecat" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

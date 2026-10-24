@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
     private lateinit var voice: OfflineVoice
     private lateinit var native: NativeBridge
+    private lateinit var billing: BillingBridge
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +65,9 @@ class MainActivity : ComponentActivity() {
         webView.addJavascriptInterface(voice, "PilgrimVoice")
         native = NativeBridge(this, webView)
         webView.addJavascriptInterface(native, "PilgrimNative")
+        billing = BillingBridge(this, webView)
+        webView.addJavascriptInterface(billing, "PilgrimBilling")
+        billing.start()
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
@@ -109,10 +113,10 @@ class MainActivity : ComponentActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean =
         if (keyCode == KeyEvent.KEYCODE_BACK) { onBackPressedDispatcher.onBackPressed(); true } else super.onKeyDown(keyCode, event)
 
-    override fun onResume() { super.onResume(); webView.onResume(); webView.resumeTimers(); native.requestFocus(); native.watchThermal(true) }
+    override fun onResume() { super.onResume(); webView.onResume(); webView.resumeTimers(); native.requestFocus(); native.watchThermal(true); billing.refreshPurchases() }
     override fun onPause() { voice.pause(); native.abandonFocus(); native.watchThermal(false); webView.pauseTimers(); webView.onPause(); super.onPause() }
     override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); webView.saveState(outState) }
-    override fun onDestroy() { voice.shutdown(); webView.removeJavascriptInterface("PilgrimVoice"); webView.removeJavascriptInterface("PilgrimNative"); webView.destroy(); super.onDestroy() }
+    override fun onDestroy() { voice.shutdown(); webView.removeJavascriptInterface("PilgrimVoice"); webView.removeJavascriptInterface("PilgrimNative"); webView.removeJavascriptInterface("PilgrimBilling"); billing.dispose(); webView.destroy(); super.onDestroy() }
 
     private companion object {
         const val APP_HOST = "appassets.androidplatform.net"

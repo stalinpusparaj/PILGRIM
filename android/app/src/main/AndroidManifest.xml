@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- The whole game is bundled in assets and plays offline: no network permission, no data collection. -->
+    <!-- The whole game is bundled in assets and plays offline; only purchases (RevenueCat) use the network. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- RevenueCat checks purchases on its servers (DECISIONS #402); nothing else in the game uses the network. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <queries><intent><action android:name="android.intent.action.TTS_SERVICE" /></intent></queries>
     <application
         android:allowBackup="true"

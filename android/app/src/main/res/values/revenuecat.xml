@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- RevenueCat public Android SDK key (starts with "goog_"; public by design, not a secret). Empty = no store. -->
+<resources>
+    <string name="revenuecat_api_key" translatable="false"></string>
+</resources>

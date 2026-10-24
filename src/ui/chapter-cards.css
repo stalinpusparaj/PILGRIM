@@ -13,8 +13,8 @@ body .pg-chapter {
     0 12px 22px rgba(20, 12, 24, 0.28);
   transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
 }
-body .pg-chapter:not([aria-disabled="true"]):hover,
-body .pg-chapter.is-focused:not([aria-disabled="true"]) {
+body .pg-chapter:not(:is([aria-disabled="true"], [data-lock="demo"])):hover,
+body .pg-chapter.is-focused:not(:is([aria-disabled="true"], [data-lock="demo"])) {
   transform: translateY(-3px);
   box-shadow: inset 0 0 0 2px rgba(255, 250, 235, 0.9), 0 8px 0 #c9a868, 0 18px 30px rgba(20, 12, 24, 0.35);
 }
@@ -91,10 +91,10 @@ body .pg-chapter .pg-chapter__number {
 /* Locked: the picture stays clear and full colour (a preview of the land to come); only a gold lock seal and
    the status line ("Not reached yet") mark it. */
 .pg-chapter__seal { display: none; }
-body .pg-chapter[aria-disabled="true"] .pg-chapter__swatch,
-body .pg-chapter[aria-disabled="true"] .pg-chapter__swatch[style*="--art"] { filter: none; }
-body .pg-chapter[aria-disabled="true"] .pg-chapter__swatch[style*="--art"]::after { display: none; }
-body .pg-chapter[aria-disabled="true"] .pg-chapter__seal {
+body .pg-chapter:is([aria-disabled="true"], [data-lock="demo"]) .pg-chapter__swatch,
+body .pg-chapter:is([aria-disabled="true"], [data-lock="demo"]) .pg-chapter__swatch[style*="--art"] { filter: none; }
+body .pg-chapter:is([aria-disabled="true"], [data-lock="demo"]) .pg-chapter__swatch[style*="--art"]::after { display: none; }
+body .pg-chapter:is([aria-disabled="true"], [data-lock="demo"]) .pg-chapter__seal {
   display: grid;
   place-items: center;
   position: absolute;
@@ -109,7 +109,7 @@ body .pg-chapter[aria-disabled="true"] .pg-chapter__seal {
   background: radial-gradient(circle at 50% 30%, #c08a3e, #6a3f14 72%);
   box-shadow: inset 0 2px 0 rgba(255, 230, 180, 0.6), 0 0 0 3px rgba(255, 228, 160, 0.95), 0 4px 10px rgba(20, 12, 24, 0.45);
 }
-body .pg-chapter[aria-disabled="true"] .pg-chapter__seal svg { width: 22px; height: 22px; }
+body .pg-chapter:is([aria-disabled="true"], [data-lock="demo"]) .pg-chapter__seal svg { width: 22px; height: 22px; }
 
 body.reduce-motion .pg-chapter .pg-chapter__shine { animation: none; }
 @media (prefers-reduced-motion: reduce) { .pg-chapter .pg-chapter__shine { animation: none !important; } }
