@@ -24,7 +24,7 @@ import {
  *     reload) and START (the opening narration);
  * (c) `?chapter=test` (through GameFlow): Tab opens MY SATCHEL with the five GDD tabs and footer, the Key card
  *     reads exactly "A key called Promise.", Esc opens the pause menu and its SATCHEL button;
- * (d) the language toggle puts every title string into Tamil without overflow at 375 px.
+ * (d) choosing Tamil in Settings puts every title string into Tamil without overflow at 375 px.
  */
 const EN = {
   n1: 'Hello, friend! Why do you look so sad?',
@@ -247,13 +247,17 @@ test('?chapter=test: Tab opens MY SATCHEL (five tabs, footer, Key card), Esc ope
 test.describe('phone', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
-  test('the language toggle puts every title string into Tamil without overflow at 375 px', async ({
+  test('choosing Tamil in Settings puts every title string into Tamil without overflow at 375 px', async ({
     page,
   }) => {
     const problems = watchConsole(page);
     await page.goto('/');
     await waitForFlow(page, (p) => p.titleReady);
-    await page.locator('.pg-title__langbtn[lang="ta"]').click();
+    // The language is chosen in Settings > General (the title has no toggle any more).
+    await page.locator('[data-key="ui.title.settings"]').click();
+    await page.locator('select.pg-set-select').selectOption('ta');
+    await page.keyboard.press('Escape');
+    await waitForFlow(page, (p) => p.screen === 'title');
     await expect(page.locator('html')).toHaveAttribute('lang', 'ta');
     const keys = ['ui.title.start', 'ui.title.chapters', 'ui.title.settings', 'ui.title.credits'];
     for (const key of keys) {

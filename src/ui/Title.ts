@@ -1,8 +1,8 @@
 /**
  * Title screen (GDD 2.14 "Title screen"): the logo PILGRIM over THE NARROW WAY with our SVG emblem, the credit
  * line, START THE JOURNEY / CONTINUE (only with a save) / CHAPTERS / SETTINGS / CREDITS, the footer ("A story
- * adventure for kids and families" left, the version right) and the "English | தமிழ்" toggle top right, which
- * switches the language live. The 3D background (TitleScene) is drawn by the engine behind this layer; until it
+ * adventure for kids and families" left, the version right). The language is chosen in Settings > General.
+ * The 3D background (TitleScene) is drawn by the engine behind this layer; until it
  * is ready a painted dusk backdrop stands in, then fades away. The logo shrinks with the window's height so the
  * whole menu fits on laptop screens; when it still runs past the bottom (large text, a short window) a bobbing
  * "more" arrow sits at the bottom of the column until it is scrolled to the end (a click on it scrolls).
@@ -13,14 +13,13 @@
  *   ...
  *   title.dispose();
  */
-import { i18n, type Lang } from '../core/I18n';
-import { LANG_NAMES } from '../core/langs';
+import { i18n } from '../core/I18n';
 import { version as GAME_VERSION } from '../../package.json';
-import { h, setText } from './dom';
+import { h } from './dom';
 import { emblemSvg } from './Emblem';
 import { UpdateBanner } from './UpdateBanner';
 import { Menu } from './Menu';
-import { Texts, menuButton, playSfx, uid } from './menu-screen';
+import { Texts, menuButton, uid } from './menu-screen';
 
 export interface TitleHandlers {
   start(): void;
@@ -42,14 +41,11 @@ export class Title {
   private readonly continueBtn: HTMLButtonElement;
   private readonly emblem: HTMLDivElement;
   private readonly notice: HTMLParagraphElement;
-  /** English, and the player's regional language (the last non-English one chosen; Tamil at first). */
-  private readonly update: UpdateBanner;
-  private readonly langButtons: { en: HTMLButtonElement; ta: HTMLButtonElement };
-  private regional: Exclude<Lang, 'en'> = i18n.lang === 'en' ? 'ta' : i18n.lang;
   private readonly menuButtons: HTMLButtonElement[];
   private readonly main: HTMLDivElement;
   private readonly more: HTMLDivElement;
   private readonly sizes: ResizeObserver | null;
+  private readonly update: UpdateBanner;
   private noticeTimer = 0;
   private disposed = false;
 
@@ -80,19 +76,6 @@ export class Title {
       'ui.menu.main',
     );
 
-    this.langButtons = { en: this.langButton(() => 'en'), ta: this.langButton(() => this.regional) };
-    const lang = tx.attr(
-      h(
-        'div',
-        { className: 'pg-title__lang', role: 'group' },
-        this.langButtons.en,
-        h('span', { className: 'pg-title__langbar', 'aria-hidden': 'true' }, '|'),
-        this.langButtons.ta,
-      ),
-      'aria-label',
-      'ui.title.lang.label',
-    );
-
     this.notice = h('p', { className: 'pg-title__notice', role: 'status', 'aria-live': 'polite' });
     const footer = h(
       'footer',
@@ -117,10 +100,8 @@ export class Title {
       h('div', { className: 'pg-title__shade', 'aria-hidden': 'true' }),
       this.main,
       footer,
-      lang,
     );
     this.renderEmblem();
-    this.syncLang();
     parent.appendChild(this.root);
     this.update = new UpdateBanner(parent); // beside the title (inside it would disturb its size observer)
     // The menu's size changes with CONTINUE, the language, the text size and the window.
@@ -131,7 +112,7 @@ export class Title {
     this.menu = new Menu({
       root: this.root,
       nav: 'vertical',
-      items: () => [...this.menuButtons, this.langButtons.en, this.langButtons.ta],
+      items: () => [...this.menuButtons],
     });
   }
 
@@ -200,34 +181,8 @@ export class Title {
     this.more.hidden = !more;
   };
 
-  private langButton(lang: () => Lang): HTMLButtonElement {
-    const b = h('button', {
-      type: 'button',
-      className: 'pg-title__langbtn',
-      dataset: { menuItem: '' },
-      onClick: () => {
-        const l = lang();
-        if (i18n.lang === l) return;
-        playSfx('ui_open');
-        i18n.setLang(l);
-      },
-    });
-    return b;
-  }
-
   private onLang(): void {
     this.renderEmblem();
-    this.syncLang();
-  }
-
-  private syncLang(): void {
-    if (i18n.lang !== 'en') this.regional = i18n.lang;
-    for (const [b, l] of [[this.langButtons.en, 'en'], [this.langButtons.ta, this.regional]] as const) {
-      b.lang = l; // each language names itself, in its own script
-      b.dataset.key = `ui.title.lang.${l}`;
-      setText(b, LANG_NAMES[l]);
-      b.setAttribute('aria-pressed', String(i18n.lang === l));
-    }
   }
 
   private renderEmblem(): void {
