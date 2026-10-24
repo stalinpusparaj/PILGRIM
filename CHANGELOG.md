@@ -2,6 +2,11 @@
 
 All notable changes to PILGRIM: THE NARROW WAY. Dates are release dates.
 
+## 0.2.2 — 2026-10-24 — Landscape tips (versionCode 13)
+
+- Phones on their side: tips and the chapter line sit at the top, clear of Christian and the guide arrow.
+- Credits name GEM CREATORS and developer Stalin Pushparaj A, Chennai.
+
 ## 0.2.1 — 2026-10-24 — Phone polish (versionCode 12)
 
 - Back button keeps the touch controls; Settings fits the phone screen; touch-only Controls.
