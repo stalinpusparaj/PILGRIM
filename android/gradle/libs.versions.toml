@@ -5,6 +5,7 @@ activity = "1.13.0"
 coreKtx = "1.19.1"
 appUpdate = "2.1.0"
 revenuecat = "9.29.1"
+fragment = "1.8.9"
 
 [libraries]
 webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
@@ -14,6 +15,8 @@ core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 play-app-update = { module = "com.google.android.play:app-update", version.ref = "appUpdate" }
 # RevenueCat (wraps Google Play Billing): the subscription and one-time unlock of Chapters V-XIII (BillingBridge.kt).
 revenuecat = { module = "com.revenuecat.purchases:purchases", version.ref = "revenuecat" }
+# Pinned: Play Billing (via RevenueCat / app-update) pulls fragment 1.1.0, which Play reports as outdated.
+fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

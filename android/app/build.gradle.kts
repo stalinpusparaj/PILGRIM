@@ -99,4 +99,5 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.play.app.update)
     implementation(libs.revenuecat)
+    implementation(libs.fragment)
 }
